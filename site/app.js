@@ -148,6 +148,7 @@
   });
 
   $('logout-btn').addEventListener('click', function () {
+    stopChatPolling();
     sessionStorage.removeItem(SESSION_KEY);
     showLogin();
   });
@@ -215,8 +216,12 @@
       document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.add('hidden'); });
       btn.classList.add('active');
       $('tab-' + btn.dataset.tab).classList.remove('hidden');
+      onTabSwitch(btn.dataset.tab);
     });
   });
+  function onTabSwitch(tabName) {
+    if (tabName === 'chat') { initChatTab(); } else { stopChatPolling(); }
+  }
 
   // --------------------------------------------------------------------------
   // BỘ LỌC — khởi tạo danh sách từ meta
@@ -665,6 +670,162 @@
       })
     });
   }
+
+  // --------------------------------------------------------------------------
+  // TRAO ĐỔI — chat riêng giữa Admin và từng nhân viên
+  // --------------------------------------------------------------------------
+  var CHAT = { thread: null, pollTimer: null, loading: false, contactsLoaded: false };
+  var CHAT_POLL_MS = 12000;
+
+  function chatAuthHeader() {
+    var session = getSession();
+    return session ? { 'Authorization': 'Bearer ' + session.token } : {};
+  }
+
+  function chatFmtTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var now = new Date();
+    var sameDay = d.toDateString() === now.toDateString();
+    var hhmm = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    return sameDay ? hhmm : (d.toLocaleDateString('vi-VN') + ' ' + hhmm);
+  }
+
+  function initChatTab() {
+    var session = getSession();
+    if (!session) return;
+    var isAdmin = session.vaiTro === 'admin';
+    $('chat-contacts').classList.toggle('hidden', !isAdmin);
+
+    if (isAdmin) {
+      if (!CHAT.contactsLoaded) loadChatContacts();
+      if (CHAT.thread) startChatPolling();
+      else setText('chat-thread-header', 'Chọn 1 nhân viên bên trái để bắt đầu trao đổi');
+    } else {
+      CHAT.thread = session.username;
+      setText('chat-thread-header', 'Trao đổi với Quản trị');
+      loadChatMessages(true);
+      startChatPolling();
+    }
+  }
+
+  function loadChatContacts() {
+    var list = $('chat-contacts-list');
+    list.innerHTML = '<div class="empty-state small">Đang tải…</div>';
+    fetch('/.netlify/functions/messages?action=threads', { headers: chatAuthHeader() })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách');
+        CHAT.contactsLoaded = true;
+        var contacts = json.data || [];
+        if (!contacts.length) {
+          list.innerHTML = '<div class="empty-state small">Chưa có tài khoản nhân viên nào.</div>';
+          return;
+        }
+        list.innerHTML = contacts.map(function (c) {
+          return '<button type="button" class="chat-contact-item" data-user="' + escapeHtml(c.username) + '">' +
+            '<span class="chat-contact-name">' + escapeHtml(c.hoTen || c.username) + '</span>' +
+            (c.active === false ? '<span class="chip warn small">Đã khoá</span>' : '') +
+            '</button>';
+        }).join('');
+        list.querySelectorAll('.chat-contact-item').forEach(function (btn) {
+          btn.addEventListener('click', function () { selectChatContact(btn.dataset.user, btn); });
+        });
+      })
+      .catch(function (err) {
+        list.innerHTML = '<div class="empty-state small">Không tải được danh sách: ' + escapeHtml(err.message) + '</div>';
+      });
+  }
+
+  function selectChatContact(username, btnEl) {
+    CHAT.thread = username;
+    $('chat-contacts-list').querySelectorAll('.chat-contact-item').forEach(function (b) { b.classList.remove('active'); });
+    if (btnEl) btnEl.classList.add('active');
+    var name = btnEl ? btnEl.querySelector('.chat-contact-name').textContent : username;
+    setText('chat-thread-header', 'Trao đổi với ' + name);
+    $('chat-messages').innerHTML = '';
+    loadChatMessages(true);
+    startChatPolling();
+  }
+
+  function loadChatMessages(scrollToBottom) {
+    if (!CHAT.thread || CHAT.loading) return;
+    CHAT.loading = true;
+    var url = '/.netlify/functions/messages?action=list&thread=' + encodeURIComponent(CHAT.thread);
+    fetch(url, { headers: chatAuthHeader() })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải tin nhắn');
+        renderChatMessages(json.data || [], json.me || {});
+        if (scrollToBottom) chatScrollToBottom();
+      })
+      .catch(function (err) {
+        $('chat-messages').innerHTML = '<div class="empty-state">Không tải được tin nhắn: ' + escapeHtml(err.message) + '</div>';
+      })
+      .finally(function () { CHAT.loading = false; });
+  }
+
+  function renderChatMessages(msgs, me) {
+    var box = $('chat-messages');
+    var wasNearBottom = (box.scrollHeight - box.scrollTop - box.clientHeight) < 60;
+    if (!msgs.length) {
+      box.innerHTML = '<div class="empty-state">Chưa có tin nhắn nào. Gửi lời chào đầu tiên nhé!</div>';
+      return;
+    }
+    box.innerHTML = msgs.map(function (m) {
+      var mine = m.from === (me && me.username);
+      return '<div class="chat-bubble-row ' + (mine ? 'mine' : 'theirs') + '">' +
+        '<div class="chat-bubble">' +
+        (mine ? '' : '<div class="chat-bubble-sender">' + escapeHtml(m.fromRole === 'admin' ? 'Quản trị' : m.from) + '</div>') +
+        '<div class="chat-bubble-text">' + escapeHtml(m.text) + '</div>' +
+        '<div class="chat-bubble-time">' + chatFmtTime(m.time) + '</div>' +
+        '</div></div>';
+    }).join('');
+    if (wasNearBottom) chatScrollToBottom();
+  }
+
+  function chatScrollToBottom() {
+    var box = $('chat-messages');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function startChatPolling() {
+    stopChatPolling();
+    CHAT.pollTimer = setInterval(function () {
+      if (CHAT.thread) loadChatMessages(false);
+    }, CHAT_POLL_MS);
+  }
+  function stopChatPolling() {
+    if (CHAT.pollTimer) { clearInterval(CHAT.pollTimer); CHAT.pollTimer = null; }
+  }
+
+  $('chat-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var input = $('chat-input');
+    var text = input.value.trim();
+    var errEl = $('chat-error');
+    errEl.textContent = '';
+    if (!CHAT.thread) { errEl.textContent = 'Chọn 1 nhân viên bên trái trước đã.'; return; }
+    if (!text) return;
+    var btn = $('chat-send-btn');
+    btn.disabled = true;
+    fetch('/.netlify/functions/messages', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, chatAuthHeader()),
+      body: JSON.stringify({ thread: CHAT.thread, text: text })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Gửi tin nhắn thất bại');
+        input.value = '';
+        loadChatMessages(true);
+      })
+      .catch(function (err) {
+        errEl.textContent = 'Không gửi được: ' + err.message;
+      })
+      .finally(function () { btn.disabled = false; });
+  });
 
   // --------------------------------------------------------------------------
   // KHỞI ĐỘNG
