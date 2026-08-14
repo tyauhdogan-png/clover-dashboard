@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard Kinh Doanh</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ============================== LOGIN ============================== -->
+<div id="login-screen">
+  <form class="login-card" id="login-form">
+    <div class="login-logo">KD</div>
+    <h1 id="login-title">Dashboard Kinh Doanh</h1>
+    <p class="sub">Nhập mật khẩu chung để tiếp tục</p>
+    <input type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password" required />
+    <button type="submit" id="login-btn">Đăng nhập</button>
+    <div class="login-error" id="login-error"></div>
+  </form>
+</div>
+
+<!-- ============================== APP ============================== -->
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="login-logo">KD</div>
+      <div>
+        <h1 id="app-title">Dashboard Kinh Doanh</h1>
+        <div class="updated" id="updated-at">Đang tải dữ liệu…</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" id="refresh-btn">↻ Làm mới</button>
+      <button class="btn" id="logout-btn">Đăng xuất</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="thau">Tiến độ Thầu</button>
+    <button class="tab-btn" data-tab="kpi">KPI Nhân viên</button>
+    <button class="tab-btn" data-tab="sales">Data Sale Khách hàng</button>
+  </nav>
+
+  <main>
+    <div id="global-error" class="hidden empty-state"></div>
+
+    <!-- ===================== TAB: THẦU ===================== -->
+    <section id="tab-thau" class="tab-panel">
+      <div class="filter-bar">
+        <select id="thau-filter-tinh"><option value="">Tất cả tỉnh</option></select>
+        <select id="thau-filter-nv"><option value="">Tất cả nhân sự phụ trách</option></select>
+        <input type="text" class="search-box" id="thau-filter-search" placeholder="Tìm khách hàng, mặt hàng, số HĐ…" />
+        <button class="clear-filters" id="thau-clear">Xoá bộ lọc</button>
+      </div>
+
+      <div class="stat-grid" id="thau-stats"></div>
+
+      <div class="panel">
+        <h2>Tỷ lệ hoàn thành theo Tỉnh</h2>
+        <div class="charts-row">
+          <div class="chart-box"><canvas id="chart-thau-tinh"></canvas></div>
+          <div class="chart-box"><canvas id="chart-thau-nv"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Hợp đồng sắp hết hạn &amp; tỷ lệ thực hiện thấp (≤ 60 ngày, &lt; 60%)</h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-thau-canhbao">
+            <thead><tr>
+              <th>Khách hàng</th><th>Tỉnh</th><th>Mặt hàng</th><th>Phụ trách</th>
+              <th>Hết hạn</th><th class="num">% thực hiện</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Chi tiết tiến độ thầu <span class="count" id="thau-row-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-thau">
+            <thead><tr>
+              <th data-sort="tenKhach">Khách hàng</th>
+              <th data-sort="tinh">Tỉnh</th>
+              <th data-sort="phuTrach">Phụ trách</th>
+              <th data-sort="tenHang">Mặt hàng</th>
+              <th data-sort="soHD">Số HĐ</th>
+              <th class="num" data-sort="slKeHoach">SL kế hoạch</th>
+              <th class="num" data-sort="slThucHien">SL thực hiện</th>
+              <th data-sort="tyLe">Tiến độ</th>
+              <th data-sort="ngayHetHan">Hết hạn</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: KPI ===================== -->
+    <section id="tab-kpi" class="tab-panel hidden">
+      <div class="filter-bar">
+        <input type="text" class="search-box" id="kpi-filter-search" placeholder="Tìm nhân viên…" />
+      </div>
+
+      <div class="stat-grid" id="kpi-stats"></div>
+
+      <div class="panel">
+        <h2>Tỉ lệ thực hiện / kế hoạch (%) theo nhân viên — <span id="kpi-thang"></span></h2>
+        <div class="chart-box tall"><canvas id="chart-kpi-tyle"></canvas></div>
+      </div>
+
+      <div class="panel">
+        <h2>Bảng KPI theo nhân viên <span class="count" id="kpi-row-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-kpi">
+            <thead><tr>
+              <th data-sort="hoTen">Nhân viên</th>
+              <th data-sort="vaiTro">Vai trò</th>
+              <th class="num" data-sort="keDon.tyLe">Kê đơn %</th>
+              <th class="num" data-sort="thau.tyLe">Thầu %</th>
+              <th class="num" data-sort="spTrongTam.tyLe">SP trọng tâm %</th>
+              <th class="num" data-sort="nhanSu.tyLe">Nhân sự %</th>
+              <th data-sort="tyLeTong">Tổng điểm TH/KH</th>
+              <th class="num" data-sort="xepHang">Xếp hạng</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: SALE ===================== -->
+    <section id="tab-sales" class="tab-panel hidden">
+      <div class="filter-bar">
+        <select id="sales-filter-tinh"><option value="">Tất cả tỉnh</option></select>
+        <select id="sales-filter-nv"><option value="">Tất cả nhân viên</option></select>
+        <select id="sales-filter-nhom"><option value="">Tất cả nhóm hàng</option></select>
+        <input type="date" id="sales-filter-from" title="Từ ngày" />
+        <input type="date" id="sales-filter-to" title="Đến ngày" />
+        <input type="text" class="search-box" id="sales-filter-search" placeholder="Tìm khách hàng, mặt hàng…" />
+        <button class="clear-filters" id="sales-clear">Xoá bộ lọc</button>
+      </div>
+
+      <div class="stat-grid" id="sales-stats"></div>
+
+      <div class="panel">
+        <h2>Doanh thu theo thời gian</h2>
+        <div class="chart-box tall"><canvas id="chart-sales-time"></canvas></div>
+      </div>
+
+      <div class="panel">
+        <h2>Doanh thu theo Tỉnh &amp; Nhóm hàng</h2>
+        <div class="charts-row">
+          <div class="chart-box"><canvas id="chart-sales-tinh"></canvas></div>
+          <div class="chart-box"><canvas id="chart-sales-nhom"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Top khách hàng theo doanh thu <span class="count" id="sales-cust-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-sales-cust">
+            <thead><tr>
+              <th data-sort="tenKhach">Khách hàng</th>
+              <th data-sort="tinh">Tỉnh</th>
+              <th data-sort="nhanVien">Nhân viên</th>
+              <th class="num" data-sort="soDon">Số đơn</th>
+              <th class="num" data-sort="doanhThu">Tổng doanh thu</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Chi tiết đơn hàng <span class="count" id="sales-row-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-sales">
+            <thead><tr>
+              <th data-sort="ngay">Ngày</th>
+              <th data-sort="nhanVien">Nhân viên</th>
+              <th data-sort="tenKhach">Khách hàng</th>
+              <th data-sort="tinh">Tỉnh</th>
+              <th data-sort="nhomHang">Nhóm hàng</th>
+              <th data-sort="tenHang">Mặt hàng</th>
+              <th class="num" data-sort="soLuong">SL</th>
+              <th class="num" data-sort="doanhThu">Doanh thu</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">Dữ liệu lấy trực tiếp từ Google Sheets qua Apps Script API.</footer>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
