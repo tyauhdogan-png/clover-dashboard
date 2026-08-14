@@ -44,6 +44,10 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7.2" cy="6.5" r="2.5"/><path d="M2.5 17c0-3 2.2-5 4.7-5s4.7 2 4.7 5"/><circle cx="14.3" cy="7.5" r="2"/><path d="M12.8 12.3c1.9.3 3.7 2 3.7 4.7"/></svg>
         <span>Khách hàng</span>
       </button>
+      <button class="tab-btn" data-tab="chat">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8l-3.8 3v-3H4.5a2 2 0 0 1-2-2v-6Z"/></svg>
+        <span>Trao đổi</span>
+      </button>
     </nav>
   </aside>
 
@@ -207,6 +211,25 @@
             </tr></thead>
             <tbody></tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: TRAO ĐỔI ===================== -->
+    <section id="tab-chat" class="tab-panel hidden">
+      <div class="chat-shell">
+        <aside class="chat-contacts" id="chat-contacts">
+          <div class="chat-contacts-title">Nhân viên</div>
+          <div class="chat-contacts-list" id="chat-contacts-list"></div>
+        </aside>
+        <div class="chat-thread-wrap">
+          <div class="chat-thread-header" id="chat-thread-header">Đang tải…</div>
+          <div class="chat-messages" id="chat-messages"></div>
+          <form class="chat-input-bar" id="chat-form">
+            <input type="text" id="chat-input" placeholder="Nhập tin nhắn…" autocomplete="off" maxlength="2000" />
+            <button type="submit" class="btn btn-primary" id="chat-send-btn">Gửi</button>
+          </form>
+          <div class="chat-error" id="chat-error"></div>
         </div>
       </div>
     </section>
