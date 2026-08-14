@@ -35,6 +35,9 @@
   --radius-l: 16px;
   --shadow-card: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 16px rgba(11, 11, 11, 0.05);
   font-variant-numeric: proportional-nums;
+
+  /* hình trang trí hoa & bướm pastel (tự vẽ, dạng SVG nhúng) dùng làm nền góc màn hình */
+  --decor-flowers: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MjAgNDIwIiB3aWR0aD0iNDIwIiBoZWlnaHQ9IjQyMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI3OCUiIGN5PSI4MiUiIHI9IjcwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmN2M5ZTYiIHN0b3Atb3BhY2l0eT0iMC41NSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjQ1JSIgc3RvcC1jb2xvcj0iI2UzYzlmNyIgc3RvcC1vcGFjaXR5PSIwLjI4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2UzYzlmNyIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJwZXRhbFBpbmsiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZkN2VhIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2YwYTNjZiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGV0YWxQdXJwbGUiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZTNkM2ZiIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2JiOThlYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icGV0YWxCbHVlIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2QzZTZmYiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM5ZGMwZWUiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbmdQaW5rIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2ZmYzllNiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNlNzliZDYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbmdCbHVlIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2NmZTBmYiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNhN2MzZWYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgoKICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iNDIwIiBoZWlnaHQ9IjQyMCIgZmlsbD0idXJsKCNnbG93KSIvPgoKICA8IS0tID09PT09IGZhaW50IHRyYWlsaW5nIHNwcmlncyB0b3dhcmQgdG9wLWxlZnQgPT09PT0gLS0+CiAgPGcgb3BhY2l0eT0iMC40NSI+CiAgICA8cGF0aCBkPSJNNzAgMjUwIFE5NSAyMTAgNzAgMTY1IiBmaWxsPSJub25lIiBzdHJva2U9IiNiY2Q5YTgiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxlbGxpcHNlIGN4PSI3OCIgY3k9IjIwNSIgcng9IjkiIHJ5PSI0LjUiIGZpbGw9IiNiY2Q5YTgiIHRyYW5zZm9ybT0icm90YXRlKC0zNSA3OCAyMDUpIi8+CiAgICA8ZWxsaXBzZSBjeD0iNjYiIGN5PSIxODAiIHJ4PSI4IiByeT0iNCIgZmlsbD0iI2JjZDlhOCIgdHJhbnNmb3JtPSJyb3RhdGUoMjAgNjYgMTgwKSIvPgogIDwvZz4KCiAgPCEtLSBzbWFsbCBkaXN0YW50IGZsb3dlciAoZmFkaW5nKSAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg5NSwyMTUpIiBvcGFjaXR5PSIwLjU1Ij4KICAgIDxnPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0xMyIgcng9IjciIHJ5PSIxMiIgZmlsbD0idXJsKCNwZXRhbEJsdWUpIiB0cmFuc2Zvcm09InJvdGF0ZSgwKSIvPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0xMyIgcng9IjciIHJ5PSIxMiIgZmlsbD0idXJsKCNwZXRhbEJsdWUpIiB0cmFuc2Zvcm09InJvdGF0ZSg3MikiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTMiIHJ4PSI3IiByeT0iMTIiIGZpbGw9InVybCgjcGV0YWxCbHVlKSIgdHJhbnNmb3JtPSJyb3RhdGUoMTQ0KSIvPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0xMyIgcng9IjciIHJ5PSIxMiIgZmlsbD0idXJsKCNwZXRhbEJsdWUpIiB0cmFuc2Zvcm09InJvdGF0ZSgyMTYpIi8+CiAgICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iLTEzIiByeD0iNyIgcnk9IjEyIiBmaWxsPSJ1cmwoI3BldGFsQmx1ZSkiIHRyYW5zZm9ybT0icm90YXRlKDI4OCkiLz4KICAgICAgPGNpcmNsZSBjeD0iMCIgY3k9IjAiIHI9IjUuNSIgZmlsbD0iI2ZmZjFjMiIvPgogICAgPC9nPgogIDwvZz4KCiAgPCEtLSBkaXN0YW50IHNtYWxsIGJ1dHRlcmZseSwgZmFkaW5nIGZ1cnRoZXIgYXdheSAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNTAsMTUwKSByb3RhdGUoLTE4KSIgb3BhY2l0eT0iMC41Ij4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTQiIHgyPSItNCIgeTI9Ii0xMSIgc3Ryb2tlPSIjOGE4NmE4IiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPGxpbmUgeDE9IjAiIHkxPSItNCIgeDI9IjQiIHkyPSItMTEiIHN0cm9rZT0iIzhhODZhOCIgc3Ryb2tlLXdpZHRoPSIxLjIiLz4KICAgIDxwYXRoIGQ9Ik0wIC0yIEMgLTE0IC0xNiwgLTIwIDIsIDAgOCBDIDIwIDIsIDE0IC0xNiwgMCAtMiBaIiBmaWxsPSJ1cmwoI3dpbmdCbHVlKSIgdHJhbnNmb3JtPSJzY2FsZSgwLjYyKSIvPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIzIiByeD0iMiIgcnk9IjkiIGZpbGw9IiM3YjczOTgiLz4KICA8L2c+CgogIDwhLS0gPT09PT0gbWlkIGZsb3dlciAocHVycGxlKSA9PT09PSAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNTUsMzQ1KSIgb3BhY2l0eT0iMC45MiI+CiAgICA8Zz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTciIHJ4PSI5LjUiIHJ5PSIxNiIgZmlsbD0idXJsKCNwZXRhbFB1cnBsZSkiIHRyYW5zZm9ybT0icm90YXRlKDApIi8+CiAgICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iLTE3IiByeD0iOS41IiByeT0iMTYiIGZpbGw9InVybCgjcGV0YWxQdXJwbGUpIiB0cmFuc2Zvcm09InJvdGF0ZSg2MCkiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTciIHJ4PSI5LjUiIHJ5PSIxNiIgZmlsbD0idXJsKCNwZXRhbFB1cnBsZSkiIHRyYW5zZm9ybT0icm90YXRlKDEyMCkiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTciIHJ4PSI5LjUiIHJ5PSIxNiIgZmlsbD0idXJsKCNwZXRhbFB1cnBsZSkiIHRyYW5zZm9ybT0icm90YXRlKDE4MCkiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTciIHJ4PSI5LjUiIHJ5PSIxNiIgZmlsbD0idXJsKCNwZXRhbFB1cnBsZSkiIHRyYW5zZm9ybT0icm90YXRlKDI0MCkiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTciIHJ4PSI5LjUiIHJ5PSIxNiIgZmlsbD0idXJsKCNwZXRhbFB1cnBsZSkiIHRyYW5zZm9ybT0icm90YXRlKDMwMCkiLz4KICAgICAgPGNpcmNsZSBjeD0iMCIgY3k9IjAiIHI9IjcuNSIgZmlsbD0iI2ZmZjFjMiIvPgogICAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmMGQ5OGEiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPC9nPgogIDwvZz4KCiAgPCEtLSBzbWFsbCBidWQgKyBsZWFmIGFjY2VudCAtLT4KICA8ZyBvcGFjaXR5PSIwLjg1Ij4KICAgIDxwYXRoIGQ9Ik0zMDAgMzAwIFEzMjUgMjcwIDMwMCAyMzUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2JjZDlhOCIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxlbGxpcHNlIGN4PSIzMTIiIGN5PSIyNzIiIHJ4PSIxMiIgcnk9IjYiIGZpbGw9IiNiY2Q5YTgiIHRyYW5zZm9ybT0icm90YXRlKC0zMCAzMTIgMjcyKSIvPgogICAgPGVsbGlwc2UgY3g9IjI5NiIgY3k9IjI0OCIgcng9IjEwIiByeT0iNSIgZmlsbD0iI2E5Y2Y5NCIgdHJhbnNmb3JtPSJyb3RhdGUoMjUgMjk2IDI0OCkiLz4KICA8L2c+CgogIDwhLS0gPT09PT0gbWFpbiBsYXJnZSBmbG93ZXIgKHBpbmspLCBib3R0b20tcmlnaHQgYW5jaG9yID09PT09IC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM0NSwzNTApIj4KICAgIDxnPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yNCIgcng9IjEzIiByeT0iMjIiIGZpbGw9InVybCgjcGV0YWxQaW5rKSIgdHJhbnNmb3JtPSJyb3RhdGUoMCkiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMjQiIHJ4PSIxMyIgcnk9IjIyIiBmaWxsPSJ1cmwoI3BldGFsUGluaykiIHRyYW5zZm9ybT0icm90YXRlKDYwKSIvPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yNCIgcng9IjEzIiByeT0iMjIiIGZpbGw9InVybCgjcGV0YWxQaW5rKSIgdHJhbnNmb3JtPSJyb3RhdGUoMTIwKSIvPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yNCIgcng9IjEzIiByeT0iMjIiIGZpbGw9InVybCgjcGV0YWxQaW5rKSIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwKSIvPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yNCIgcng9IjEzIiByeT0iMjIiIGZpbGw9InVybCgjcGV0YWxQaW5rKSIgdHJhbnNmb3JtPSJyb3RhdGUoMjQwKSIvPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yNCIgcng9IjEzIiByeT0iMjIiIGZpbGw9InVybCgjcGV0YWxQaW5rKSIgdHJhbnNmb3JtPSJyb3RhdGUoMzAwKSIvPgogICAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iMTAuNSIgZmlsbD0iI2ZmZTlhOCIvPgogICAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iMTAuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjBjNTY5IiBzdHJva2Utd2lkdGg9IjEuMiIvPgogICAgPC9nPgogIDwvZz4KCiAgPCEtLSBzZWNvbmQgYmxvb20sIHNsaWdodGx5IHNtYWxsZXIsIGJsdWUsIHR1Y2tlZCBiZXNpZGUgbWFpbiBmbG93ZXIgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzg4LDMwMCkgcm90YXRlKDE1KSIgb3BhY2l0eT0iMC45NSI+CiAgICA8Zz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTUiIHJ4PSI4LjUiIHJ5PSIxNC41IiBmaWxsPSJ1cmwoI3BldGFsQmx1ZSkiIHRyYW5zZm9ybT0icm90YXRlKDApIi8+CiAgICAgIDxlbGxpcHNlIGN4PSIwIiBjeT0iLTE1IiByeD0iOC41IiByeT0iMTQuNSIgZmlsbD0idXJsKCNwZXRhbEJsdWUpIiB0cmFuc2Zvcm09InJvdGF0ZSg3MikiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTUiIHJ4PSI4LjUiIHJ5PSIxNC41IiBmaWxsPSJ1cmwoI3BldGFsQmx1ZSkiIHRyYW5zZm9ybT0icm90YXRlKDE0NCkiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTUiIHJ4PSI4LjUiIHJ5PSIxNC41IiBmaWxsPSJ1cmwoI3BldGFsQmx1ZSkiIHRyYW5zZm9ybT0icm90YXRlKDIxNikiLz4KICAgICAgPGVsbGlwc2UgY3g9IjAiIGN5PSItMTUiIHJ4PSI4LjUiIHJ5PSIxNC41IiBmaWxsPSJ1cmwoI3BldGFsQmx1ZSkiIHRyYW5zZm9ybT0icm90YXRlKDI4OCkiLz4KICAgICAgPGNpcmNsZSBjeD0iMCIgY3k9IjAiIHI9IjYuNSIgZmlsbD0iI2ZmZjFjMiIvPgogICAgPC9nPgogIDwvZz4KCiAgPCEtLSA9PT09PSBidXR0ZXJmbHksIGxhcmdlc3QsIGhvdmVyaW5nIGFib3ZlIHRoZSBib3VxdWV0ID09PT09IC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI1NSwyMzUpIHJvdGF0ZSgtMTIpIj4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTYiIHgyPSItNyIgeTI9Ii0xOSIgc3Ryb2tlPSIjOGE3YWEwIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8bGluZSB4MT0iMCIgeTE9Ii02IiB4Mj0iNyIgeTI9Ii0xOSIgc3Ryb2tlPSIjOGE3YWEwIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8Y2lyY2xlIGN4PSItNyIgY3k9Ii0xOSIgcj0iMS42IiBmaWxsPSIjOGE3YWEwIi8+CiAgICA8Y2lyY2xlIGN4PSI3IiBjeT0iLTE5IiByPSIxLjYiIGZpbGw9IiM4YTdhYTAiLz4KICAgIDwhLS0gdXBwZXIgd2luZ3MgLS0+CiAgICA8cGF0aCBkPSJNMCAtNCBDIC0yNiAtMzAsIC00NiAtNiwgLTIwIDE2IEMgLTEwIDIyLCAtMiAxMCwgMCAtNCBaIiBmaWxsPSJ1cmwoI3dpbmdQaW5rKSIvPgogICAgPHBhdGggZD0iTTAgLTQgQyAyNiAtMzAsIDQ2IC02LCAyMCAxNiBDIDEwIDIyLCAyIDEwLCAwIC00IFoiIGZpbGw9InVybCgjd2luZ1BpbmspIi8+CiAgICA8IS0tIGxvd2VyIHdpbmdzIC0tPgogICAgPHBhdGggZD0iTTAgMiBDIC0xOCAxOCwgLTI0IDMyLCAtNiAzMCBDIDIgMjYsIDMgMTIsIDAgMiBaIiBmaWxsPSJ1cmwoI3BldGFsUHVycGxlKSIvPgogICAgPHBhdGggZD0iTTAgMiBDIDE4IDE4LCAyNCAzMiwgNiAzMCBDIC0yIDI2LCAtMyAxMiwgMCAyIFoiIGZpbGw9InVybCgjcGV0YWxQdXJwbGUpIi8+CiAgICA8IS0tIHdpbmcgZG90cyAtLT4KICAgIDxjaXJjbGUgY3g9Ii0xNiIgY3k9Ii04IiByPSIyLjQiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNzUiLz4KICAgIDxjaXJjbGUgY3g9IjE2IiBjeT0iLTgiIHI9IjIuNCIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC43NSIvPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSI2IiByeD0iMi40IiByeT0iMTMiIGZpbGw9IiM1YjUyN2EiLz4KICA8L2c+CgogIDwhLS0gc21hbGwgY29tcGFuaW9uIGJ1dHRlcmZseSwgbWlkLWFpciwgdG9wLXJpZ2h0IG9mIHRoZSBib3VxdWV0IC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMzMCwxNzUpIHJvdGF0ZSgxMCkiIG9wYWNpdHk9IjAuOTUiPgogICAgPGxpbmUgeDE9IjAiIHkxPSItNCIgeDI9Ii01IiB5Mj0iLTEzIiBzdHJva2U9IiM4YTdhYTAiIHN0cm9rZS13aWR0aD0iMS4zIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxsaW5lIHgxPSIwIiB5MT0iLTQiIHgyPSI1IiB5Mj0iLTEzIiBzdHJva2U9IiM4YTdhYTAiIHN0cm9rZS13aWR0aD0iMS4zIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0wIC0zIEMgLTE3IC0yMCwgLTMwIC00LCAtMTMgMTEgQyAtNyAxNSwgLTEgNywgMCAtMyBaIiBmaWxsPSJ1cmwoI3dpbmdCbHVlKSIgdHJhbnNmb3JtPSJzY2FsZSgwLjc4KSIvPgogICAgPHBhdGggZD0iTTAgLTMgQyAxNyAtMjAsIDMwIC00LCAxMyAxMSBDIDcgMTUsIDEgNywgMCAtMyBaIiBmaWxsPSJ1cmwoI3dpbmdCbHVlKSIgdHJhbnNmb3JtPSJzY2FsZSgwLjc4KSIvPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSI0IiByeD0iMS44IiByeT0iOSIgZmlsbD0iIzViNTI3YSIgdHJhbnNmb3JtPSJzY2FsZSgwLjc4KSIvPgogIDwvZz4KCiAgPCEtLSBzY2F0dGVyZWQgdGlueSBwZXRhbHMgLyBzcGFya2xlIGRvdHMgZm9yIHRleHR1cmUgLS0+CiAgPGcgb3BhY2l0eT0iMC41NSI+CiAgICA8Y2lyY2xlIGN4PSIxOTAiIGN5PSIzODAiIHI9IjMiIGZpbGw9IiNmMGEzY2YiLz4KICAgIDxjaXJjbGUgY3g9IjE3MCIgY3k9IjM2MCIgcj0iMi4yIiBmaWxsPSIjYmI5OGVjIi8+CiAgICA8Y2lyY2xlIGN4PSIzNjUiIGN5PSIyMzAiIHI9IjIuNiIgZmlsbD0iIzlkYzBlZSIvPgogICAgPGNpcmNsZSBjeD0iMTIwIiBjeT0iMjkwIiByPSIyIiBmaWxsPSIjYmNkOWE4Ii8+CiAgICA8Y2lyY2xlIGN4PSIyMzAiIGN5PSIzMzAiIHI9IjIuNCIgZmlsbD0iI2YwYzU2OSIvPgogIDwvZz4KPC9zdmc+Cg==');
 }
 
 * { box-sizing: border-box; }
@@ -122,6 +125,41 @@ button, input, select { font-family: inherit; font-size: inherit; }
 }
 
 /* ============================================================================
+   TRANG TRÍ HOA & BƯỚM — nền màn hình đăng nhập
+   (chỉ trang trí góc màn hình, không che nội dung/thẻ đăng nhập)
+   ============================================================================ */
+#login-screen { position: relative; overflow: hidden; }
+#login-screen::before,
+#login-screen::after {
+  content: "";
+  position: fixed;
+  background: var(--decor-flowers) no-repeat center / contain;
+  pointer-events: none;
+  z-index: 0;
+}
+#login-screen::before {
+  width: 420px;
+  height: 420px;
+  bottom: -30px;
+  right: -30px;
+  opacity: 0.95;
+}
+#login-screen::after {
+  width: 260px;
+  height: 260px;
+  top: -30px;
+  left: -30px;
+  transform: rotate(180deg);
+  opacity: 0.55;
+}
+.login-card { position: relative; z-index: 1; }
+
+@media (max-width: 520px) {
+  #login-screen::before { width: 280px; height: 280px; }
+  #login-screen::after { width: 170px; height: 170px; }
+}
+
+/* ============================================================================
    APP SHELL — sidebar tối (navy) + khu vực nội dung sáng
    ============================================================================ */
 :root {
@@ -133,8 +171,21 @@ button, input, select { font-family: inherit; font-size: inherit; }
   --sidebar-width: 210px;
 }
 
-#app { min-height: 100vh; }
+#app { min-height: 100vh; position: relative; z-index: 0; }
 .app-shell { display: flex; min-height: 100vh; }
+
+/* Hoa & bướm trang trí góc màn hình khi đã đăng nhập — mờ, nằm dưới mọi khối dữ liệu
+   nên không bao giờ che số liệu (khối panel/bảng nào phủ lên trên sẽ tự động che nó). */
+#app::before,
+#app::after {
+  content: "";
+  position: fixed;
+  background: var(--decor-flowers) no-repeat center / contain;
+  pointer-events: none;
+  z-index: -1;
+}
+#app::before { width: 320px; height: 320px; bottom: -20px; right: -20px; opacity: 0.55; }
+#app::after { width: 200px; height: 200px; top: -20px; left: -20px; transform: rotate(180deg); opacity: 0.28; }
 
 /* ---- Sidebar ---- */
 .sidebar {
@@ -148,12 +199,26 @@ button, input, select { font-family: inherit; font-size: inherit; }
   height: 100vh;
   overflow-y: auto;
 }
+/* hoa nhỏ mờ ở chân sidebar, chỉ để trang trí — mix-blend-mode giúp màu pastel nổi nhẹ trên nền navy */
+.sidebar::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 200px;
+  background: var(--decor-flowers) no-repeat center bottom / 160px 160px;
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 20px 18px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+  z-index: 1;
 }
 .sidebar-brand .login-logo { margin: 0; width: 34px; height: 34px; border-radius: 8px; flex: none; }
 .sidebar-title {
@@ -162,7 +227,7 @@ button, input, select { font-family: inherit; font-size: inherit; }
   color: #fff;
   line-height: 1.3;
 }
-.side-nav { display: flex; flex-direction: column; gap: 2px; padding: 14px 10px; }
+.side-nav { display: flex; flex-direction: column; gap: 2px; padding: 14px 10px; position: relative; z-index: 1; }
 .side-nav .tab-btn {
   display: flex;
   align-items: center;
@@ -263,6 +328,9 @@ main { flex: 1; padding: 20px 24px 60px; max-width: 1400px; width: 100%; margin:
   .sidebar { width: 100%; flex: none; height: auto; position: static; }
   .side-nav { flex-direction: row; overflow-x: auto; padding: 10px 14px 14px; }
   .side-nav .tab-btn { flex: none; }
+  .sidebar::after { display: none; }
+  #app::before { width: 200px; height: 200px; }
+  #app::after { display: none; }
 }
 
 /* ============================================================================
