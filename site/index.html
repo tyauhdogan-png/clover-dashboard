@@ -14,7 +14,8 @@
   <form class="login-card" id="login-form">
     <div class="login-logo">KD</div>
     <h1 id="login-title">Dashboard Kinh Doanh</h1>
-    <p class="sub">Nhập mật khẩu chung để tiếp tục</p>
+    <p class="sub">Đăng nhập bằng tài khoản của bạn</p>
+    <input type="text" id="login-username" placeholder="Tên đăng nhập" autocomplete="username" required />
     <input type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password" required />
     <button type="submit" id="login-btn">Đăng nhập</button>
     <div class="login-error" id="login-error"></div>
@@ -32,6 +33,7 @@
       </div>
     </div>
     <div class="topbar-right">
+      <span class="user-badge" id="user-badge"></span>
       <button class="btn" id="refresh-btn">↻ Làm mới</button>
       <button class="btn" id="logout-btn">Đăng xuất</button>
     </div>
