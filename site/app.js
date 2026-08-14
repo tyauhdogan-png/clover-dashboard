@@ -82,18 +82,27 @@
   // --------------------------------------------------------------------------
   // AUTH
   // --------------------------------------------------------------------------
-  function isAuthed() {
+  function getSession() {
     try {
       var raw = sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return false;
+      if (!raw) return null;
       var obj = JSON.parse(raw);
-      return !!(obj && obj.token);
-    } catch (e) { return false; }
+      return (obj && obj.token) ? obj : null;
+    } catch (e) { return null; }
   }
+  function isAuthed() { return !!getSession(); }
 
   function showApp() {
     $('login-screen').classList.add('hidden');
     $('app').classList.remove('hidden');
+    var session = getSession();
+    var badge = $('user-badge');
+    if (badge) {
+      badge.innerHTML = session
+        ? 'Xin chào, <b>' + escapeHtml(session.hoTen || session.username || '') + '</b>' +
+          (session.vaiTro === 'admin' ? ' · Quản trị' : '')
+        : '';
+    }
     loadAll();
   }
 
@@ -104,6 +113,7 @@
 
   $('login-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
+    var username = $('login-username').value;
     var pwd = $('login-password').value;
     var btn = $('login-btn');
     var err = $('login-error');
@@ -112,11 +122,17 @@
     btn.textContent = 'Đang kiểm tra…';
     fetch('/.netlify/functions/login', {
       method: 'POST',
-      body: JSON.stringify({ password: pwd })
+      body: JSON.stringify({ username: username, password: pwd })
     }).then(function (res) { return res.json().then(function (j) { return { status: res.status, body: j }; }); })
       .then(function (r) {
         if (r.body && r.body.ok) {
-          sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token: r.body.token, ts: Date.now() }));
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+            token: r.body.token,
+            username: r.body.username,
+            hoTen: r.body.hoTen,
+            vaiTro: r.body.vaiTro,
+            ts: Date.now()
+          }));
           showApp();
         } else {
           err.textContent = (r.body && r.body.error) || 'Đăng nhập thất bại';
