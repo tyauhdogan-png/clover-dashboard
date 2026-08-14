@@ -11,7 +11,7 @@ window.APP_CONFIG = {
   API_KEY: 'thay-doi-chuoi-nay',
 
   // Tên công ty / nhóm hiển thị trên header (tuỳ chỉnh tự do)
- APP_TITLE: 'TEAM CLOVER CPC1HN',
+ APP_TITLE: 'TEAM CLOVER CPC1HN-SS TẠ HOÀNG DUY',
 
   // Ngưỡng màu cho thanh tiến độ % hoàn thành
   THRESHOLDS: { good: 0.8, warn: 0.4 }
