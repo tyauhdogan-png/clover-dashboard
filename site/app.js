@@ -573,16 +573,35 @@
     });
   }
 
-  // Hiển thị nguyên văn giá trị lấy từ sheet (giống cột "Kế hoạch"), KHÔNG
-  // format lại qua Intl.NumberFormat — nếu ô "Thực hiện" trên Google Sheet
-  // được gõ tay có dấu phẩy phân cách hàng nghìn (vd "180,000,000" dạng
-  // text), Intl.NumberFormat.format() sẽ trả về "NaN" vì nó ép chuỗi đó
-  // thành Number trước, và "180,000,000" không phải là số hợp lệ.
+  // Ô "Thực hiện" (chỉ tiêu) và "Điểm đạt được" (điểm cộng thêm): server luôn
+  // trả về giá trị đã được PARSE SẴN thành số (hoặc null) — không còn là
+  // chuỗi thô lấy nguyên văn từ ô Sheet như trước — nên hiển thị an toàn qua
+  // Intl.NumberFormat('vi-VN') (tự thêm dấu chấm phân cách hàng nghìn, vd
+  // "10.000.000") khi chỉ xem (không sửa được). Khi có thể sửa thì vẫn dùng
+  // input type=number (không chèn dấu chấm vào đó vì trình duyệt sẽ từ chối).
   function kpiValueCellHtml(rowType, rowIndex, value, canEdit) {
+    if (!canEdit) {
+      if (value === null || value === undefined || value === '') return '—';
+      var num = (typeof value === 'number') ? value : parseFloat(value);
+      return escapeHtml(isNaN(num) ? String(value) : fmtNum.format(num));
+    }
     var v = (value === null || value === undefined) ? '' : value;
-    if (!canEdit) return v === '' ? '—' : escapeHtml(v);
     return '<input type="number" step="any" inputmode="decimal" class="kpi-input" ' +
       'data-row-type="' + rowType + '" data-row-index="' + rowIndex + '" value="' + escapeHtml(v) + '" />';
+  }
+
+  // Cột "Kế hoạch" là VĂN BẢN lấy nguyên từ Sheet, có thể là số tiền lớn
+  // ("250,000,000") hoặc số kèm đơn vị ("2 BỆNH VIỆN", "100 ỐNG"). Hàm này chỉ
+  // định dạng lại PHẦN SỐ ở đầu chuỗi theo kiểu Việt Nam (dấu chấm phân cách
+  // hàng nghìn, vd "250.000.000"), giữ nguyên phần đơn vị/chữ phía sau.
+  function kpiFmtKeHoach(raw) {
+    var s = String(raw === null || raw === undefined ? '' : raw).trim();
+    if (!s) return '';
+    var m = s.match(/^(-?[\d.,]+)(.*)$/);
+    if (!m) return s;
+    var n = parseFloat(m[1].replace(/,/g, ''));
+    if (isNaN(n)) return s;
+    return fmtNum.format(n) + m[2];
   }
 
   function kpiGhiChuCellHtml(rowIndex, value, canEdit) {
@@ -609,7 +628,7 @@
   function kpiChiTieuRowHtml(c, canEdit, showLoai) {
     return '<tr>' +
       '<td>' + escapeHtml(showLoai && c.loai ? c.loai : c.chiTieu) + '</td>' +
-      '<td>' + escapeHtml(c.keHoach) + '</td>' +
+      '<td>' + escapeHtml(kpiFmtKeHoach(c.keHoach)) + '</td>' +
       '<td class="num">' + kpiValueCellHtml('chiTieu', c.rowIndex, c.thucHien, canEdit) + '</td>' +
       '<td class="num">' + fmtNum.format(c.diemKeHoach || 0) + '</td>' +
       '<td class="num">' + (c.diemThucHien === null || c.diemThucHien === undefined ? '—' : fmtNum.format(c.diemThucHien)) + '</td>' +
@@ -728,6 +747,19 @@
             '<td class="num">' + fmtNum.format(d.diemThucTe) + '</td></tr>';
         }).join('')
       : '<tr><td colspan="4" class="empty-state">Không có mục điểm trừ.</td></tr>';
+
+    // Tổng điểm cuối cùng dạng "940 điểm kpis / 1000 điểm kpis" — 1 mục RIÊNG
+    // ở cuối trang, sau khi đã cộng điểm cộng thêm và trừ điểm trừ, để nhân
+    // viên thấy ngay kết quả tổng mà không phải tự cộng trừ các mục phía trên.
+    var finalScoreEl = $('kpi-final-score');
+    if (finalScoreEl) {
+      var finalScore = kpiFinalScore(emp);
+      finalScoreEl.innerHTML =
+        '<span class="kpi-final-score-label">Tổng điểm KPI sau cộng/trừ</span>' +
+        '<span class="kpi-final-score-value">' + fmtNum.format(finalScore) + ' điểm kpis</span>' +
+        '<span class="kpi-final-score-sep">/</span>' +
+        '<span class="kpi-final-score-max">1000 điểm kpis</span>';
+    }
 
     $('kpi-save-status').textContent = '';
     $('kpi-save-status').className = 'kpi-save-status';
