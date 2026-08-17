@@ -712,9 +712,9 @@
     var dsKH = sumBy(doanhSoRows, 'diemKeHoach');
     var dsTH = sumBy(doanhSoRows, function (c) { return c.diemThucHien || 0; });
     $('table-kpi-doanhso').querySelector('tfoot').innerHTML =
-      '<tr><td colspan="3" class="kpi-total-label">Tổng nhóm Doanh số</td>' +
-      '<td class="num kpi-total-value">' + fmtNum.format(dsKH) + '</td>' +
-      '<td class="num kpi-total-value">' + fmtNum.format(dsTH) + '</td><td></td><td></td></tr>';
+      '<tr><td colspan="7" class="kpi-group-total-bar">Tổng nhóm Doanh số: <b>' +
+      fmtNum.format(dsTH) + ' / ' + fmtNum.format(dsKH) + '</b> điểm' +
+      (dsKH > 0 ? ' (' + fmtPct(dsTH / dsKH) + ')' : '') + '</td></tr>';
 
     // Nhóm 2 — Sản phẩm trọng tâm, tách theo từng sản phẩm (SUGAM-BFS,
     // PROPOFOL-BFS, hoặc bất kỳ sản phẩm nào khác nếu công ty đổi/thêm sau này)
