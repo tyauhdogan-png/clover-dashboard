@@ -577,17 +577,31 @@
   // trả về giá trị đã được PARSE SẴN thành số (hoặc null) — không còn là
   // chuỗi thô lấy nguyên văn từ ô Sheet như trước — nên hiển thị an toàn qua
   // Intl.NumberFormat('vi-VN') (tự thêm dấu chấm phân cách hàng nghìn, vd
-  // "10.000.000") khi chỉ xem (không sửa được). Khi có thể sửa thì vẫn dùng
-  // input type=number (không chèn dấu chấm vào đó vì trình duyệt sẽ từ chối).
+  // "10.000.000") khi chỉ xem (không sửa được). Khi có thể sửa thì dùng
+  // input type=text (chứ không phải type=number, vì trình duyệt sẽ từ chối
+  // ký tự dấu chấm trong ô number) để vẫn hiện được dấu chấm hàng nghìn ngay
+  // trong lúc sửa — xem thêm 2 hàm kpiParseVnNumber()/format lại khi
+  // focus/blur ở attachKpiInputHandlers().
   function kpiValueCellHtml(rowType, rowIndex, value, canEdit) {
     if (!canEdit) {
       if (value === null || value === undefined || value === '') return '—';
       var num = (typeof value === 'number') ? value : parseFloat(value);
       return escapeHtml(isNaN(num) ? String(value) : fmtNum.format(num));
     }
-    var v = (value === null || value === undefined) ? '' : value;
-    return '<input type="number" step="any" inputmode="decimal" class="kpi-input" ' +
+    var v = (value === null || value === undefined || value === '') ? '' : fmtNum.format(value);
+    return '<input type="text" inputmode="decimal" class="kpi-input kpi-input-number" ' +
       'data-row-type="' + rowType + '" data-row-index="' + rowIndex + '" value="' + escapeHtml(v) + '" />';
+  }
+
+  // Đổi qua lại giữa "500.000.000" (hiển thị, kiểu Việt Nam: dấu chấm ngăn
+  // hàng nghìn, dấu phẩy là phần thập phân) và số JS thật để gửi lên server/
+  // tính toán. Trả về null nếu không phải số hợp lệ (ô trống cũng ra null).
+  function kpiParseVnNumber(s) {
+    s = String(s === null || s === undefined ? '' : s).trim();
+    if (!s) return null;
+    s = s.replace(/\./g, '').replace(',', '.');
+    var n = parseFloat(s);
+    return isNaN(n) ? null : n;
   }
 
   // Cột "Kế hoạch" là VĂN BẢN lấy nguyên từ Sheet, có thể là số tiền lớn
@@ -774,8 +788,23 @@
   function attachKpiInputHandlers(emp) {
     var els = $('kpi-detail-panel').querySelectorAll('.kpi-input');
     els.forEach(function (el) {
-      var evt = el.tagName === 'SELECT' ? 'change' : 'change';
-      el.addEventListener(evt, function () {
+      // Ô số (Thực hiện / Điểm đạt được): bỏ dấu chấm khi bấm vào để gõ cho dễ
+      // (vd "500.000.000" -> "500000000"), rồi tự thêm lại dấu chấm khi rời ô
+      // (vd gõ xong -> "500.000.000") — thuần hiển thị, KHÔNG liên quan việc
+      // lưu (việc lưu đọc trực tiếp từ el.value tại thời điểm sự kiện "change",
+      // luôn parse đúng dù đang có dấu chấm hay không nhờ kpiParseVnNumber()).
+      if (el.classList.contains('kpi-input-number')) {
+        el.addEventListener('focus', function () {
+          var n = kpiParseVnNumber(el.value);
+          el.value = (n === null) ? '' : String(n);
+        });
+        el.addEventListener('blur', function () {
+          var n = kpiParseVnNumber(el.value);
+          el.value = (n === null) ? '' : fmtNum.format(n);
+        });
+      }
+
+      el.addEventListener('change', function () {
         var rowType = el.dataset.rowType;
         var rowIndex = +el.dataset.rowIndex;
         var rowMeta = kpiFindRowMeta(emp, rowType, rowIndex);
@@ -786,11 +815,13 @@
         } else if (rowType === 'diemTru') {
           newVal = el.value;
         } else {
-          newVal = el.value === '' ? 0 : parseFloat(el.value);
-          if (isNaN(newVal)) {
-            el.value = rowType === 'congThem' ? (rowMeta.diemThucHien || 0) : (rowMeta.thucHien != null ? rowMeta.thucHien : 0);
+          var parsed = el.value.trim() === '' ? 0 : kpiParseVnNumber(el.value);
+          if (parsed === null) {
+            var fallback = rowType === 'congThem' ? (rowMeta.diemThucHien || 0) : (rowMeta.thucHien != null ? rowMeta.thucHien : 0);
+            el.value = fmtNum.format(fallback);
             return;
           }
+          newVal = parsed;
         }
         saveKpiValue(emp.sheetName, rowType, rowIndex, newVal, el);
       });
