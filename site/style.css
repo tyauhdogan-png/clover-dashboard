@@ -552,11 +552,30 @@ tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
   margin: 12px 0 16px;
 }
 
+/* Ô tóm tắt "ĐẠT KPI" / "BỊ LIỆT KPI" + lý do, hiển thị ngay đầu chi tiết */
+.kpi-result-summary {
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-soft, #e1e0d9);
+}
+.kpi-result-summary.ok { background: rgba(12,163,12,0.07); border-color: rgba(12,163,12,0.3); }
+.kpi-result-summary.fail { background: rgba(208,59,59,0.07); border-color: rgba(208,59,59,0.3); }
+.kpi-result-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.kpi-result-score { font-size: 12.5px; color: var(--text-secondary); }
+.kpi-result-reasons { margin: 8px 0 0; padding-left: 20px; font-size: 12.5px; color: var(--status-critical); }
+.kpi-result-reasons li { margin-bottom: 3px; }
+
+.kpi-group-title { font-size: 14.5px; margin: 26px 0 10px; font-weight: 700; }
+.kpi-group-title:first-of-type { margin-top: 4px; }
+.kpi-subgroup-title { font-size: 13px; margin: 16px 0 8px; color: var(--text-secondary); font-weight: 700; }
+.kpi-subtotal-line { font-size: 12.5px; color: var(--text-secondary); margin: 4px 0 8px; }
+
 .kpi-detail-table tfoot td { border-top: 2px solid var(--sidebar-active-bg); padding: 10px 12px; }
 .kpi-total-label { text-align: right; font-weight: 700; }
 .kpi-total-value { font-weight: 700; }
 
-.kpi-bonus-title { font-size: 13.5px; margin: 22px 0 10px; }
+.kpi-bonus-title, .kpi-tru-title { font-size: 13.5px; margin: 22px 0 10px; }
 
 .kpi-input {
   width: 100px;
@@ -569,6 +588,25 @@ tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
 }
 .kpi-input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.15); outline: none; }
 .kpi-input:disabled { opacity: .6; }
+.kpi-input-text { width: 100%; min-width: 160px; text-align: left; }
+.kpi-select.kpi-input { width: auto; min-width: 120px; text-align: left; }
+
+/* Bảng xếp hạng huy chương trên panel "Tỉ lệ hoàn thành KPI" */
+.kpi-leaderboard { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.kpi-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-s);
+  background: var(--page-plane);
+  border: 1px solid var(--border-soft, #e1e0d9);
+}
+.kpi-leaderboard-row.top3 { background: rgba(250,178,25,0.08); border-color: rgba(250,178,25,0.3); }
+.kpi-medal { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.kpi-rank-num { font-size: 12.5px; font-weight: 700; color: var(--text-muted); width: 26px; text-align: center; flex-shrink: 0; }
+.kpi-leaderboard-name { font-size: 13px; font-weight: 600; flex: 1; }
+.kpi-leaderboard-score { font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
 .kpi-save-status {
   margin-top: 14px;
