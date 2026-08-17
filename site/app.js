@@ -451,8 +451,10 @@
   }
 
   // ==========================================================================
-  // TAB 2: KPI NHÂN VIÊN
+  // TAB 2: KPI NHÂN VIÊN — mỗi người có 1 bảng KPI chi tiết riêng, xem theo tên
   // ==========================================================================
+  var KPI_SELECTED_SHEET = null; // sheetName của nhân viên đang xem chi tiết
+
   function getKpiFiltered() {
     var q = $('kpi-filter-search').value.trim().toLowerCase();
     var emps = (RAW.kpi.employees || []);
@@ -460,34 +462,33 @@
     return emps.filter(function (e) { return e.hoTen.toLowerCase().indexOf(q) !== -1; });
   }
 
-  function checkinFor(emp) {
-    var list = RAW.checkin.employees || [];
-    var maNvNum = parseInt(emp.maNV, 10);
-    for (var i = 0; i < list.length; i++) {
-      var c = list[i];
-      if (c.maNV && !isNaN(maNvNum) && parseInt(c.maNV, 10) === maNvNum) return c;
-      if (c.hoTen && c.hoTen.trim() === emp.hoTen.trim()) return c;
-    }
-    return null;
+  function kpiNormName(s) { return String(s || '').trim().toUpperCase(); }
+
+  function kpiCanEdit(emp) {
+    var session = getSession();
+    if (!session || !emp) return false;
+    if (session.vaiTro === 'admin') return true;
+    return kpiNormName(emp.hoTen) === kpiNormName(session.hoTen);
   }
 
   function renderKpi() {
+    var all = RAW.kpi.employees || [];
     var emps = getKpiFiltered();
     setText('kpi-thang', RAW.kpi.thang || '');
 
-    var dat100 = emps.filter(function (e) { return e.tyLeTong >= 1; }).length;
-    var avgTyLe = emps.length ? sumBy(emps, 'tyLeTong') / emps.length : 0;
-    var totalTH = sumBy(emps, 'tongDiemThucHien');
-    var totalKH = sumBy(emps, 'tongDiemKeHoach');
+    var dat100 = all.filter(function (e) { return e.tyLeTong >= 1; }).length;
+    var avgTyLe = all.length ? sumBy(all, 'tyLeTong') / all.length : 0;
+    var totalTH = sumBy(all, 'tongDiemThucHien');
+    var totalKH = sumBy(all, 'tongDiemKeHoach');
 
     $('kpi-stats').innerHTML = [
-      statTile('Số nhân viên', fmtNum.format(emps.length)),
+      statTile('Số nhân viên', fmtNum.format(all.length)),
       statTile('Đạt/vượt 100% KPI', fmtNum.format(dat100)),
       statTile('Tỉ lệ TH/KH trung bình', fmtPct(avgTyLe), progressClass(avgTyLe)),
       statTile('Tổng điểm TH / KH nhóm', fmtNum.format(totalTH) + ' / ' + fmtNum.format(totalKH))
     ].join('');
 
-    var sorted = emps.slice().sort(function (a, b) { return b.tyLeTong - a.tyLeTong; });
+    var sorted = all.slice().sort(function (a, b) { return b.tyLeTong - a.tyLeTong; });
     var colors = sorted.map(function (e) {
       var cls = progressClass(e.tyLeTong);
       return cls === 'good' ? '#0ca30c' : (cls === 'warn' ? '#fab219' : '#d03b3b');
@@ -506,51 +507,171 @@
     });
 
     setText('kpi-row-count', '(' + fmtNum.format(emps.length) + ' người)');
-    renderKpiTableBody(emps);
-    attachSort('table-kpi', getKpiFiltered, renderKpiTableBody);
+    renderKpiPicker(emps);
+
+    // Nhân viên (không phải admin) mở tab KPI lần đầu -> tự chọn sẵn bảng của
+    // chính mình cho tiện, khỏi phải tự tìm trong danh sách.
+    if (!KPI_SELECTED_SHEET) {
+      var session = getSession();
+      if (session && session.vaiTro !== 'admin') {
+        var mine = all.filter(function (e) { return kpiNormName(e.hoTen) === kpiNormName(session.hoTen); })[0];
+        if (mine) KPI_SELECTED_SHEET = mine.sheetName;
+      }
+    }
+    if (KPI_SELECTED_SHEET && !all.some(function (e) { return e.sheetName === KPI_SELECTED_SHEET; })) {
+      KPI_SELECTED_SHEET = null;
+    }
+    renderKpiDetail();
   }
 
-  function renderKpiTableBody(emps) {
-    var body = $('table-kpi').querySelector('tbody');
-    if (!emps.length) { body.innerHTML = '<tr><td colspan="8" class="empty-state">Không có dữ liệu.</td></tr>'; return; }
-    body.innerHTML = emps.map(function (e, i) {
-      return '<tr class="emp-row" data-idx="' + i + '"><td>' + escapeHtml(e.hoTen) + ' <span class="muted small">(' + escapeHtml(e.maNV) + ')</span></td>' +
-        '<td>' + escapeHtml(e.vaiTro) + '</td>' +
-        '<td class="num">' + fmtPct(e.keDon.tyLe) + '</td>' +
-        '<td class="num">' + fmtPct(e.thau.tyLe) + '</td>' +
-        '<td class="num">' + fmtPct(e.spTrongTam.tyLe) + '</td>' +
-        '<td class="num">' + fmtPct(e.nhanSu.tyLe) + '</td>' +
-        '<td>' + progressCellHtml(e.tyLeTong) + '</td>' +
-        '<td class="num">' + escapeHtml(e.xepHang || '—') + '</td></tr>';
+  function renderKpiPicker(emps) {
+    var box = $('kpi-emp-picker');
+    if (!emps.length) { box.innerHTML = '<div class="empty-state small">Không tìm thấy nhân viên phù hợp.</div>'; return; }
+    box.innerHTML = emps.map(function (e) {
+      var cls = progressClass(e.tyLeTong || 0);
+      var active = e.sheetName === KPI_SELECTED_SHEET ? ' active' : '';
+      return '<button type="button" class="kpi-emp-chip ' + cls + active + '" data-sheet="' + escapeHtml(e.sheetName) + '">' +
+        '<span class="kpi-emp-name">' + escapeHtml(e.hoTen) + '</span>' +
+        '<span class="kpi-emp-pct">' + fmtPct(e.tyLeTong) + '</span></button>';
     }).join('');
-    body.querySelectorAll('tr.emp-row').forEach(function (tr) {
-      tr.style.cursor = 'pointer';
-      tr.addEventListener('click', function () { toggleEmpDetail(tr, emps[+tr.dataset.idx]); });
+    box.querySelectorAll('.kpi-emp-chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        KPI_SELECTED_SHEET = btn.dataset.sheet;
+        renderKpiPicker(getKpiFiltered());
+        renderKpiDetail();
+      });
     });
   }
 
-  function toggleEmpDetail(tr, emp) {
-    var next = tr.nextElementSibling;
-    if (next && next.classList.contains('emp-detail-row')) { next.remove(); return; }
-    document.querySelectorAll('.emp-detail-row').forEach(function (r) { r.remove(); });
-    var activity = checkinFor(emp);
-    var row = document.createElement('tr');
-    row.className = 'emp-detail-row';
-    row.innerHTML = '<td colspan="8"><div class="detail-grid">' +
-      detailMetric('Doanh số kê đơn', fmtVnd(emp.keDon.thucHien) + ' / ' + fmtVnd(emp.keDon.keHoach), fmtPct(emp.keDon.tyLe)) +
-      detailMetric('Doanh số thầu', fmtVnd(emp.thau.thucHien) + ' / ' + fmtVnd(emp.thau.keHoach), fmtPct(emp.thau.tyLe)) +
-      detailMetric('Điểm SP trọng tâm', emp.spTrongTam.diemThucHien + ' / ' + emp.spTrongTam.diemKeHoach, fmtPct(emp.spTrongTam.tyLe)) +
-      detailMetric('Điểm nhân sự', emp.nhanSu.diemThucHien + ' / ' + emp.nhanSu.diemKeHoach, fmtPct(emp.nhanSu.tyLe)) +
-      detailMetric('Điểm coaching call', emp.coaching.diemThucHien + ' / ' + emp.coaching.diemKeHoach, fmtPct(emp.coaching.tyLe)) +
-      detailMetric('Điểm cộng / trừ', fmtNum.format(emp.congTru), '') +
-      detailMetric('Tổng điểm TH/KH', fmtNum.format(emp.tongDiemThucHien) + ' / ' + fmtNum.format(emp.tongDiemKeHoach), fmtPct(emp.tyLeTong)) +
-      (activity ? detailMetric('Hoạt động viếng thăm (Jan–Jul)', fmtNum.format(activity.tongLuotCheckin) + ' lượt checkin', fmtNum.format(activity.soKhachDaTham) + ' khách hàng đã thăm') : '') +
-      (emp.ghiChu ? detailMetric('Ghi chú', emp.ghiChu, '') : '') +
-      '</div></td>';
-    tr.parentNode.insertBefore(row, tr.nextSibling);
+  function kpiThucHienCellHtml(rowType, idx, value, canEdit) {
+    var v = (value === null || value === undefined) ? '' : value;
+    // Hiển thị nguyên văn giá trị lấy từ sheet (giống cột "Kế hoạch"), KHÔNG
+    // format lại qua Intl.NumberFormat — nếu ô "Thực hiện" trên Google Sheet
+    // được gõ tay có dấu phẩy phân cách hàng nghìn (vd "180,000,000" dạng
+    // text), Intl.NumberFormat.format() sẽ trả về "NaN" vì nó ép chuỗi đó
+    // thành Number trước, và "180,000,000" không phải là số hợp lệ.
+    if (!canEdit) return v === '' ? '—' : escapeHtml(v);
+    return '<input type="number" step="any" inputmode="decimal" class="kpi-input" ' +
+      'data-row-type="' + rowType + '" data-idx="' + idx + '" value="' + escapeHtml(v) + '" />';
   }
-  function detailMetric(k, v, v2) {
-    return '<div class="detail-metric"><div class="k">' + escapeHtml(k) + '</div><div class="v">' + v + '</div>' + (v2 ? '<div class="v2">' + v2 + '</div>' : '') + '</div>';
+
+  // Ghép hoạt động viếng thăm khách hàng (checkin GPS) vào đúng nhân viên
+  // đang xem chi tiết KPI, khớp theo họ tên (dữ liệu checkin và KPI nằm ở 2
+  // sheet khác nhau, không có ID chung nên khớp theo tên đã chuẩn hoá).
+  function kpiFindCheckin(emp) {
+    var list = (RAW.checkin && RAW.checkin.employees) || [];
+    return list.filter(function (c) { return kpiNormName(c.hoTen) === kpiNormName(emp.hoTen); })[0] || null;
+  }
+
+  function renderKpiDetail() {
+    var panel = $('kpi-detail-panel');
+    if (!KPI_SELECTED_SHEET) { panel.style.display = 'none'; return; }
+    var emp = (RAW.kpi.employees || []).filter(function (e) { return e.sheetName === KPI_SELECTED_SHEET; })[0];
+    if (!emp) { panel.style.display = 'none'; return; }
+    panel.style.display = '';
+
+    var canEdit = kpiCanEdit(emp);
+    $('kpi-detail-header').innerHTML =
+      '<div class="kpi-detail-title">' + escapeHtml(emp.hoTen) +
+      '<span class="chip small ' + (canEdit ? 'good' : 'muted') + '" style="margin-left:8px;">' +
+      (canEdit ? 'Bạn có thể sửa' : 'Chỉ xem') + '</span></div>' +
+      '<div class="kpi-detail-meta">' +
+      [emp.thang, emp.thamNien ? 'Thâm niên: ' + emp.thamNien : '', emp.nhom ? 'Nhóm: ' + emp.nhom : '', emp.ss ? 'SS: ' + emp.ss : '']
+        .filter(Boolean).map(escapeHtml).join(' · ') + '</div>';
+
+    var checkin = kpiFindCheckin(emp);
+    var checkinEl = $('kpi-checkin-summary');
+    if (checkinEl) {
+      checkinEl.innerHTML = checkin
+        ? 'Hoạt động thăm khách hàng: <b>' + fmtNum.format(checkin.tongLuotCheckin) + '</b> lượt checkin · <b>' +
+          fmtNum.format(checkin.soKhachDaTham) + '</b> khách đã ghé · 7 ngày qua: <b>' + fmtNum.format(checkin.luot7Ngay) +
+          '</b> · 30 ngày qua: <b>' + fmtNum.format(checkin.luot30Ngay) + '</b>'
+        : 'Chưa có dữ liệu checkin thăm khách hàng cho nhân viên này.';
+    }
+
+    var body = $('table-kpi-detail').querySelector('tbody');
+    if (!emp.chiTieu.length) {
+      body.innerHTML = '<tr><td colspan="6" class="empty-state">Chưa có chỉ tiêu nào trong bảng này.</td></tr>';
+    } else {
+      body.innerHTML = emp.chiTieu.map(function (c, i) {
+        return '<tr>' +
+          '<td>' + escapeHtml(c.chiTieu) + '</td>' +
+          '<td>' + escapeHtml(c.keHoach) + '</td>' +
+          '<td class="num">' + kpiThucHienCellHtml('chiTieu', i, c.thucHien, canEdit) + '</td>' +
+          '<td class="num">' + fmtNum.format(c.diemKeHoach || 0) + '</td>' +
+          '<td class="num">' + (c.diemThucHien === null || c.diemThucHien === undefined ? '—' : fmtNum.format(c.diemThucHien)) + '</td>' +
+          '<td>' + escapeHtml(c.vuotMax) + '</td></tr>';
+      }).join('');
+    }
+    var foot = $('table-kpi-detail').querySelector('tfoot');
+    foot.innerHTML = '<tr><td colspan="3" class="kpi-total-label">TỔNG (1000 ĐIỂM)</td>' +
+      '<td class="num kpi-total-value">' + fmtNum.format(emp.tongDiemKeHoach) + '</td>' +
+      '<td class="num kpi-total-value">' + fmtNum.format(emp.tongDiemThucHien) + '</td><td></td></tr>';
+
+    var bonusBody = $('table-kpi-bonus').querySelector('tbody');
+    if (!emp.congThem.length) {
+      bonusBody.innerHTML = '<tr><td colspan="3" class="empty-state">Không có mục điểm cộng thêm.</td></tr>';
+    } else {
+      bonusBody.innerHTML = emp.congThem.map(function (c, i) {
+        return '<tr><td>' + escapeHtml(c.moTa) + '</td><td>' + escapeHtml(c.diemToiDa) + '</td>' +
+          '<td class="num">' + kpiThucHienCellHtml('congThem', i, c.diemThucHien, canEdit) + '</td></tr>';
+      }).join('');
+    }
+
+    $('kpi-save-status').textContent = '';
+    $('kpi-save-status').className = 'kpi-save-status';
+    if (canEdit) attachKpiInputHandlers(emp);
+  }
+
+  function attachKpiInputHandlers(emp) {
+    var inputs = $('kpi-detail-panel').querySelectorAll('.kpi-input');
+    inputs.forEach(function (input) {
+      input.addEventListener('change', function () {
+        var rowType = input.dataset.rowType;
+        var idx = +input.dataset.idx;
+        var rowMeta = rowType === 'chiTieu' ? emp.chiTieu[idx] : emp.congThem[idx];
+        if (!rowMeta) return;
+        var newVal = input.value === '' ? 0 : parseFloat(input.value);
+        if (isNaN(newVal)) { input.value = rowMeta.thucHien != null ? rowMeta.thucHien : (rowMeta.diemThucHien || 0); return; }
+        saveKpiValue(emp.sheetName, rowType, rowMeta.rowIndex, newVal, input);
+      });
+    });
+  }
+
+  function saveKpiValue(sheetName, rowType, rowIndex, thucHien, inputEl) {
+    var statusEl = $('kpi-save-status');
+    statusEl.textContent = 'Đang lưu…';
+    statusEl.className = 'kpi-save-status';
+    if (inputEl) inputEl.disabled = true;
+    fetch('/.netlify/functions/kpi', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ sheetName: sheetName, rowType: rowType, rowIndex: rowIndex, thucHien: thucHien })
+    })
+      .then(function (res) { return res.json().then(function (j) { return { status: res.status, body: j }; }); })
+      .then(function (r) {
+        if (!r.body || !r.body.ok) throw new Error((r.body && r.body.error) || 'Lưu thất bại');
+        var idx = -1;
+        for (var i = 0; i < RAW.kpi.employees.length; i++) {
+          if (RAW.kpi.employees[i].sheetName === sheetName) { idx = i; break; }
+        }
+        if (idx !== -1) RAW.kpi.employees[idx] = r.body.data;
+        // renderKpi() -> renderKpiDetail() luôn xoá trắng #kpi-save-status khi vẽ
+        // lại (để dọn trạng thái "Đang lưu…" cũ), nên PHẢI render xong rồi mới
+        // ghi thông báo "Đã lưu" — nếu làm ngược lại, thông báo bị xoá ngay lập
+        // tức trong cùng một lượt và người dùng sẽ không thấy xác nhận lưu thành công.
+        renderKpi();
+        var doneEl = $('kpi-save-status');
+        doneEl.textContent = 'Đã lưu lúc ' + new Date().toLocaleTimeString('vi-VN');
+        doneEl.className = 'kpi-save-status ok';
+      })
+      .catch(function (err) {
+        statusEl.textContent = 'Lỗi: ' + err.message;
+        statusEl.className = 'kpi-save-status error';
+      })
+      .finally(function () {
+        if (inputEl) inputEl.disabled = false;
+      });
   }
 
   // ==========================================================================
@@ -677,7 +798,7 @@
   var CHAT = { thread: null, pollTimer: null, loading: false, contactsLoaded: false };
   var CHAT_POLL_MS = 12000;
 
-  function chatAuthHeader() {
+  function authHeader() {
     var session = getSession();
     return session ? { 'Authorization': 'Bearer ' + session.token } : {};
   }
@@ -713,7 +834,7 @@
   function loadChatContacts() {
     var list = $('chat-contacts-list');
     list.innerHTML = '<div class="empty-state small">Đang tải…</div>';
-    fetch('/.netlify/functions/messages?action=threads', { headers: chatAuthHeader() })
+    fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
       .then(function (res) { return res.json(); })
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách');
@@ -753,7 +874,7 @@
     if (!CHAT.thread || CHAT.loading) return;
     CHAT.loading = true;
     var url = '/.netlify/functions/messages?action=list&thread=' + encodeURIComponent(CHAT.thread);
-    fetch(url, { headers: chatAuthHeader() })
+    fetch(url, { headers: authHeader() })
       .then(function (res) { return res.json(); })
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải tin nhắn');
@@ -812,7 +933,7 @@
     btn.disabled = true;
     fetch('/.netlify/functions/messages', {
       method: 'POST',
-      headers: Object.assign({ 'Content-Type': 'application/json' }, chatAuthHeader()),
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
       body: JSON.stringify({ thread: CHAT.thread, text: text })
     })
       .then(function (res) { return res.json(); })
