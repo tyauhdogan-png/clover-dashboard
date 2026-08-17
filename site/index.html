@@ -130,6 +130,8 @@
       <div class="panel">
         <h2>Tỉ lệ hoàn thành KPI theo nhân viên — <span id="kpi-thang"></span></h2>
         <div class="chart-box tall"><canvas id="chart-kpi-tyle"></canvas></div>
+        <h3 class="kpi-subgroup-title">Bảng xếp hạng (theo tổng điểm cuối cùng)</h3>
+        <div class="kpi-leaderboard" id="kpi-leaderboard"></div>
       </div>
 
       <div class="panel">
@@ -140,21 +142,28 @@
       <div class="panel" id="kpi-detail-panel" style="display:none;">
         <div class="kpi-detail-header" id="kpi-detail-header"></div>
         <div class="kpi-checkin-summary" id="kpi-checkin-summary"></div>
+        <div class="kpi-result-summary" id="kpi-result-summary"></div>
 
+        <h3 class="kpi-group-title">Nhóm 1 · Doanh số</h3>
         <div class="table-wrap">
-          <table class="data-table kpi-detail-table" id="table-kpi-detail">
+          <table class="data-table kpi-detail-table" id="table-kpi-doanhso">
             <thead><tr>
               <th>Chỉ tiêu</th>
               <th>Kế hoạch</th>
               <th class="num">Thực hiện</th>
-              <th class="num">Điểm KPIs kế hoạch</th>
-              <th class="num">Điểm KPIs thực hiện</th>
+              <th class="num">Điểm KH</th>
+              <th class="num">Điểm TH</th>
               <th>Vượt max</th>
+              <th>Ghi chú</th>
             </tr></thead>
             <tbody></tbody>
             <tfoot></tfoot>
           </table>
         </div>
+
+        <h3 class="kpi-group-title">Nhóm 2 · Sản phẩm trọng tâm</h3>
+        <div id="kpi-sp-groups"></div>
+        <div class="kpi-subtotal-line" id="kpi-sp-subtotal"></div>
 
         <h3 class="kpi-bonus-title">Điểm cộng thêm</h3>
         <div class="table-wrap">
@@ -163,6 +172,19 @@
               <th>Mô tả</th>
               <th>Điểm tối đa</th>
               <th class="num">Điểm đạt được</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <h3 class="kpi-tru-title">Điểm trừ KPI</h3>
+        <div class="table-wrap">
+          <table class="data-table kpi-detail-table" id="table-kpi-tru">
+            <thead><tr>
+              <th>Mục</th>
+              <th>Trạng thái</th>
+              <th class="num">Mức trừ</th>
+              <th class="num">Điểm trừ thực tế</th>
             </tr></thead>
             <tbody></tbody>
           </table>
