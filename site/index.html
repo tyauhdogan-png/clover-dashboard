@@ -128,27 +128,47 @@
       <div class="stat-grid" id="kpi-stats"></div>
 
       <div class="panel">
-        <h2>Tỉ lệ thực hiện / kế hoạch (%) theo nhân viên — <span id="kpi-thang"></span></h2>
+        <h2>Tỉ lệ hoàn thành KPI theo nhân viên — <span id="kpi-thang"></span></h2>
         <div class="chart-box tall"><canvas id="chart-kpi-tyle"></canvas></div>
       </div>
 
       <div class="panel">
-        <h2>Bảng KPI theo nhân viên <span class="count" id="kpi-row-count"></span></h2>
+        <h2>Chọn nhân viên để xem chi tiết KPI <span class="count" id="kpi-row-count"></span></h2>
+        <div class="kpi-emp-picker" id="kpi-emp-picker"></div>
+      </div>
+
+      <div class="panel" id="kpi-detail-panel" style="display:none;">
+        <div class="kpi-detail-header" id="kpi-detail-header"></div>
+        <div class="kpi-checkin-summary" id="kpi-checkin-summary"></div>
+
         <div class="table-wrap">
-          <table class="data-table" id="table-kpi">
+          <table class="data-table kpi-detail-table" id="table-kpi-detail">
             <thead><tr>
-              <th data-sort="hoTen">Nhân viên</th>
-              <th data-sort="vaiTro">Vai trò</th>
-              <th class="num" data-sort="keDon.tyLe">Kê đơn %</th>
-              <th class="num" data-sort="thau.tyLe">Thầu %</th>
-              <th class="num" data-sort="spTrongTam.tyLe">SP trọng tâm %</th>
-              <th class="num" data-sort="nhanSu.tyLe">Nhân sự %</th>
-              <th data-sort="tyLeTong">Tổng điểm TH/KH</th>
-              <th class="num" data-sort="xepHang">Xếp hạng</th>
+              <th>Chỉ tiêu</th>
+              <th>Kế hoạch</th>
+              <th class="num">Thực hiện</th>
+              <th class="num">Điểm KPIs kế hoạch</th>
+              <th class="num">Điểm KPIs thực hiện</th>
+              <th>Vượt max</th>
+            </tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+
+        <h3 class="kpi-bonus-title">Điểm cộng thêm</h3>
+        <div class="table-wrap">
+          <table class="data-table kpi-detail-table" id="table-kpi-bonus">
+            <thead><tr>
+              <th>Mô tả</th>
+              <th>Điểm tối đa</th>
+              <th class="num">Điểm đạt được</th>
             </tr></thead>
             <tbody></tbody>
           </table>
         </div>
+
+        <div class="kpi-save-status" id="kpi-save-status"></div>
       </div>
     </section>
 
