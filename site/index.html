@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>TEAM CLOVER CPC1HN</title>
 <link rel="stylesheet" href="style.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<!-- Chart.js được đóng gói NGAY TRONG site (vendor/chart.umd.min.js) thay vì tải
+     từ CDN ngoài (cdnjs) — trước đây nếu mạng của người dùng chặn/không vào
+     được CDN đó (hay gặp với mạng công ty/mạng di động ở VN) thì biểu đồ toàn
+     bộ trang bị trống, chỉ hiện dòng "Không tải được thư viện biểu đồ". Giờ
+     Chart.js nằm cùng domain với chính trang web nên luôn tải được. -->
+<script src="vendor/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -189,6 +194,8 @@
             <tbody></tbody>
           </table>
         </div>
+
+        <div class="kpi-final-score" id="kpi-final-score"></div>
 
         <div class="kpi-save-status" id="kpi-save-status"></div>
       </div>
