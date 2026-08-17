@@ -451,9 +451,12 @@
   }
 
   // ==========================================================================
-  // TAB 2: KPI NHÂN VIÊN — mỗi người có 1 bảng KPI chi tiết riêng, xem theo tên
+  // TAB 2: KPI NHÂN VIÊN — mỗi người có 1 bảng KPI chi tiết riêng, xem theo
+  // tên, chia 3 nhóm chỉ tiêu (Doanh số / Sản phẩm trọng tâm / Điểm cộng thêm
+  // + Điểm trừ tách riêng), có xếp hạng huy chương theo tổng điểm cuối cùng.
   // ==========================================================================
   var KPI_SELECTED_SHEET = null; // sheetName của nhân viên đang xem chi tiết
+  var KPI_MEDALS = ['🥇', '🥈', '🥉'];
 
   function getKpiFiltered() {
     var q = $('kpi-filter-search').value.trim().toLowerCase();
@@ -471,33 +474,40 @@
     return kpiNormName(emp.hoTen) === kpiNormName(session.hoTen);
   }
 
+  // Tổng điểm dùng để xếp hạng & tính %: ưu tiên "tổng điểm cuối cùng" (đã
+  // gồm cộng/trừ) do Apps Script trả về; nếu vì lý do gì đó server cũ chưa
+  // có trường này thì tạm lùi về tổng điểm chỉ tiêu gốc để không vỡ giao diện.
+  function kpiFinalScore(e) {
+    return (typeof e.tongDiemCuoiCung === 'number') ? e.tongDiemCuoiCung : (e.tongDiemThucHien || 0);
+  }
+
   function renderKpi() {
     var all = RAW.kpi.employees || [];
     var emps = getKpiFiltered();
     setText('kpi-thang', RAW.kpi.thang || '');
 
-    var dat100 = all.filter(function (e) { return e.tyLeTong >= 1; }).length;
+    var datCount = all.filter(function (e) { return e.ketQuaKpi && e.ketQuaKpi.dat; }).length;
     var avgTyLe = all.length ? sumBy(all, 'tyLeTong') / all.length : 0;
     var totalTH = sumBy(all, 'tongDiemThucHien');
     var totalKH = sumBy(all, 'tongDiemKeHoach');
 
     $('kpi-stats').innerHTML = [
       statTile('Số nhân viên', fmtNum.format(all.length)),
-      statTile('Đạt/vượt 100% KPI', fmtNum.format(dat100)),
-      statTile('Tỉ lệ TH/KH trung bình', fmtPct(avgTyLe), progressClass(avgTyLe)),
+      statTile('Đạt KPI (≥850đ, đủ điều kiện)', fmtNum.format(datCount) + ' / ' + fmtNum.format(all.length)),
+      statTile('Tỉ lệ TH/KH trung bình (nhóm chỉ tiêu)', fmtPct(avgTyLe), progressClass(avgTyLe)),
       statTile('Tổng điểm TH / KH nhóm', fmtNum.format(totalTH) + ' / ' + fmtNum.format(totalKH))
     ].join('');
 
-    var sorted = all.slice().sort(function (a, b) { return b.tyLeTong - a.tyLeTong; });
-    var colors = sorted.map(function (e) {
+    var ranked = all.slice().sort(function (a, b) { return kpiFinalScore(b) - kpiFinalScore(a); });
+    var colors = ranked.map(function (e) {
       var cls = progressClass(e.tyLeTong);
       return cls === 'good' ? '#0ca30c' : (cls === 'warn' ? '#fab219' : '#d03b3b');
     });
     upsertChart('chart-kpi-tyle', {
       type: 'bar',
       data: {
-        labels: sorted.map(function (e) { return e.hoTen; }),
-        datasets: [{ data: sorted.map(function (e) { return +(e.tyLeTong * 100).toFixed(1); }), backgroundColor: colors, borderRadius: 4, maxBarThickness: 40 }]
+        labels: ranked.map(function (e) { return e.hoTen; }),
+        datasets: [{ data: ranked.map(function (e) { return +(e.tyLeTong * 100).toFixed(1); }), backgroundColor: colors, borderRadius: 4, maxBarThickness: 40 }]
       },
       options: Object.assign({}, CHART_BASE_OPTS, {
         indexAxis: 'y',
@@ -506,6 +516,7 @@
       })
     });
 
+    renderKpiLeaderboard(ranked);
     setText('kpi-row-count', '(' + fmtNum.format(emps.length) + ' người)');
     renderKpiPicker(emps);
 
@@ -522,6 +533,25 @@
       KPI_SELECTED_SHEET = null;
     }
     renderKpiDetail();
+  }
+
+  // Bảng xếp hạng theo tổng điểm cuối cùng (đã gồm cộng/trừ) — huy chương
+  // vàng/bạc/đồng cho top 3, còn lại đánh số thứ hạng.
+  function renderKpiLeaderboard(ranked) {
+    var box = $('kpi-leaderboard');
+    if (!box) return;
+    if (!ranked.length) { box.innerHTML = ''; return; }
+    box.innerHTML = ranked.map(function (e, i) {
+      var medal = KPI_MEDALS[i] ? '<span class="kpi-medal">' + KPI_MEDALS[i] + '</span>' : '<span class="kpi-rank-num">#' + (i + 1) + '</span>';
+      var dat = e.ketQuaKpi && e.ketQuaKpi.dat;
+      var resultChip = '<span class="chip small ' + (dat ? 'good' : 'critical') + '">' + (dat ? 'Đạt KPI' : 'Bị liệt') + '</span>';
+      return '<div class="kpi-leaderboard-row' + (i < 3 ? ' top3' : '') + '">' +
+        medal +
+        '<span class="kpi-leaderboard-name">' + escapeHtml(e.hoTen) + '</span>' +
+        resultChip +
+        '<span class="kpi-leaderboard-score">' + fmtNum.format(kpiFinalScore(e)) + ' điểm</span>' +
+        '</div>';
+    }).join('');
   }
 
   function renderKpiPicker(emps) {
@@ -543,17 +573,53 @@
     });
   }
 
-  function kpiThucHienCellHtml(rowType, idx, value, canEdit) {
+  // Hiển thị nguyên văn giá trị lấy từ sheet (giống cột "Kế hoạch"), KHÔNG
+  // format lại qua Intl.NumberFormat — nếu ô "Thực hiện" trên Google Sheet
+  // được gõ tay có dấu phẩy phân cách hàng nghìn (vd "180,000,000" dạng
+  // text), Intl.NumberFormat.format() sẽ trả về "NaN" vì nó ép chuỗi đó
+  // thành Number trước, và "180,000,000" không phải là số hợp lệ.
+  function kpiValueCellHtml(rowType, rowIndex, value, canEdit) {
     var v = (value === null || value === undefined) ? '' : value;
-    // Hiển thị nguyên văn giá trị lấy từ sheet (giống cột "Kế hoạch"), KHÔNG
-    // format lại qua Intl.NumberFormat — nếu ô "Thực hiện" trên Google Sheet
-    // được gõ tay có dấu phẩy phân cách hàng nghìn (vd "180,000,000" dạng
-    // text), Intl.NumberFormat.format() sẽ trả về "NaN" vì nó ép chuỗi đó
-    // thành Number trước, và "180,000,000" không phải là số hợp lệ.
     if (!canEdit) return v === '' ? '—' : escapeHtml(v);
     return '<input type="number" step="any" inputmode="decimal" class="kpi-input" ' +
-      'data-row-type="' + rowType + '" data-idx="' + idx + '" value="' + escapeHtml(v) + '" />';
+      'data-row-type="' + rowType + '" data-row-index="' + rowIndex + '" value="' + escapeHtml(v) + '" />';
   }
+
+  function kpiGhiChuCellHtml(rowIndex, value, canEdit) {
+    var v = value || '';
+    if (!canEdit) return v === '' ? '—' : escapeHtml(v);
+    return '<input type="text" maxlength="500" class="kpi-input kpi-input-text" placeholder="Ghi chú…" ' +
+      'data-row-type="chiTieuGhiChu" data-row-index="' + rowIndex + '" value="' + escapeHtml(v) + '" />';
+  }
+
+  function kpiDiemTruCellHtml(d, canEdit) {
+    if (!canEdit) {
+      return '<span class="chip small ' + (d.trangThai === 'KHÔNG ĐẠT' ? 'critical' : 'good') + '">' + escapeHtml(d.trangThai) + '</span>';
+    }
+    return '<select class="kpi-input kpi-select" data-row-type="diemTru" data-row-index="' + d.rowIndex + '">' +
+      '<option value="ĐẠT"' + (d.trangThai !== 'KHÔNG ĐẠT' ? ' selected' : '') + '>ĐẠT</option>' +
+      '<option value="KHÔNG ĐẠT"' + (d.trangThai === 'KHÔNG ĐẠT' ? ' selected' : '') + '>KHÔNG ĐẠT</option>' +
+      '</select>';
+  }
+
+  // 1 dòng chỉ tiêu (dùng chung cho bảng "Doanh số" và mỗi bảng sản phẩm
+  // trong "Sản phẩm trọng tâm") — showLoai=true thì cột đầu hiển thị tên loại
+  // chỉ tiêu ngắn gọn (Khảo sát / Mở mới điểm bán / ...) thay vì tên đầy đủ,
+  // vì tên sản phẩm đã lên tiêu đề bảng con rồi, khỏi lặp lại.
+  function kpiChiTieuRowHtml(c, canEdit, showLoai) {
+    return '<tr>' +
+      '<td>' + escapeHtml(showLoai && c.loai ? c.loai : c.chiTieu) + '</td>' +
+      '<td>' + escapeHtml(c.keHoach) + '</td>' +
+      '<td class="num">' + kpiValueCellHtml('chiTieu', c.rowIndex, c.thucHien, canEdit) + '</td>' +
+      '<td class="num">' + fmtNum.format(c.diemKeHoach || 0) + '</td>' +
+      '<td class="num">' + (c.diemThucHien === null || c.diemThucHien === undefined ? '—' : fmtNum.format(c.diemThucHien)) + '</td>' +
+      '<td>' + escapeHtml(c.vuotMax) + '</td>' +
+      '<td>' + kpiGhiChuCellHtml(c.rowIndex, c.ghiChu, canEdit) + '</td>' +
+      '</tr>';
+  }
+
+  var KPI_TABLE_HEAD = '<thead><tr><th>Chỉ tiêu</th><th>Kế hoạch</th><th class="num">Thực hiện</th>' +
+    '<th class="num">Điểm KH</th><th class="num">Điểm TH</th><th>Vượt max</th><th>Ghi chú</th></tr></thead>';
 
   // Ghép hoạt động viếng thăm khách hàng (checkin GPS) vào đúng nhân viên
   // đang xem chi tiết KPI, khớp theo họ tên (dữ liệu checkin và KPI nằm ở 2
@@ -589,51 +655,112 @@
         : 'Chưa có dữ liệu checkin thăm khách hàng cho nhân viên này.';
     }
 
-    var body = $('table-kpi-detail').querySelector('tbody');
-    if (!emp.chiTieu.length) {
-      body.innerHTML = '<tr><td colspan="6" class="empty-state">Chưa có chỉ tiêu nào trong bảng này.</td></tr>';
-    } else {
-      body.innerHTML = emp.chiTieu.map(function (c, i) {
-        return '<tr>' +
-          '<td>' + escapeHtml(c.chiTieu) + '</td>' +
-          '<td>' + escapeHtml(c.keHoach) + '</td>' +
-          '<td class="num">' + kpiThucHienCellHtml('chiTieu', i, c.thucHien, canEdit) + '</td>' +
-          '<td class="num">' + fmtNum.format(c.diemKeHoach || 0) + '</td>' +
-          '<td class="num">' + (c.diemThucHien === null || c.diemThucHien === undefined ? '—' : fmtNum.format(c.diemThucHien)) + '</td>' +
-          '<td>' + escapeHtml(c.vuotMax) + '</td></tr>';
-      }).join('');
-    }
-    var foot = $('table-kpi-detail').querySelector('tfoot');
-    foot.innerHTML = '<tr><td colspan="3" class="kpi-total-label">TỔNG (1000 ĐIỂM)</td>' +
-      '<td class="num kpi-total-value">' + fmtNum.format(emp.tongDiemKeHoach) + '</td>' +
-      '<td class="num kpi-total-value">' + fmtNum.format(emp.tongDiemThucHien) + '</td><td></td></tr>';
+    // Ô tóm tắt kết quả KPI: tổng điểm cuối cùng (đã gồm cộng/trừ) + kết quả
+    // ĐẠT / BỊ LIỆT + lý do cụ thể nếu bị liệt, để nhân viên biết ngay cần
+    // cải thiện chỉ tiêu nào mà không phải tự cộng trừ thủ công.
+    var ketQua = emp.ketQuaKpi || { dat: false, lyDoLiet: [] };
+    var resultHtml = '<div class="kpi-result-summary ' + (ketQua.dat ? 'ok' : 'fail') + '">' +
+      '<div class="kpi-result-top">' +
+      '<span class="chip ' + (ketQua.dat ? 'good' : 'critical') + '">' + (ketQua.dat ? 'ĐẠT KPI' : 'BỊ LIỆT KPI') + '</span>' +
+      '<span class="kpi-result-score">Tổng điểm cuối cùng: <b>' + fmtNum.format(kpiFinalScore(emp)) + '</b> điểm (chỉ tiêu ' +
+      fmtNum.format(emp.tongDiemThucHien) + ' + cộng thêm ' + fmtNum.format(emp.tongCongThem) + ' − trừ ' +
+      fmtNum.format(Math.abs(emp.tongDiemTru || 0)) + ')</span></div>' +
+      (ketQua.lyDoLiet && ketQua.lyDoLiet.length
+        ? '<ul class="kpi-result-reasons">' + ketQua.lyDoLiet.map(function (r) { return '<li>' + escapeHtml(r) + '</li>'; }).join('') + '</ul>'
+        : '') + '</div>';
+    $('kpi-result-summary').innerHTML = resultHtml;
 
+    // Nhóm 1 — Doanh số
+    var doanhSoRows = emp.chiTieu.filter(function (c) { return c.nhom === 'doanh_so'; });
+    var dsBody = $('table-kpi-doanhso').querySelector('tbody');
+    dsBody.innerHTML = doanhSoRows.length
+      ? doanhSoRows.map(function (c) { return kpiChiTieuRowHtml(c, canEdit, false); }).join('')
+      : '<tr><td colspan="7" class="empty-state">Chưa có chỉ tiêu doanh số.</td></tr>';
+    var dsKH = sumBy(doanhSoRows, 'diemKeHoach');
+    var dsTH = sumBy(doanhSoRows, function (c) { return c.diemThucHien || 0; });
+    $('table-kpi-doanhso').querySelector('tfoot').innerHTML =
+      '<tr><td colspan="3" class="kpi-total-label">Tổng nhóm Doanh số</td>' +
+      '<td class="num kpi-total-value">' + fmtNum.format(dsKH) + '</td>' +
+      '<td class="num kpi-total-value">' + fmtNum.format(dsTH) + '</td><td></td><td></td></tr>';
+
+    // Nhóm 2 — Sản phẩm trọng tâm, tách theo từng sản phẩm (SUGAM-BFS,
+    // PROPOFOL-BFS, hoặc bất kỳ sản phẩm nào khác nếu công ty đổi/thêm sau này)
+    var spRows = emp.chiTieu.filter(function (c) { return c.nhom === 'san_pham_trong_tam'; });
+    var spByProduct = {};
+    var spOrder = [];
+    spRows.forEach(function (c) {
+      var key = c.sanPham || 'Khác';
+      if (!spByProduct[key]) { spByProduct[key] = []; spOrder.push(key); }
+      spByProduct[key].push(c);
+    });
+    var spGroupsEl = $('kpi-sp-groups');
+    spGroupsEl.innerHTML = spOrder.map(function (key) {
+      var rows = spByProduct[key];
+      return '<h4 class="kpi-subgroup-title">' + escapeHtml(key) + '</h4>' +
+        '<div class="table-wrap"><table class="data-table kpi-detail-table">' + KPI_TABLE_HEAD +
+        '<tbody>' + rows.map(function (c) { return kpiChiTieuRowHtml(c, canEdit, true); }).join('') + '</tbody>' +
+        '</table></div>';
+    }).join('') || '<div class="empty-state small">Chưa có chỉ tiêu sản phẩm trọng tâm.</div>';
+    var spKH = sumBy(spRows, 'diemKeHoach');
+    var spTH = sumBy(spRows, function (c) { return c.diemThucHien || 0; });
+    $('kpi-sp-subtotal').innerHTML = 'Tổng nhóm Sản phẩm trọng tâm: <b>' + fmtNum.format(spTH) + ' / ' + fmtNum.format(spKH) + '</b> điểm' +
+      (spKH > 0 ? ' (' + fmtPct(spTH / spKH) + ')' : '');
+
+    // Điểm cộng thêm — tách riêng bên dưới nhóm chỉ tiêu chính
     var bonusBody = $('table-kpi-bonus').querySelector('tbody');
     if (!emp.congThem.length) {
       bonusBody.innerHTML = '<tr><td colspan="3" class="empty-state">Không có mục điểm cộng thêm.</td></tr>';
     } else {
-      bonusBody.innerHTML = emp.congThem.map(function (c, i) {
+      bonusBody.innerHTML = emp.congThem.map(function (c) {
         return '<tr><td>' + escapeHtml(c.moTa) + '</td><td>' + escapeHtml(c.diemToiDa) + '</td>' +
-          '<td class="num">' + kpiThucHienCellHtml('congThem', i, c.diemThucHien, canEdit) + '</td></tr>';
+          '<td class="num">' + kpiValueCellHtml('congThem', c.rowIndex, c.diemThucHien, canEdit) + '</td></tr>';
       }).join('');
     }
+
+    // Điểm trừ KPI — mục mới, KHÔNG đạt thì trừ thẳng vào tổng điểm cuối cùng
+    var truBody = $('table-kpi-tru').querySelector('tbody');
+    var diemTru = emp.diemTru || [];
+    truBody.innerHTML = diemTru.length
+      ? diemTru.map(function (d) {
+          return '<tr><td>' + escapeHtml(d.moTa) + '</td>' +
+            '<td>' + kpiDiemTruCellHtml(d, canEdit) + '</td>' +
+            '<td class="num">' + fmtNum.format(d.mucTru) + '</td>' +
+            '<td class="num">' + fmtNum.format(d.diemThucTe) + '</td></tr>';
+        }).join('')
+      : '<tr><td colspan="4" class="empty-state">Không có mục điểm trừ.</td></tr>';
 
     $('kpi-save-status').textContent = '';
     $('kpi-save-status').className = 'kpi-save-status';
     if (canEdit) attachKpiInputHandlers(emp);
   }
 
+  function kpiFindRowMeta(emp, rowType, rowIndex) {
+    var list = (rowType === 'congThem') ? emp.congThem : (rowType === 'diemTru') ? emp.diemTru : emp.chiTieu;
+    return (list || []).filter(function (r) { return r.rowIndex === rowIndex; })[0] || null;
+  }
+
   function attachKpiInputHandlers(emp) {
-    var inputs = $('kpi-detail-panel').querySelectorAll('.kpi-input');
-    inputs.forEach(function (input) {
-      input.addEventListener('change', function () {
-        var rowType = input.dataset.rowType;
-        var idx = +input.dataset.idx;
-        var rowMeta = rowType === 'chiTieu' ? emp.chiTieu[idx] : emp.congThem[idx];
+    var els = $('kpi-detail-panel').querySelectorAll('.kpi-input');
+    els.forEach(function (el) {
+      var evt = el.tagName === 'SELECT' ? 'change' : 'change';
+      el.addEventListener(evt, function () {
+        var rowType = el.dataset.rowType;
+        var rowIndex = +el.dataset.rowIndex;
+        var rowMeta = kpiFindRowMeta(emp, rowType, rowIndex);
         if (!rowMeta) return;
-        var newVal = input.value === '' ? 0 : parseFloat(input.value);
-        if (isNaN(newVal)) { input.value = rowMeta.thucHien != null ? rowMeta.thucHien : (rowMeta.diemThucHien || 0); return; }
-        saveKpiValue(emp.sheetName, rowType, rowMeta.rowIndex, newVal, input);
+        var newVal;
+        if (rowType === 'chiTieuGhiChu') {
+          newVal = el.value;
+        } else if (rowType === 'diemTru') {
+          newVal = el.value;
+        } else {
+          newVal = el.value === '' ? 0 : parseFloat(el.value);
+          if (isNaN(newVal)) {
+            el.value = rowType === 'congThem' ? (rowMeta.diemThucHien || 0) : (rowMeta.thucHien != null ? rowMeta.thucHien : 0);
+            return;
+          }
+        }
+        saveKpiValue(emp.sheetName, rowType, rowIndex, newVal, el);
       });
     });
   }
