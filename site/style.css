@@ -577,6 +577,24 @@ tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
 
 .kpi-bonus-title, .kpi-tru-title { font-size: 13.5px; margin: 22px 0 10px; }
 
+/* Mục tổng điểm cuối cùng "X điểm kpis / 1000 điểm kpis" ở cuối trang chi tiết
+   KPI, sau khi đã cộng "Điểm cộng thêm" và trừ "Điểm trừ KPI". */
+.kpi-final-score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  padding: 14px 16px;
+  border-radius: var(--radius-m);
+  background: var(--sidebar-active-bg, rgba(42,120,214,0.08));
+  border: 1px solid rgba(42,120,214,0.25);
+}
+.kpi-final-score-label { width: 100%; font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
+.kpi-final-score-value { font-size: 22px; font-weight: 800; color: var(--series-1); font-variant-numeric: tabular-nums; }
+.kpi-final-score-sep { font-size: 16px; color: var(--text-muted); }
+.kpi-final-score-max { font-size: 15px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
 .kpi-input {
   width: 100px;
   padding: 6px 8px;
