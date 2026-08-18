@@ -221,6 +221,7 @@
   });
   function onTabSwitch(tabName) {
     if (tabName === 'chat') { initChatTab(); } else { stopChatPolling(); }
+    if (tabName === 'giaoviec') { initGiaoViecTab(); }
   }
 
   // --------------------------------------------------------------------------
@@ -1134,6 +1135,178 @@
       })
       .catch(function (err) {
         errEl.textContent = 'Không gửi được: ' + err.message;
+      })
+      .finally(function () { btn.disabled = false; });
+  });
+
+  // --------------------------------------------------------------------------
+  // GIAO VIỆC — admin giao nhiệm vụ cho từng nhân viên, nhân viên phản hồi
+  // --------------------------------------------------------------------------
+  var GIAOVIEC = { employeesLoaded: false, tasks: [], loading: false };
+
+  var GIAOVIEC_STATUS_OPTIONS = ['Chưa bắt đầu', 'Đang làm', 'Hoàn thành'];
+
+  function giaoViecStatusClass(trangThai) {
+    if (trangThai === 'Hoàn thành') return 'good';
+    if (trangThai === 'Đang làm') return 'warn';
+    return 'muted';
+  }
+
+  function giaoViecFmtTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function initGiaoViecTab() {
+    var session = getSession();
+    if (!session) return;
+    var isAdmin = session.vaiTro === 'admin';
+    $('giaoviec-new-panel').classList.toggle('hidden', !isAdmin);
+    if (isAdmin && !GIAOVIEC.employeesLoaded) loadGiaoViecEmployees();
+    loadGiaoViecTasks();
+  }
+
+  function loadGiaoViecEmployees() {
+    fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhân viên');
+        GIAOVIEC.employeesLoaded = true;
+        var sel = $('giaoviec-nv');
+        var contacts = (json.data || []).filter(function (c) { return c.active !== false; });
+        sel.innerHTML = '<option value="">— Chọn nhân viên —</option>' + contacts.map(function (c) {
+          return '<option value="' + escapeHtml(c.username) + '">' + escapeHtml(c.hoTen || c.username) + '</option>';
+        }).join('');
+      })
+      .catch(function (err) {
+        setText('giaoviec-form-status', 'Không tải được danh sách nhân viên: ' + err.message);
+      });
+  }
+
+  function loadGiaoViecTasks() {
+    if (GIAOVIEC.loading) return;
+    GIAOVIEC.loading = true;
+    var box = $('giaoviec-list');
+    if (!GIAOVIEC.tasks.length) box.innerHTML = '<div class="empty-state">Đang tải…</div>';
+    fetch('/.netlify/functions/tasks', { headers: authHeader() })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhiệm vụ');
+        GIAOVIEC.tasks = json.data || [];
+        renderGiaoViecList(json.me || {});
+      })
+      .catch(function (err) {
+        box.innerHTML = '<div class="empty-state">Không tải được danh sách nhiệm vụ: ' + escapeHtml(err.message) + '</div>';
+      })
+      .finally(function () { GIAOVIEC.loading = false; });
+  }
+
+  function giaoViecCardHtml(t, isAdmin) {
+    var statusBadge = '<span class="chip ' + giaoViecStatusClass(t.trangThai) + '">' + escapeHtml(t.trangThai) + '</span>';
+    var mailBadge = t.daNhanMail
+      ? '<span class="chip good small">Đã nhận mail' + (t.ngayNhanMail ? ' · ' + giaoViecFmtTime(t.ngayNhanMail) : '') + '</span>'
+      : '<span class="chip muted small">Chưa xác nhận nhận mail</span>';
+    var statusOptions = GIAOVIEC_STATUS_OPTIONS.map(function (s) {
+      return '<option value="' + escapeHtml(s) + '"' + (s === t.trangThai ? ' selected' : '') + '>' + escapeHtml(s) + '</option>';
+    }).join('');
+    return '<div class="giaoviec-card" data-id="' + escapeHtml(t.id) + '">' +
+      '<div class="giaoviec-card-head">' +
+      '<div class="giaoviec-card-title">' + escapeHtml(t.tenNhiemVu) + '</div>' +
+      statusBadge +
+      '</div>' +
+      '<div class="giaoviec-card-meta">' +
+      (isAdmin ? '<span>Nhân viên: <b>' + escapeHtml(t.hoTen || t.username) + '</b></span>' : '<span>Người giao: <b>' + escapeHtml(t.nguoiGiao) + '</b></span>') +
+      (t.ngayThucHien ? '<span>Ngày thực hiện: <b>' + escapeHtml(t.ngayThucHien) + '</b></span>' : '') +
+      '<span>Giao lúc: ' + giaoViecFmtTime(t.thoiGianGiao) + '</span>' +
+      '</div>' +
+      (t.noiDung ? '<div class="giaoviec-card-content">' + escapeHtml(t.noiDung).replace(/\n/g, '<br>') + '</div>' : '') +
+      '<div class="giaoviec-card-mail">' + mailBadge + '</div>' +
+      '<form class="giaoviec-feedback-form" data-id="' + escapeHtml(t.id) + '">' +
+      '<label class="giaoviec-field">' +
+      '<span>Trạng thái hoàn thành</span>' +
+      '<select class="giaoviec-fb-status">' + statusOptions + '</select>' +
+      '</label>' +
+      '<label class="giaoviec-field">' +
+      '<span>Ghi chú phản hồi</span>' +
+      '<textarea class="giaoviec-fb-note" rows="2" maxlength="2000" placeholder="Tình hình thực hiện, khó khăn…">' + escapeHtml(t.ghiChuPhanHoi || '') + '</textarea>' +
+      '</label>' +
+      '<div class="giaoviec-form-actions">' +
+      '<button type="submit" class="btn btn-primary btn-small">Lưu phản hồi</button>' +
+      '<span class="giaoviec-fb-status-text">' + (t.ngayPhanHoi ? 'Cập nhật lần cuối: ' + giaoViecFmtTime(t.ngayPhanHoi) : '') + '</span>' +
+      '</div>' +
+      '</form>' +
+      '</div>';
+  }
+
+  function renderGiaoViecList(me) {
+    var box = $('giaoviec-list');
+    var isAdmin = !!me.isAdmin;
+    setText('giaoviec-count', GIAOVIEC.tasks.length ? '(' + GIAOVIEC.tasks.length + ')' : '');
+    if (!GIAOVIEC.tasks.length) {
+      box.innerHTML = '<div class="empty-state">' + (isAdmin ? 'Chưa giao nhiệm vụ nào.' : 'Bạn chưa được giao nhiệm vụ nào.') + '</div>';
+      return;
+    }
+    box.innerHTML = GIAOVIEC.tasks.map(function (t) { return giaoViecCardHtml(t, isAdmin); }).join('');
+    box.querySelectorAll('.giaoviec-feedback-form').forEach(function (form) {
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var id = form.dataset.id;
+        var trangThai = form.querySelector('.giaoviec-fb-status').value;
+        var ghiChu = form.querySelector('.giaoviec-fb-note').value;
+        var btn = form.querySelector('button[type="submit"]');
+        var statusText = form.querySelector('.giaoviec-fb-status-text');
+        btn.disabled = true;
+        statusText.textContent = 'Đang lưu…';
+        fetch('/.netlify/functions/tasks', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+          body: JSON.stringify({ action: 'feedback', id: id, trangThai: trangThai, ghiChu: ghiChu })
+        })
+          .then(function (res) { return res.json(); })
+          .then(function (json) {
+            if (!json.ok) throw new Error(json.error || 'Lưu phản hồi thất bại');
+            statusText.textContent = 'Đã lưu lúc ' + giaoViecFmtTime(new Date().toISOString());
+            loadGiaoViecTasks();
+          })
+          .catch(function (err) {
+            statusText.textContent = 'Lỗi: ' + err.message;
+          })
+          .finally(function () { btn.disabled = false; });
+      });
+    });
+  }
+
+  $('giaoviec-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var statusEl = $('giaoviec-form-status');
+    var btn = $('giaoviec-submit-btn');
+    var username = $('giaoviec-nv').value;
+    var tenNhiemVu = $('giaoviec-ten').value.trim();
+    var noiDung = $('giaoviec-noidung').value.trim();
+    var ngayThucHien = $('giaoviec-ngay').value.trim();
+    statusEl.textContent = '';
+    if (!username) { statusEl.textContent = 'Vui lòng chọn nhân viên.'; return; }
+    if (!tenNhiemVu) { statusEl.textContent = 'Vui lòng nhập tên nhiệm vụ.'; return; }
+    btn.disabled = true;
+    statusEl.textContent = 'Đang giao việc…';
+    fetch('/.netlify/functions/tasks', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ action: 'create', username: username, tenNhiemVu: tenNhiemVu, noiDung: noiDung, ngayThucHien: ngayThucHien })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Giao việc thất bại');
+        var mailNote = json.mailSent ? ' Đã gửi mail báo cho nhân viên.' :
+          (json.mailError ? ' (Chưa gửi được mail: ' + json.mailError + ')' : '');
+        statusEl.textContent = 'Đã giao việc thành công!' + mailNote;
+        $('giaoviec-form').reset();
+        loadGiaoViecTasks();
+      })
+      .catch(function (err) {
+        statusEl.textContent = 'Lỗi: ' + err.message;
       })
       .finally(function () { btn.disabled = false; });
   });
