@@ -912,6 +912,77 @@ tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
 .giaoviec-emp-body { padding: 4px 16px 16px; }
 .giaoviec-emp-empty { font-size: 12.5px; color: var(--text-muted); padding: 0 0 4px; }
 
+/* ============================================================================
+   TAB: SẢN PHẨM TRỌNG TÂM
+   ============================================================================ */
+.sptt-team-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.sptt-team-title {
+  font-size: 19px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -.01em;
+}
+.sptt-updated { font-size: 12px; color: var(--text-muted); }
+
+.sptt-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.sptt-team-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  padding: 18px 20px;
+  background-image: linear-gradient(135deg, rgba(42,120,214,0.06), transparent 60%);
+}
+.sptt-team-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sptt-card-icon { font-size: 26px; line-height: 1; }
+.sptt-team-card-name { font-size: 17px; font-weight: 800; }
+.sptt-team-card-nums { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+.sptt-luyke { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--series-1); }
+.sptt-target { font-size: 12.5px; color: var(--text-muted); }
+
+.sptt-emp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+.sptt-emp-card {
+  background: var(--page-plane);
+  border: 1px solid var(--border-soft, #e1e0d9);
+  border-radius: var(--radius-m);
+  padding: 14px 16px;
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.sptt-emp-card:hover { box-shadow: var(--shadow-card); transform: translateY(-1px); }
+.sptt-emp-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.sptt-emp-medal { font-size: 18px; line-height: 1; }
+.sptt-emp-name { font-size: 16px; font-weight: 800; }
+.sptt-product-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 7px 0;
+  border-top: 1px dashed var(--border-soft, #e1e0d9);
+}
+.sptt-product-row:first-of-type { border-top: none; }
+.sptt-product-icon { font-size: 18px; grid-row: 1; }
+.sptt-product-label { font-size: 13px; font-weight: 700; grid-row: 1; }
+.sptt-product-nums { font-size: 12px; color: var(--text-muted); grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; }
+.sptt-product-row .progress-cell { grid-column: 1 / -1; }
+
 /* footer */
 footer.app-footer {
   text-align: center;
@@ -925,4 +996,6 @@ footer.app-footer {
   main { padding: 14px 14px 40px; }
   .stat-tile .value { font-size: 20px; }
   .giaoviec-form-row { grid-template-columns: 1fr; }
+  .sptt-team-title { font-size: 16px; }
+  .sptt-luyke { font-size: 22px; }
 }
