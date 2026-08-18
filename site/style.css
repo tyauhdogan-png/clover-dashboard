@@ -983,6 +983,116 @@ tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
 .sptt-product-nums { font-size: 12px; color: var(--text-muted); grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; }
 .sptt-product-row .progress-cell { grid-column: 1 / -1; }
 
+/* ============================================================================
+   TAB: DOANH SỐ — phong cách chibi dễ thương (bo tròn lớn, gradient pastel,
+   icon to, hiệu ứng nảy nhẹ khi hover)
+   ============================================================================ */
+.ds-team-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.ds-team-title { font-size: 19px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+.ds-updated { font-size: 12px; color: var(--text-muted); }
+
+.ds-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.ds-team-card {
+  background: var(--surface-1);
+  border: 2px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-card);
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.ds-team-card:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 6px 22px rgba(11,11,11,0.10); }
+.ds-team-card--kedon {
+  background-image: linear-gradient(135deg, rgba(42,120,214,0.12), rgba(27,175,122,0.05) 70%);
+  border-color: rgba(42,120,214,0.35);
+}
+.ds-team-card--thau {
+  background-image: linear-gradient(135deg, rgba(232,123,164,0.14), rgba(237,161,0,0.06) 70%);
+  border-color: rgba(232,123,164,0.35);
+}
+.ds-team-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.ds-card-icon { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.08)); }
+.ds-team-card-name { font-size: 17px; font-weight: 800; }
+.ds-team-card-nums { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+.ds-luyke { font-size: 27px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--series-1); }
+.ds-team-card--thau .ds-luyke { color: var(--series-5); }
+.ds-target { font-size: 12.5px; color: var(--text-muted); }
+
+.ds-emp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+.ds-emp-card {
+  background: var(--page-plane);
+  border: 2px solid var(--border-soft, #e1e0d9);
+  border-radius: 20px;
+  padding: 16px 18px;
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.ds-emp-card:hover { box-shadow: var(--shadow-card); transform: translateY(-2px) scale(1.005); border-color: var(--series-5); }
+.ds-emp-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ds-emp-medal { font-size: 19px; line-height: 1; }
+.ds-emp-name { font-size: 16px; font-weight: 800; }
+.ds-product-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 7px 0;
+  border-top: 1px dashed var(--border-soft, #e1e0d9);
+}
+.ds-product-row:first-of-type { border-top: none; }
+.ds-product-icon { font-size: 18px; grid-row: 1; }
+.ds-product-label { font-size: 13px; font-weight: 700; grid-row: 1; }
+.ds-product-nums { font-size: 12px; color: var(--text-muted); grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; }
+.ds-product-row .progress-cell { grid-column: 1 / -1; }
+
+.ds-cust-list { display: flex; flex-direction: column; gap: 8px; }
+.ds-cust-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--page-plane);
+  border: 1px solid var(--border-soft, #e1e0d9);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.ds-cust-row:hover { transform: translateX(2px); box-shadow: var(--shadow-card); }
+.ds-cust-row:nth-child(odd) { background: var(--surface-1); }
+.ds-cust-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--series-1);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.ds-cust-crown { font-size: 16px; flex: 0 0 auto; }
+.ds-cust-name { flex: 1 1 auto; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ds-cust-amount { font-size: 14.5px; font-weight: 800; color: var(--series-5); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.ds-cust-share { font-size: 11px; color: var(--text-muted); flex: 0 0 auto; min-width: 92px; text-align: right; }
+
 /* footer */
 footer.app-footer {
   text-align: center;
@@ -998,4 +1108,7 @@ footer.app-footer {
   .giaoviec-form-row { grid-template-columns: 1fr; }
   .sptt-team-title { font-size: 16px; }
   .sptt-luyke { font-size: 22px; }
+  .ds-team-title { font-size: 16px; }
+  .ds-luyke { font-size: 22px; }
+  .ds-cust-share { display: none; }
 }
