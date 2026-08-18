@@ -53,6 +53,10 @@
         <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="4.2"/><circle cx="10" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg></span>
         <span>SP trọng tâm</span>
       </button>
+      <button class="tab-btn" data-tab="doanhso">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.5v9M12.6 7.6c0-1-1-1.7-2.3-1.7-1.4 0-2.5.7-2.5 1.9 0 2.6 4.8 1.3 4.8 3.9 0 1.2-1.1 1.9-2.5 1.9-1.3 0-2.3-.7-2.3-1.7"/></svg></span>
+        <span>Doanh số</span>
+      </button>
       <button class="tab-btn" data-tab="giaoviec">
         <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V3a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 12.5 3v.5"/><path d="M7 10.6l2 2 4-4.6"/></svg></span>
         <span>Giao việc</span>
@@ -283,6 +287,25 @@
       <div class="panel">
         <h2>🏅 Lũy kế theo từng nhân viên — Tháng 8/2026</h2>
         <div class="sptt-emp-grid" id="sptt-emp-cards"></div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: DOANH SỐ ===================== -->
+    <section id="tab-doanhso" class="tab-panel hidden">
+      <div class="ds-team-header">
+        <h2 class="ds-team-title">💰 Doanh số Tháng 8/2026 — Team SS Tạ Hoàng Duy</h2>
+        <div class="ds-updated" id="ds-updated"></div>
+      </div>
+      <div class="ds-team-grid" id="ds-team-cards"></div>
+
+      <div class="panel">
+        <h2>🐣 Xếp hạng hoàn thành chỉ tiêu — từng nhân viên</h2>
+        <div class="ds-emp-grid" id="ds-emp-cards"></div>
+      </div>
+
+      <div class="panel">
+        <h2>👑 Top 10 khách hàng doanh số cao nhất</h2>
+        <div class="ds-cust-list" id="ds-cust-list"></div>
       </div>
     </section>
 
