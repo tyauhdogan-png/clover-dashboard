@@ -9,7 +9,7 @@
   var CFG = window.APP_CONFIG || {};
   var SESSION_KEY = 'kd_dashboard_auth';
 
-  var RAW = { thau: [], kpi: { employees: [], thang: '' }, sales: [], checkin: { employees: [] }, sptt: { capNhatLuc: '', team: [], employees: [] }, meta: {} };
+  var RAW = { thau: [], kpi: { employees: [], thang: '' }, sales: [], checkin: { employees: [] }, sptt: { capNhatLuc: '', team: [], employees: [] }, doanhso: { capNhatLuc: '', team: [], employees: [], khachHang: [] }, meta: {} };
   var CHARTS = {};
   var SORT_STATE = {}; // { tableId: { key, dir } }
 
@@ -181,6 +181,7 @@
         RAW.sales = json.data.sales || [];
         RAW.checkin = json.data.checkin || { employees: [] };
         RAW.sptt = json.data.sptt || { capNhatLuc: '', team: [], employees: [] };
+        RAW.doanhso = json.data.doanhso || { capNhatLuc: '', team: [], employees: [], khachHang: [] };
         RAW.meta = json.data.meta || {};
         setText('updated-at', 'Cập nhật lúc ' + new Date(json.updatedAt).toLocaleString('vi-VN'));
         safeRun(initFilters);
@@ -188,6 +189,7 @@
         safeRun(renderKpi);
         safeRun(renderSales);
         safeRun(renderSptt);
+        safeRun(renderDoanhSo);
       })
       .catch(function (err) {
         showGlobalError('Không tải được dữ liệu: ' + err.message + '. Kiểm tra API_URL trong config.js, kiểm tra Apps Script đã Deploy đúng quyền "Anyone", hoặc thử Làm mới.');
@@ -1073,6 +1075,90 @@
       : '<div class="empty-state small">Chưa có dữ liệu nhân viên.</div>';
 
     setText('sptt-updated', data.capNhatLuc ? 'n8n cập nhật lúc ' + new Date(data.capNhatLuc).toLocaleString('vi-VN') : '');
+  }
+
+  // ==========================================================================
+  // TAB: DOANH SỐ — Kê đơn + Thầu của Team SS Tạ Hoàng Duy. Cũng do 1 workflow
+  // n8n khác tự lọc/tính mỗi ngày từ sheet đơn hàng (xem getDoanhSo_ trong
+  // Code.gs), Apps Script chỉ đọc lại tab đã tính sẵn. Gồm: 2 thẻ tổng team
+  // (Kê đơn / Thầu), xếp hạng hoàn thành chỉ tiêu từng nhân viên, và top 10
+  // khách hàng doanh số cao nhất — phong cách chibi dễ thương, icon ngộ nghĩnh.
+  // ==========================================================================
+  var DS_LOAI_ICON = { KEDON: '💊', THAU: '🏛️' };
+  var DS_LOAI_LABEL = { KEDON: 'Kê đơn', THAU: 'Thầu' };
+  var DS_CROWNS = ['👑', '🥈', '🥉'];
+
+  function fmtTrieu(n) {
+    var trieu = (n || 0) / 1000000;
+    return trieu.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' triệu';
+  }
+
+  function dsTeamCardHtml(t) {
+    var icon = DS_LOAI_ICON[t.loai] || '💰';
+    var label = DS_LOAI_LABEL[t.loai] || t.loai;
+    return '<div class="ds-team-card ds-team-card--' + String(t.loai || '').toLowerCase() + '">' +
+      '<div class="ds-team-card-head"><span class="ds-card-icon">' + icon + '</span>' +
+      '<span class="ds-team-card-name">' + escapeHtml(label) + '</span></div>' +
+      '<div class="ds-team-card-nums">' +
+      '<span class="ds-luyke">' + fmtTrieu(t.luyKe) + '</span>' +
+      '<span class="ds-target">/ ' + fmtTrieu(t.target) + ' (Target tháng 8)</span></div>' +
+      spttProgressBar(t.tyLe) + '</div>';
+  }
+
+  function dsEmpAvgTyLe(emp) {
+    if (!emp.items.length) return 0;
+    return sumBy(emp.items, 'tyLe') / emp.items.length;
+  }
+
+  function dsEmpCardHtml(emp, rankIdx) {
+    var medal = SPTT_MEDALS[rankIdx] ? '<span class="ds-emp-medal">' + SPTT_MEDALS[rankIdx] + '</span>' : '';
+    var rows = emp.items.map(function (it) {
+      var icon = DS_LOAI_ICON[it.loai] || '💰';
+      var label = DS_LOAI_LABEL[it.loai] || it.loai;
+      return '<div class="ds-product-row">' +
+        '<span class="ds-product-icon">' + icon + '</span>' +
+        '<span class="ds-product-label">' + escapeHtml(label) + '</span>' +
+        '<span class="ds-product-nums">' + fmtTrieu(it.luyKe) + ' / ' + fmtTrieu(it.target) + '</span>' +
+        spttProgressBar(it.tyLe) + '</div>';
+    }).join('');
+    return '<div class="ds-emp-card">' +
+      '<div class="ds-emp-card-head">' + medal + chatAvatarHtml(emp.hoTen, emp.maNhanVien || emp.hoTen) +
+      '<span class="ds-emp-name">' + escapeHtml(emp.hoTen) + '</span></div>' +
+      rows + '</div>';
+  }
+
+  function dsCustRowHtml(c, rankIdx) {
+    var crown = DS_CROWNS[rankIdx] ? '<span class="ds-cust-crown">' + DS_CROWNS[rankIdx] + '</span>' : '';
+    var sharePct = (c.tyLe || 0).toFixed(1).replace('.0', '');
+    return '<div class="ds-cust-row">' +
+      '<span class="ds-cust-rank">#' + (rankIdx + 1) + '</span>' + crown +
+      '<span class="ds-cust-name">' + escapeHtml(c.tenToChuc || c.maToChuc || '—') + '</span>' +
+      '<span class="ds-cust-amount">' + fmtTrieu(c.luyKe) + '</span>' +
+      '<span class="ds-cust-share">' + sharePct + '% doanh số team</span></div>';
+  }
+
+  function renderDoanhSo() {
+    var data = RAW.doanhso || { capNhatLuc: '', team: [], employees: [], khachHang: [] };
+    var teamBox = $('ds-team-cards');
+    var empBox = $('ds-emp-cards');
+    var custBox = $('ds-cust-list');
+    if (!teamBox || !empBox || !custBox) return;
+
+    teamBox.innerHTML = data.team.length
+      ? data.team.map(dsTeamCardHtml).join('')
+      : '<div class="empty-state small">Chưa có dữ liệu — workflow n8n chưa chạy lần nào hoặc chưa tới giờ chạy đầu tiên (6h10 sáng hàng ngày).</div>';
+
+    var emps = data.employees.slice().sort(function (a, b) { return dsEmpAvgTyLe(b) - dsEmpAvgTyLe(a); });
+    empBox.innerHTML = emps.length
+      ? emps.map(function (e, i) { return dsEmpCardHtml(e, i); }).join('')
+      : '<div class="empty-state small">Chưa có dữ liệu nhân viên.</div>';
+
+    var custs = (data.khachHang || []).slice().sort(function (a, b) { return b.luyKe - a.luyKe; });
+    custBox.innerHTML = custs.length
+      ? custs.map(function (c, i) { return dsCustRowHtml(c, i); }).join('')
+      : '<div class="empty-state small">Chưa có dữ liệu khách hàng.</div>';
+
+    setText('ds-updated', data.capNhatLuc ? 'n8n cập nhật lúc ' + new Date(data.capNhatLuc).toLocaleString('vi-VN') : '');
   }
 
   // --------------------------------------------------------------------------
