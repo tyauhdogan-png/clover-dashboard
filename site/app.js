@@ -1142,7 +1142,7 @@
   // --------------------------------------------------------------------------
   // GIAO VIỆC — admin giao nhiệm vụ cho từng nhân viên, nhân viên phản hồi
   // --------------------------------------------------------------------------
-  var GIAOVIEC = { employeesLoaded: false, tasks: [], loading: false };
+  var GIAOVIEC = { employeesLoaded: false, employees: [], tasks: [], loading: false, lastMe: {} };
 
   var GIAOVIEC_STATUS_OPTIONS = ['Chưa bắt đầu', 'Đang làm', 'Hoàn thành'];
 
@@ -1159,11 +1159,21 @@
     return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   }
 
+  // Input <input type="date"> trả về "yyyy-mm-dd" — đổi sang "dd/mm/yyyy" để
+  // hiển thị/lưu đồng nhất với phần còn lại của app + nội dung mail n8n.
+  function giaoViecDateInputToVN(value) {
+    if (!value) return '';
+    var parts = String(value).split('-');
+    if (parts.length !== 3) return value;
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+
   function initGiaoViecTab() {
     var session = getSession();
     if (!session) return;
     var isAdmin = session.vaiTro === 'admin';
     $('giaoviec-new-panel').classList.toggle('hidden', !isAdmin);
+    $('giaoviec-byemployee-panel').classList.toggle('hidden', !isAdmin);
     if (isAdmin && !GIAOVIEC.employeesLoaded) loadGiaoViecEmployees();
     loadGiaoViecTasks();
   }
@@ -1176,9 +1186,11 @@
         GIAOVIEC.employeesLoaded = true;
         var sel = $('giaoviec-nv');
         var contacts = (json.data || []).filter(function (c) { return c.active !== false; });
+        GIAOVIEC.employees = contacts;
         sel.innerHTML = '<option value="">— Chọn nhân viên —</option>' + contacts.map(function (c) {
           return '<option value="' + escapeHtml(c.username) + '">' + escapeHtml(c.hoTen || c.username) + '</option>';
         }).join('');
+        renderGiaoViecByEmployee();
       })
       .catch(function (err) {
         setText('giaoviec-form-status', 'Không tải được danh sách nhân viên: ' + err.message);
@@ -1195,7 +1207,9 @@
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhiệm vụ');
         GIAOVIEC.tasks = json.data || [];
-        renderGiaoViecList(json.me || {});
+        GIAOVIEC.lastMe = json.me || {};
+        renderGiaoViecList(GIAOVIEC.lastMe);
+        renderGiaoViecByEmployee();
       })
       .catch(function (err) {
         box.innerHTML = '<div class="empty-state">Không tải được danh sách nhiệm vụ: ' + escapeHtml(err.message) + '</div>';
@@ -1240,16 +1254,8 @@
       '</div>';
   }
 
-  function renderGiaoViecList(me) {
-    var box = $('giaoviec-list');
-    var isAdmin = !!me.isAdmin;
-    setText('giaoviec-count', GIAOVIEC.tasks.length ? '(' + GIAOVIEC.tasks.length + ')' : '');
-    if (!GIAOVIEC.tasks.length) {
-      box.innerHTML = '<div class="empty-state">' + (isAdmin ? 'Chưa giao nhiệm vụ nào.' : 'Bạn chưa được giao nhiệm vụ nào.') + '</div>';
-      return;
-    }
-    box.innerHTML = GIAOVIEC.tasks.map(function (t) { return giaoViecCardHtml(t, isAdmin); }).join('');
-    box.querySelectorAll('.giaoviec-feedback-form').forEach(function (form) {
+  function wireGiaoViecFeedbackForms(container) {
+    container.querySelectorAll('.giaoviec-feedback-form').forEach(function (form) {
       form.addEventListener('submit', function (ev) {
         ev.preventDefault();
         var id = form.dataset.id;
@@ -1278,6 +1284,59 @@
     });
   }
 
+  function renderGiaoViecList(me) {
+    var box = $('giaoviec-list');
+    var isAdmin = !!me.isAdmin;
+    setText('giaoviec-count', GIAOVIEC.tasks.length ? '(' + GIAOVIEC.tasks.length + ')' : '');
+    if (!GIAOVIEC.tasks.length) {
+      box.innerHTML = '<div class="empty-state">' + (isAdmin ? 'Chưa giao nhiệm vụ nào.' : 'Bạn chưa được giao nhiệm vụ nào.') + '</div>';
+      return;
+    }
+    box.innerHTML = GIAOVIEC.tasks.map(function (t) { return giaoViecCardHtml(t, isAdmin); }).join('');
+    wireGiaoViecFeedbackForms(box);
+  }
+
+  // Bảng "Theo từng nhân viên" — chỉ admin thấy: mỗi nhân viên 1 khối gấp
+  // gọn (details/summary), bên trong là các nhiệm vụ CỦA RIÊNG người đó, kể
+  // cả nhân viên chưa có nhiệm vụ nào (để admin biết ai đang chưa được giao
+  // việc).
+  function renderGiaoViecByEmployee() {
+    var box = $('giaoviec-by-employee');
+    if (!box) return;
+    var isAdmin = !!GIAOVIEC.lastMe.isAdmin;
+    var panel = $('giaoviec-byemployee-panel');
+    if (panel) panel.classList.toggle('hidden', !isAdmin);
+    if (!isAdmin) return;
+    if (!GIAOVIEC.employees.length) {
+      box.innerHTML = '<div class="empty-state">Đang tải danh sách nhân viên…</div>';
+      return;
+    }
+    var byUser = {};
+    GIAOVIEC.tasks.forEach(function (t) {
+      var key = normalizeUsernameKey(t.username);
+      (byUser[key] = byUser[key] || []).push(t);
+    });
+    box.innerHTML = GIAOVIEC.employees.map(function (emp) {
+      var key = normalizeUsernameKey(emp.username);
+      var tasks = byUser[key] || [];
+      var body = tasks.length
+        ? tasks.map(function (t) { return giaoViecCardHtml(t, true); }).join('')
+        : '<div class="giaoviec-emp-empty">Chưa có nhiệm vụ nào.</div>';
+      return '<details class="giaoviec-emp-group">' +
+        '<summary class="giaoviec-emp-summary">' +
+        '<span>' + escapeHtml(emp.hoTen || emp.username) + '</span>' +
+        '<span class="chip ' + (tasks.length ? 'muted' : 'muted') + ' small">' + tasks.length + ' nhiệm vụ</span>' +
+        '</summary>' +
+        '<div class="giaoviec-emp-body">' + body + '</div>' +
+        '</details>';
+    }).join('');
+    wireGiaoViecFeedbackForms(box);
+  }
+
+  function normalizeUsernameKey(s) {
+    return String(s || '').trim().toLowerCase();
+  }
+
   $('giaoviec-form').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var statusEl = $('giaoviec-form-status');
@@ -1285,7 +1344,7 @@
     var username = $('giaoviec-nv').value;
     var tenNhiemVu = $('giaoviec-ten').value.trim();
     var noiDung = $('giaoviec-noidung').value.trim();
-    var ngayThucHien = $('giaoviec-ngay').value.trim();
+    var ngayThucHien = giaoViecDateInputToVN($('giaoviec-ngay').value);
     statusEl.textContent = '';
     if (!username) { statusEl.textContent = 'Vui lòng chọn nhân viên.'; return; }
     if (!tenNhiemVu) { statusEl.textContent = 'Vui lòng nhập tên nhiệm vụ.'; return; }
