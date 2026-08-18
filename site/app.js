@@ -321,14 +321,14 @@
     }
   }
 
-  var PALETTE = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+  var PALETTE = ['#6fa8dc', '#f3a879', '#5bccbb', '#f7cb6e', '#f2a4c4', '#8bcf7e', '#b3a0e6', '#f0847f'];
   var CHART_BASE_OPTS = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { display: false }, tooltip: { padding: 10 } },
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#898781', font: { size: 11 } } },
-      y: { grid: { color: '#e1e0d9' }, ticks: { color: '#898781', font: { size: 11 } }, beginAtZero: true }
+      x: { grid: { display: false }, ticks: { color: '#b39aae', font: { size: 11 } } },
+      y: { grid: { color: '#f4dcec' }, ticks: { color: '#b39aae', font: { size: 11 } }, beginAtZero: true }
     }
   };
 
@@ -426,7 +426,7 @@
   function renderRatioBarChart(canvasId, title, data) {
     var colors = data.map(function (d) {
       var cls = progressClass(d.ratio);
-      return cls === 'good' ? '#0ca30c' : (cls === 'warn' ? '#fab219' : '#d03b3b');
+      return cls === 'good' ? '#6fbf73' : (cls === 'warn' ? '#f6c877' : '#ee7e79');
     });
     upsertChart(canvasId, {
       type: 'bar',
@@ -516,7 +516,7 @@
     // đúng kết quả Đạt KPI / Bị liệt (đồng bộ với bảng xếp hạng bên dưới).
     var colors = ranked.map(function (e) {
       var dat = e.ketQuaKpi && e.ketQuaKpi.dat;
-      return dat ? '#0ca30c' : '#d03b3b';
+      return dat ? '#6fbf73' : '#ee7e79';
     });
     upsertChart('chart-kpi-tyle', {
       type: 'bar',
@@ -537,7 +537,7 @@
         },
         scales: Object.assign({}, CHART_BASE_OPTS.scales, {
           y: Object.assign({}, CHART_BASE_OPTS.scales.y, { suggestedMax: 1000 }),
-          x: Object.assign({}, CHART_BASE_OPTS.scales.x, { ticks: { color: '#3a3830', font: { size: 12, weight: '600' } } })
+          x: Object.assign({}, CHART_BASE_OPTS.scales.x, { ticks: { color: '#7a5c76', font: { size: 12, weight: '600' } } })
         })
       })
     });
@@ -974,7 +974,7 @@
         labels: dates.map(fmtDate),
         datasets: [{
           data: dates.map(function (d) { return byDate[d]; }),
-          borderColor: '#2a78d6', backgroundColor: 'rgba(42,120,214,0.12)',
+          borderColor: '#6fa8dc', backgroundColor: 'rgba(111,168,220,0.12)',
           fill: true, tension: 0.25, pointRadius: 0, borderWidth: 2
         }]
       },
@@ -993,7 +993,7 @@
     var tinhKeys = Object.keys(byTinh).sort(function (a, b) { return byTinh[b] - byTinh[a]; });
     upsertChart('chart-sales-tinh', {
       type: 'bar',
-      data: { labels: tinhKeys, datasets: [{ data: tinhKeys.map(function (k) { return byTinh[k]; }), backgroundColor: '#2a78d6', borderRadius: 4, maxBarThickness: 32 }] },
+      data: { labels: tinhKeys, datasets: [{ data: tinhKeys.map(function (k) { return byTinh[k]; }), backgroundColor: '#6fa8dc', borderRadius: 4, maxBarThickness: 32 }] },
       options: Object.assign({}, CHART_BASE_OPTS, {
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return fmtVnd(ctx.parsed.y); } } } }
       })
