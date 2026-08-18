@@ -390,24 +390,190 @@
       }).join('');
     }
 
+    // --- cảnh báo vét thầu (< 3 tháng) + cài gói thầu mới (~6 tháng), gộp
+    // theo TỪNG HỢP ĐỒNG (Số HĐ), vì 1 hợp đồng có nhiều dòng sản phẩm và
+    // ngày hết hạn tính theo hợp đồng chứ không phải theo bệnh viện ---
+    var hopDongGroups = groupThauBySoHD(rows);
+    renderThauAlerts(hopDongGroups);
+
+    // --- tổng hợp theo nhân sự phụ trách (số bệnh viện + số tỉnh) ---
+    renderThauEmpSummary(rows);
+
     // --- bảng chi tiết ---
     setText('thau-row-count', '(' + fmtNum.format(rows.length) + ' dòng)');
     renderThauTableBody(rows);
     attachSort('table-thau', getThauFiltered, renderThauTableBody);
   }
 
+  // Gộp các dòng Thầu theo Số HĐ (1 hợp đồng có thể có nhiều dòng sản phẩm) —
+  // dùng cho 2 khối cảnh báo "vét thầu"/"cài gói thầu mới" vì ngày hết hạn +
+  // ghi chú áp dụng theo TỪNG HỢP ĐỒNG, không phải theo từng dòng sản phẩm.
+  function groupThauBySoHD(rows) {
+    var map = {};
+    var order = [];
+    rows.forEach(function (r) {
+      var key = r.soHD || ('(không rõ #' + r.maKhach + ')');
+      if (!map[key]) {
+        map[key] = {
+          soHD: r.soHD, tenKhach: r.tenKhach, tinh: r.tinh, phuTrach: r.phuTrach,
+          maKhach: r.maKhach, ngayHetHan: r.ngayHetHan, ngayBatDau: r.ngayBatDau,
+          slKeHoach: 0, slThucHien: 0, soSanPham: 0, ghiChu: r.ghiChu,
+          ghiChuRowIndex: r.ghiChuRowIndex, coCanhBaoDoiChieu: false
+        };
+        order.push(key);
+      }
+      var g = map[key];
+      g.slKeHoach += (r.slKeHoachThuc > 0 ? r.slKeHoachThuc : r.slKeHoach);
+      g.slThucHien += r.slThucHien;
+      g.soSanPham += 1;
+      if (r.doiChieu && r.doiChieu.canhBao) g.coCanhBaoDoiChieu = true;
+    });
+    return order.map(function (key) {
+      var g = map[key];
+      g.tyLe = g.slKeHoach > 0 ? g.slThucHien / g.slKeHoach : 0;
+      g.daysLeft = daysUntil(g.ngayHetHan);
+      return g;
+    });
+  }
+
+  function renderThauAlerts(groups) {
+    // Vét thầu: hợp đồng còn hiệu lực nhưng dưới 3 tháng (90 ngày) nữa hết hạn.
+    var vet = groups.filter(function (g) { return g.daysLeft >= 0 && g.daysLeft <= 90; })
+      .sort(function (a, b) { return a.daysLeft - b.daysLeft; });
+    var vetEl = $('thau-vetthau-list');
+    if (!vet.length) {
+      vetEl.innerHTML = '<div class="empty-state">Không có gói thầu nào sắp hết hạn trong 3 tháng tới.</div>';
+    } else {
+      vetEl.innerHTML = vet.map(function (g) {
+        var urgentCls = g.daysLeft <= 30 ? 'thau-alert-days--urgent' : 'thau-alert-days--soon';
+        return thauAlertCardHtml(g, urgentCls, g.daysLeft + ' ngày nữa hết hạn');
+      }).join('');
+    }
+
+    // Cài gói thầu mới: hợp đồng còn khoảng 6 tháng (150–210 ngày) nữa hết
+    // hạn — gộp hiển thị THEO NHÂN VIÊN phụ trách để dễ chuẩn bị trước.
+    var newPkg = groups.filter(function (g) { return g.daysLeft > 150 && g.daysLeft <= 210; })
+      .sort(function (a, b) { return a.daysLeft - b.daysLeft; });
+    var newPkgEl = $('thau-caigoimoi-list');
+    if (!newPkg.length) {
+      newPkgEl.innerHTML = '<div class="empty-state">Không có gói thầu nào cần chuẩn bị cài mới trong khoảng 6 tháng tới.</div>';
+    } else {
+      var byNv = {};
+      var nvOrder = [];
+      newPkg.forEach(function (g) {
+        var nv = g.phuTrach || '(chưa rõ)';
+        if (!byNv[nv]) { byNv[nv] = []; nvOrder.push(nv); }
+        byNv[nv].push(g);
+      });
+      newPkgEl.innerHTML = nvOrder.map(function (nv) {
+        return '<div class="thau-alert-nvgroup">' +
+          '<div class="thau-alert-nvgroup-title">👤 ' + escapeHtml(nv) + ' <span class="muted small">(' + byNv[nv].length + ' gói)</span></div>' +
+          byNv[nv].map(function (g) { return thauAlertCardHtml(g, 'thau-alert-days--soon', g.daysLeft + ' ngày nữa hết hạn'); }).join('') +
+          '</div>';
+      }).join('');
+    }
+  }
+
+  function thauAlertCardHtml(g, daysCls, daysLabel) {
+    var doiChieuBadge = g.coCanhBaoDoiChieu
+      ? '<span class="chip critical" title="Đơn kế toán tháng này đã giao vượt SL còn lại của gói — có thể bảng Thầu chưa cập nhật kịp">⚠️ Chênh lệch đơn kế toán</span>'
+      : '';
+    return '<div class="thau-alert-card">' +
+      '<div class="thau-alert-card-top">' +
+        '<span class="thau-alert-card-name">' + escapeHtml(g.tenKhach) + '</span>' +
+        '<span class="thau-alert-days ' + daysCls + '">' + escapeHtml(daysLabel) + '</span>' +
+      '</div>' +
+      '<div class="thau-alert-card-meta">' +
+        '<span>' + escapeHtml(g.tinh) + '</span><span>·</span>' +
+        '<span>👤 ' + escapeHtml(g.phuTrach) + '</span><span>·</span>' +
+        '<span class="muted small">HĐ ' + escapeHtml(g.soHD) + '</span>' +
+      '</div>' +
+      '<div class="thau-alert-card-bottom">' +
+        '<span class="muted small">' + g.soSanPham + ' mặt hàng · Hết hạn ' + fmtDate(g.ngayHetHan) + '</span>' +
+        progressCellHtml(g.tyLe) +
+      '</div>' +
+      (doiChieuBadge ? '<div class="thau-alert-card-badges">' + doiChieuBadge + '</div>' : '') +
+      (g.ghiChu ? '<div class="thau-alert-card-note">📝 ' + escapeHtml(g.ghiChu) + '</div>' : '') +
+      '</div>';
+  }
+
+  function renderThauEmpSummary(rows) {
+    var byNv = {};
+    var order = [];
+    rows.forEach(function (r) {
+      var nv = r.phuTrach || '(chưa rõ)';
+      if (!byNv[nv]) { byNv[nv] = { benhVien: {}, tinh: {}, slKeHoach: 0, slThucHien: 0 }; order.push(nv); }
+      var g = byNv[nv];
+      if (r.maKhach) g.benhVien[r.maKhach] = true;
+      if (r.tinh) g.tinh[r.tinh] = true;
+      g.slKeHoach += (r.slKeHoachThuc > 0 ? r.slKeHoachThuc : r.slKeHoach);
+      g.slThucHien += r.slThucHien;
+    });
+    order.sort();
+    var el = $('thau-emp-summary');
+    if (!order.length) { el.innerHTML = '<div class="empty-state">Không có dữ liệu.</div>'; return; }
+    el.innerHTML = order.map(function (nv) {
+      var g = byNv[nv];
+      var soBv = Object.keys(g.benhVien).length;
+      var soTinh = Object.keys(g.tinh).length;
+      var tyLe = g.slKeHoach > 0 ? g.slThucHien / g.slKeHoach : 0;
+      return '<div class="sptt-emp-card thau-emp-card">' +
+        '<div class="sptt-emp-card-head"><span class="sptt-emp-name">👤 ' + escapeHtml(nv) + '</span></div>' +
+        '<div class="thau-emp-stats">' +
+          '<div class="thau-emp-stat"><span class="thau-emp-stat-value">' + soBv + '</span><span class="thau-emp-stat-label">bệnh viện</span></div>' +
+          '<div class="thau-emp-stat"><span class="thau-emp-stat-value">' + soTinh + '</span><span class="thau-emp-stat-label">tỉnh</span></div>' +
+        '</div>' +
+        progressCellHtml(tyLe) +
+        '</div>';
+    }).join('');
+  }
+
   function renderThauTableBody(rows) {
     var body = $('table-thau').querySelector('tbody');
-    if (!rows.length) { body.innerHTML = '<tr><td colspan="9" class="empty-state">Không có dữ liệu phù hợp bộ lọc.</td></tr>'; return; }
+    if (!rows.length) { body.innerHTML = '<tr><td colspan="11" class="empty-state">Không có dữ liệu phù hợp bộ lọc.</td></tr>'; return; }
     body.innerHTML = rows.map(function (r) {
+      var doiChieuCell = (r.doiChieu && r.doiChieu.canhBao)
+        ? '<span class="chip critical" title="Đơn kế toán tháng này (' + fmtNum.format(r.doiChieu.slThangNay) + ' SL) đã giao vượt SL còn lại — có thể bảng Thầu chưa cập nhật kịp">⚠️ Chênh lệch</span>'
+        : (r.doiChieu ? '<span class="chip good" title="Đã giao ' + fmtNum.format(r.doiChieu.slThangNay) + ' SL trong tháng theo đơn kế toán, khớp với SL còn lại">✓ Khớp</span>' : '<span class="muted small">—</span>');
       return '<tr><td>' + escapeHtml(r.tenKhach) + '</td><td>' + escapeHtml(r.tinh) + '</td>' +
         '<td>' + escapeHtml(r.phuTrach) + '</td><td>' + escapeHtml(r.tenHang) + '</td>' +
         '<td class="muted small">' + escapeHtml(r.soHD) + '</td>' +
         '<td class="num">' + fmtNum.format(r.slKeHoach) + '</td>' +
         '<td class="num">' + fmtNum.format(r.slThucHien) + '</td>' +
         '<td>' + progressCellHtml(r.tyLe) + '</td>' +
-        '<td>' + fmtDate(r.ngayHetHan) + '</td></tr>';
+        '<td>' + fmtDate(r.ngayHetHan) + '</td>' +
+        '<td>' + doiChieuCell + '</td>' +
+        '<td><textarea class="thau-ghichu-input" rows="1" placeholder="Ghi chú…" data-rowindex="' + r.ghiChuRowIndex + '">' + escapeHtml(r.ghiChu) + '</textarea></td></tr>';
     }).join('');
+    attachThauGhiChuHandlers();
+  }
+
+  function attachThauGhiChuHandlers() {
+    var els = $('table-thau').querySelectorAll('.thau-ghichu-input');
+    els.forEach(function (el) {
+      el.addEventListener('change', function () {
+        saveThauGhiChu(+el.dataset.rowindex, el.value, el);
+      });
+    });
+  }
+
+  function saveThauGhiChu(rowIndex, ghiChu, inputEl) {
+    if (inputEl) inputEl.disabled = true;
+    fetch('/.netlify/functions/thau', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ rowIndex: rowIndex, ghiChu: ghiChu })
+    })
+      .then(function (res) { return res.json().then(function (j) { return { status: res.status, body: j }; }); })
+      .then(function (r) {
+        if (!r.body || !r.body.ok) throw new Error((r.body && r.body.error) || 'Lưu ghi chú thất bại');
+        RAW.thau = r.body.data || [];
+        renderThau();
+      })
+      .catch(function (err) {
+        if (inputEl) inputEl.disabled = false;
+        alert('Không lưu được ghi chú: ' + err.message);
+      });
   }
 
   function groupAgg(rows, keyFn) {
