@@ -136,11 +136,14 @@ button, input, select { font-family: inherit; font-size: inherit; }
   min-height: 16px;
 }
 .login-logo {
-  width: 44px; height: 44px; border-radius: 10px;
-  background: #fff center/contain no-repeat url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA5MCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjkwIj4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCw2KSBzY2FsZSgxKSI+PHBhdGggZD0iTTgsMjAgTDU2LDIwIEw1NiwyNiBDNTYsMjggNTQsMjkgNTIsMjkgTDEyLDI5IEMxMCwyOSA4LDI4IDgsMjYgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik04LDIwIEwxNCw2IEwyMCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTIwLDIwIEwyNiwtMiBMMzIsMjAgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik0yNiwyMCBMMzIsLTggTDM4LDIwIFoiIGZpbGw9IiNjOTg2MWEiLz48cGF0aCBkPSJNMzIsMjAgTDM4LC0yIEw0NCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTQ0LDIwIEw1MCw2IEw1NiwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PGNpcmNsZSBjeD0iMTQiIGN5PSI5IiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMjYiIGN5PSIxIiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSItNSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjM4IiBjeT0iMSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iOSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwyMikgcm90YXRlKDAsMzIsMzQpIHNjYWxlKDEpIiBvcGFjaXR5PSIxIj48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjMWUzYTcwIi8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiMwZjFiM2QiLz48L2c+Cjwvc3ZnPg==');
-  border: 1px solid var(--border);
+  width: 44px; height: 44px;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 58%, 79% 91%, 50% 70%, 21% 91%, 32% 58%, 2% 35%, 39% 35%);
+  -webkit-clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 58%, 79% 91%, 50% 70%, 21% 91%, 32% 58%, 2% 35%, 39% 35%);
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA5MCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjkwIj4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCw2KSBzY2FsZSgxKSI+PHBhdGggZD0iTTgsMjAgTDU2LDIwIEw1NiwyNiBDNTYsMjggNTQsMjkgNTIsMjkgTDEyLDI5IEMxMCwyOSA4LDI4IDgsMjYgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik04LDIwIEwxNCw2IEwyMCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTIwLDIwIEwyNiwtMiBMMzIsMjAgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik0yNiwyMCBMMzIsLTggTDM4LDIwIFoiIGZpbGw9IiNjOTg2MWEiLz48cGF0aCBkPSJNMzIsMjAgTDM4LC0yIEw0NCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTQ0LDIwIEw1MCw2IEw1NiwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PGNpcmNsZSBjeD0iMTQiIGN5PSI5IiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMjYiIGN5PSIxIiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSItNSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjM4IiBjeT0iMSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iOSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwyMikgcm90YXRlKDAsMzIsMzQpIHNjYWxlKDEpIiBvcGFjaXR5PSIxIj48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjMWUzYTcwIi8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiMwZjFiM2QiLz48L2c+Cjwvc3ZnPg==') center / 60% no-repeat, linear-gradient(135deg, #ff3b3b 0%, #ff9f3b 18%, #ffe93b 36%, #4bdc6c 54%, #3bb8ff 72%, #8a5cff 88%, #ff3bd6 100%);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25));
   margin: 0 auto 16px;
 }
+
 
 /* ============================================================================
    TRANG TRÍ HOA & BƯỚM — nền màn hình đăng nhập
@@ -238,32 +241,48 @@ button, input, select { font-family: inherit; font-size: inherit; }
   position: relative;
   z-index: 1;
 }
-.sidebar-brand .login-logo { margin: 0; width: 34px; height: 34px; border-radius: 8px; flex: none; }
+.sidebar-brand .login-logo { margin: 0; width: 38px; height: 38px; border-radius: 8px; flex: none; }
 .sidebar-title {
-  font-size: 13.5px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: .015em;
   color: #fff;
-  line-height: 1.3;
+  line-height: 1.25;
 }
-.side-nav { display: flex; flex-direction: column; gap: 2px; padding: 14px 10px; position: relative; z-index: 1; }
+.side-nav { display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; position: relative; z-index: 1; }
 .side-nav .tab-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   border: none;
   background: none;
   color: var(--sidebar-text);
-  padding: 10px 12px;
-  border-radius: var(--radius-s);
-  font-size: 13.5px;
-  font-weight: 600;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .01em;
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
+  transition: background .15s ease, color .15s ease;
 }
-.side-nav .tab-btn svg { width: 18px; height: 18px; flex: none; opacity: 0.85; }
+.side-nav .tab-btn .tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  flex: none;
+  transition: background .15s ease;
+}
+.side-nav .tab-btn svg { width: 19px; height: 19px; stroke-width: 1.9; flex: none; opacity: 0.9; }
 .side-nav .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.06); color: #fff; }
+.side-nav .tab-btn:hover:not(.active) .tab-icon { background: rgba(255,255,255,0.13); }
 .side-nav .tab-btn.active { background: var(--sidebar-active-bg); color: var(--sidebar-text-active); }
+.side-nav .tab-btn.active .tab-icon { background: rgba(255,255,255,0.2); }
 .side-nav .tab-btn.active svg { opacity: 1; }
 
 /* ---- Main column ---- */
@@ -780,6 +799,53 @@ tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
   .chat-contacts { width: 100%; max-height: 200px; }
   .chat-thread-wrap { height: 60vh; }
 }
+
+/* ---- Giao việc ---- */
+.giaoviec-form { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.giaoviec-field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+.giaoviec-field select,
+.giaoviec-field input[type="text"],
+.giaoviec-field textarea {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--text-primary);
+  padding: 9px 12px;
+  border: 1px solid var(--baseline);
+  border-radius: var(--radius-s);
+  outline: none;
+  resize: vertical;
+}
+.giaoviec-field select:focus,
+.giaoviec-field input[type="text"]:focus,
+.giaoviec-field textarea:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42,120,214,0.15); }
+.giaoviec-form-actions { display: flex; align-items: center; gap: 12px; }
+.giaoviec-form-status, .giaoviec-fb-status-text { font-size: 12px; color: var(--text-muted); }
+.btn-small { padding: 5px 11px; font-size: 12px; }
+
+.giaoviec-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  background: var(--surface-1);
+}
+.giaoviec-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.giaoviec-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.giaoviec-card-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.giaoviec-card-meta b { color: var(--text-secondary); font-weight: 600; }
+.giaoviec-card-content {
+  font-size: 13.5px;
+  color: var(--text-primary);
+  background: var(--page-plane);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+.giaoviec-card-mail { margin-bottom: 12px; }
+.giaoviec-feedback-form { border-top: 1px dashed var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.giaoviec-feedback-form .giaoviec-field { max-width: 320px; }
 
 /* footer */
 footer.app-footer {
