@@ -9,7 +9,7 @@
   var CFG = window.APP_CONFIG || {};
   var SESSION_KEY = 'kd_dashboard_auth';
 
-  var RAW = { thau: [], kpi: { employees: [], thang: '' }, sales: [], checkin: { employees: [] }, meta: {} };
+  var RAW = { thau: [], kpi: { employees: [], thang: '' }, sales: [], checkin: { employees: [] }, sptt: { capNhatLuc: '', team: [], employees: [] }, meta: {} };
   var CHARTS = {};
   var SORT_STATE = {}; // { tableId: { key, dir } }
 
@@ -180,12 +180,14 @@
         RAW.kpi = json.data.kpi || { employees: [] };
         RAW.sales = json.data.sales || [];
         RAW.checkin = json.data.checkin || { employees: [] };
+        RAW.sptt = json.data.sptt || { capNhatLuc: '', team: [], employees: [] };
         RAW.meta = json.data.meta || {};
         setText('updated-at', 'Cập nhật lúc ' + new Date(json.updatedAt).toLocaleString('vi-VN'));
         safeRun(initFilters);
         safeRun(renderThau);
         safeRun(renderKpi);
         safeRun(renderSales);
+        safeRun(renderSptt);
       })
       .catch(function (err) {
         showGlobalError('Không tải được dữ liệu: ' + err.message + '. Kiểm tra API_URL trong config.js, kiểm tra Apps Script đã Deploy đúng quyền "Anyone", hoặc thử Làm mới.');
@@ -1002,6 +1004,75 @@
         plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return fmtVnd(ctx.parsed.y); } } } }
       })
     });
+  }
+
+  // ==========================================================================
+  // TAB: SẢN PHẨM TRỌNG TÂM — Sugam-BFS / Propofol-BFS của Team SS Tạ Hoàng
+  // Duy. Dữ liệu được 1 workflow n8n tự tính lũy kế mỗi ngày (đọc từ sheet đơn
+  // hàng), Apps Script chỉ đọc lại tab đã tính sẵn, xem thêm getSanPhamTrongTam_
+  // trong Code.gs. Không có bộ lọc/bảng chi tiết — chỉ hiển thị thẻ tổng quan
+  // (lũy kế quý của team + lũy kế tháng của từng nhân viên), theo đúng yêu cầu
+  // "tên nhân viên và tiêu đề to rõ ràng, icon ngộ nghĩnh cho sinh động".
+  // ==========================================================================
+  var SPTT_PRODUCT_ICON = { 'Propofol BFS': '💉', 'Sugam BFS': '🧴' };
+  var SPTT_MEDALS = ['🥇', '🥈', '🥉'];
+
+  function spttProgressBar(ratioPct) {
+    var ratio = Math.max(0, (ratioPct || 0) / 100);
+    var cls = progressClass(ratio);
+    return '<div class="progress-cell"><div class="progress-track">' +
+      '<div class="progress-fill ' + cls + '" style="width:' + (Math.min(1, ratio) * 100) + '%"></div></div>' +
+      '<div class="progress-pct">' + (ratioPct || 0).toFixed(1).replace('.0', '') + '%</div></div>';
+  }
+
+  function spttTeamCardHtml(t) {
+    var icon = SPTT_PRODUCT_ICON[t.sanPham] || '🎯';
+    return '<div class="sptt-team-card">' +
+      '<div class="sptt-team-card-head"><span class="sptt-card-icon">' + icon + '</span>' +
+      '<span class="sptt-team-card-name">' + escapeHtml(t.sanPham) + '</span></div>' +
+      '<div class="sptt-team-card-nums">' +
+      '<span class="sptt-luyke">' + fmtNum.format(t.luyKe) + '</span>' +
+      '<span class="sptt-target">/ ' + fmtNum.format(t.target) + ' ống (Target Quý 3)</span></div>' +
+      spttProgressBar(t.tyLe) + '</div>';
+  }
+
+  function spttEmpAvgTyLe(emp) {
+    if (!emp.items.length) return 0;
+    return sumBy(emp.items, 'tyLe') / emp.items.length;
+  }
+
+  function spttEmpCardHtml(emp, rankIdx) {
+    var medal = SPTT_MEDALS[rankIdx] ? '<span class="sptt-emp-medal">' + SPTT_MEDALS[rankIdx] + '</span>' : '';
+    var rows = emp.items.map(function (it) {
+      var icon = SPTT_PRODUCT_ICON[it.sanPham] || '🎯';
+      return '<div class="sptt-product-row">' +
+        '<span class="sptt-product-icon">' + icon + '</span>' +
+        '<span class="sptt-product-label">' + escapeHtml(it.sanPham) + '</span>' +
+        '<span class="sptt-product-nums">' + fmtNum.format(it.luyKe) + ' / ' + fmtNum.format(it.target) + ' ống</span>' +
+        spttProgressBar(it.tyLe) + '</div>';
+    }).join('');
+    return '<div class="sptt-emp-card">' +
+      '<div class="sptt-emp-card-head">' + medal + chatAvatarHtml(emp.hoTen, emp.maNhanVien || emp.hoTen) +
+      '<span class="sptt-emp-name">' + escapeHtml(emp.hoTen) + '</span></div>' +
+      rows + '</div>';
+  }
+
+  function renderSptt() {
+    var data = RAW.sptt || { capNhatLuc: '', team: [], employees: [] };
+    var teamBox = $('sptt-team-cards');
+    var empBox = $('sptt-emp-cards');
+    if (!teamBox || !empBox) return;
+
+    teamBox.innerHTML = data.team.length
+      ? data.team.map(spttTeamCardHtml).join('')
+      : '<div class="empty-state small">Chưa có dữ liệu — workflow n8n chưa chạy lần nào hoặc chưa tới giờ chạy đầu tiên (6h sáng hàng ngày).</div>';
+
+    var emps = data.employees.slice().sort(function (a, b) { return spttEmpAvgTyLe(b) - spttEmpAvgTyLe(a); });
+    empBox.innerHTML = emps.length
+      ? emps.map(function (e, i) { return spttEmpCardHtml(e, i); }).join('')
+      : '<div class="empty-state small">Chưa có dữ liệu nhân viên.</div>';
+
+    setText('sptt-updated', data.capNhatLuc ? 'n8n cập nhật lúc ' + new Date(data.capNhatLuc).toLocaleString('vi-VN') : '');
   }
 
   // --------------------------------------------------------------------------
