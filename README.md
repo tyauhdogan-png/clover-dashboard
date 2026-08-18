@@ -1,166 +1,862 @@
-# Dashboard Kinh Doanh — Thầu / KPI / Sale
+/* ============================================================================
+   DESIGN TOKENS (nguồn: dataviz skill – palette.md, light mode)
+   ============================================================================ */
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page-plane: #f4f4f1;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
 
-Website theo dõi 3 mảng dữ liệu, lấy trực tiếp (live) từ 4 Google Sheet hiện có
-của bạn, không cần nhập liệu lại:
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #eda100; /* yellow */
+  --series-5: #e87ba4; /* magenta */
+  --series-6: #008300; /* green */
+  --series-7: #4a3aa7; /* violet */
+  --series-8: #e34948; /* red */
 
-1. **Tiến độ Thầu** theo từng tỉnh / từng khách hàng (kế hoạch vs thực hiện,
-   cảnh báo hợp đồng sắp hết hạn mà tỷ lệ thực hiện còn thấp).
-2. **KPI từng nhân viên** (rút gọn theo nhóm chính: doanh số kê đơn, doanh số
-   thầu, sản phẩm trọng tâm, nhân sự, coaching call, tổng điểm TH/KH, xếp hạng),
-   có kèm hoạt động viếng thăm khách hàng (checkin GPS).
-3. **Data sale khách hàng** (doanh thu theo thời gian / tỉnh / nhóm hàng, top
-   khách hàng, chi tiết từng đơn).
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
 
-## Kiến trúc
+  --seq-100: #cde2fb;
+  --seq-400: #3987e5;
+  --seq-550: #1c5cab;
 
-```
-Google Sheets (4 file bạn đang dùng)
-        │  (Apps Script đọc trực tiếp, KHÔNG copy dữ liệu ra đâu khác)
-        ▼
-Google Apps Script — triển khai thành "Web app" trả về JSON
-        │  (gọi qua fetch, dữ liệu luôn mới nhất)
-        ▼
-Website tĩnh (HTML/CSS/JS thuần, không framework) — host trên Netlify
-        │  (được khoá bằng mật khẩu chung qua Netlify Function)
-        ▼
-Trình duyệt người dùng
-```
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --shadow-card: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 16px rgba(11, 11, 11, 0.05);
+  font-variant-numeric: proportional-nums;
 
-Không có bước đồng bộ hay lưu trữ trung gian — mỗi lần mở trang / bấm "Làm
-mới", trang gọi thẳng vào Apps Script, Apps Script đọc trực tiếp từ 4 Google
-Sheet tại thời điểm đó.
+  /* watermark logo CPC1HN rất mờ, đặt chính giữa nền website (tự tạo từ logo, giảm độ đậm) */
+  --decor-watermark: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA5MCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjkwIj4KICA8ZyBvcGFjaXR5PSIwLjA2Ij4KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsNikgc2NhbGUoMSkiPjxwYXRoIGQ9Ik04LDIwIEw1NiwyMCBMNTYsMjYgQzU2LDI4IDU0LDI5IDUyLDI5IEwxMiwyOSBDMTAsMjkgOCwyOCA4LDI2IFoiIGZpbGw9IiMxZTNhNzAiLz48cGF0aCBkPSJNOCwyMCBMMTQsNiBMMjAsMjAgWiIgZmlsbD0iIzFlM2E3MCIvPjxwYXRoIGQ9Ik0yMCwyMCBMMjYsLTIgTDMyLDIwIFoiIGZpbGw9IiMxZTNhNzAiLz48cGF0aCBkPSJNMjYsMjAgTDMyLC04IEwzOCwyMCBaIiBmaWxsPSIjMWUzYTcwIi8+PHBhdGggZD0iTTMyLDIwIEwzOCwtMiBMNDQsMjAgWiIgZmlsbD0iIzFlM2E3MCIvPjxwYXRoIGQ9Ik00NCwyMCBMNTAsNiBMNTYsMjAgWiIgZmlsbD0iIzFlM2E3MCIvPjxjaXJjbGUgY3g9IjE0IiBjeT0iOSIgcj0iMyIgZmlsbD0iIzFlM2E3MCIvPjxjaXJjbGUgY3g9IjI2IiBjeT0iMSIgcj0iMyIgZmlsbD0iIzFlM2E3MCIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iLTUiIHI9IjMiIGZpbGw9IiMxZTNhNzAiLz48Y2lyY2xlIGN4PSIzOCIgY3k9IjEiIHI9IjMiIGZpbGw9IiMxZTNhNzAiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjkiIHI9IjMiIGZpbGw9IiMxZTNhNzAiLz48L2c+CiAgICA8cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjMWUzYTcwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLDIyKSIvPgogIDwvZz4KPC9zdmc+');
 
-## Cấu trúc thư mục
+  /* mẫu hoa văn hoa & bướm nhỏ, lặp lại (tileable) — phủ khắp nền trang, phía sau mọi khối nội dung */
+  --decor-tile: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE4LDIwKSByb3RhdGUoLTEyLDMyLDM0KSBzY2FsZSgwLjU1KSIgb3BhY2l0eT0iMC41NSI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iI2I5YzZlNiIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE0MCwxMCkgcm90YXRlKDE4LDMyLDM0KSBzY2FsZSgwLjQyKSIgb3BhY2l0eT0iMC40MiI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iIzlmYjBkOSIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDcwLDkwKSByb3RhdGUoOCwzMiwzNCkgc2NhbGUoMC42KSIgb3BhY2l0eT0iMC41Ij48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjYzdkMGVjIi8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiM1NDcwYWQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTUwLDEyMCkgcm90YXRlKC0yMCwzMiwzNCkgc2NhbGUoMC40NikiIG9wYWNpdHk9IjAuNCI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iIzhmYTNkMSIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwLDE0MCkgcm90YXRlKDI1LDMyLDM0KSBzY2FsZSgwLjQpIiBvcGFjaXR5PSIwLjM4Ij48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjYjljNmU2Ii8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiM1NDcwYWQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTEwLDE3MCkgcm90YXRlKC04LDMyLDM0KSBzY2FsZSgwLjM2KSIgb3BhY2l0eT0iMC40MiI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iIzlmYjBkOSIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPgo8L3N2Zz4=');
 
-```
-apps-script/Code.gs        → dán vào Google Apps Script (backend/API)
-site/                       → toàn bộ frontend, publish lên Netlify
-  index.html
-  style.css
-  app.js
-  config.js                → SỬA FILE NÀY sau khi deploy Apps Script
-netlify/functions/login.js  → kiểm tra mật khẩu chung (Netlify Function)
-netlify.toml                → cấu hình build cho Netlify
-```
+  /* cụm hoa & bướm lớn (tự vẽ, dạng SVG nhúng) dùng làm điểm nhấn ở góc màn hình */
+  --decor-flowers: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MjAgNDIwIiB3aWR0aD0iNDIwIiBoZWlnaHQ9IjQyMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI1NSUiIGN5PSI0NSUiIHI9IjYwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM5ZmIwZDkiIHN0b3Atb3BhY2l0eT0iMC4zNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM5ZmIwZDkiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iMjMwIiBjeT0iMjAwIiByPSIyMDAiIGZpbGw9InVybCgjZ2xvdykiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxOTAsMTUwKSByb3RhdGUoLTYsMzIsMzQpIHNjYWxlKDIuMikiIG9wYWNpdHk9IjAuNTUiPjxwYXRoIGQ9Ik0zMiwzIEM0OC41LDMgNTksMTUgNTksMzEgQzU5LDQxLjUgNTMsNDggNDYuNSw1Mi41IEw0Ni41LDYwIEM0Ni41LDYzIDQ0LDY1LjUgNDEsNjUuNSBMMzgsNjUuNSBMMzgsNTguNSBMMzQuNSw1OC41IEwzNC41LDY1LjUgTDMwLDY1LjUgTDI2LDY1LjUgQzIzLDY1LjUgMjAuNSw2MyAyMC41LDYwIEwyMC41LDUyLjUgQzE0LDQ4IDUsNDEuNSA1LDMxIEM1LDE1IDE1LjUsMyAzMiwzIFoiIGZpbGw9IiM4ZmEzZDEiLz48ZWxsaXBzZSBjeD0iMjAuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiMzZTU1OTAiLz48ZWxsaXBzZSBjeD0iNDMuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiMzZTU1OTAiLz48cGF0aCBkPSJNMzIsMzUgTDI3LjUsNDQgTDM2LjUsNDQgWiIgZmlsbD0iIzNlNTU5MCIvPjwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg3MCwyNzApIHJvdGF0ZSgxNCwzMiwzNCkgc2NhbGUoMS4xKSIgb3BhY2l0eT0iMC41Ij48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjYjljNmU2Ii8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiM1NDcwYWQiLz48L2c+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAwLDI5MCkgcm90YXRlKC0xOCwzMiwzNCkgc2NhbGUoMC44NSkiIG9wYWNpdHk9IjAuNDUiPjxwYXRoIGQ9Ik0zMiwzIEM0OC41LDMgNTksMTUgNTksMzEgQzU5LDQxLjUgNTMsNDggNDYuNSw1Mi41IEw0Ni41LDYwIEM0Ni41LDYzIDQ0LDY1LjUgNDEsNjUuNSBMMzgsNjUuNSBMMzgsNTguNSBMMzQuNSw1OC41IEwzNC41LDY1LjUgTDMwLDY1LjUgTDI2LDY1LjUgQzIzLDY1LjUgMjAuNSw2MyAyMC41LDYwIEwyMC41LDUyLjUgQzE0LDQ4IDUsNDEuNSA1LDMxIEM1LDE1IDE1LjUsMyAzMiwzIFoiIGZpbGw9IiNjN2QwZWMiLz48ZWxsaXBzZSBjeD0iMjAuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiM1NDcwYWQiLz48ZWxsaXBzZSBjeD0iNDMuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiM1NDcwYWQiLz48cGF0aCBkPSJNMzIsMzUgTDI3LjUsNDQgTDM2LjUsNDQgWiIgZmlsbD0iIzU0NzBhZCIvPjwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMzAsMzMwKSByb3RhdGUoNDUpIHNjYWxlKDAuOSkiIG9wYWNpdHk9IjAuNCI+PHJlY3QgeD0iLTIyIiB5PSItMyIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjYTZiNmRlIi8+PGNpcmNsZSBjeD0iLTIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9Ii0yMiIgY3k9IjMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMyIgcj0iNC41IiBmaWxsPSIjYTZiNmRlIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIzMCwzMzApIHJvdGF0ZSgtNDUpIHNjYWxlKDAuOSkiIG9wYWNpdHk9IjAuNCI+PHJlY3QgeD0iLTIyIiB5PSItMyIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjYTZiNmRlIi8+PGNpcmNsZSBjeD0iLTIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9Ii0yMiIgY3k9IjMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMyIgcj0iNC41IiBmaWxsPSIjYTZiNmRlIi8+PC9nPgo8L3N2Zz4=');
+}
 
----
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background-color: var(--page-plane);
+  /* Lớp 1 (trên): watermark logo CPC1HN rất to, rất mờ, luôn đứng yên ở chính giữa màn hình.
+     Lớp 2 (dưới): hoa văn hoa & bướm lặp khắp nền trang.
+     Cả hai đều là nền của <body> nên luôn nằm dưới mọi thẻ/bảng/biểu đồ — không bao giờ che dữ liệu. */
+  background-image: var(--decor-watermark), var(--decor-tile);
+  background-repeat: no-repeat, repeat;
+  background-position: center center, 0 0;
+  background-size: min(60vw, 640px) auto, 200px 200px;
+  background-attachment: fixed, fixed;
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
 
-## BƯỚC 1 — Triển khai Apps Script (API dữ liệu)
+@media (max-width: 640px) {
+  body { background-size: min(85vw, 420px) auto, 200px 200px; }
+}
 
-1. Mở https://script.google.com/ → **Dự án mới**.
-2. Xoá hết code mẫu trong `Code.gs`, dán toàn bộ nội dung file
-   `apps-script/Code.gs` (trong bộ file này) vào.
-3. File đã có sẵn ID của 4 Google Sheet bạn gửi (KPI, checkin, sale, thầu) —
-   không cần sửa gì nếu bạn dùng đúng 4 file đó. Nếu muốn đổi mật khẩu API,
-   sửa dòng:
-   ```js
-   API_KEY: 'thay-doi-chuoi-nay',
-   ```
-   thành một chuỗi bất kỳ do bạn đặt (nhớ đổi giống hệt trong
-   `site/config.js` ở Bước 2).
-4. Bấm **Triển khai (Deploy) → Triển khai mới (New deployment)**.
-   - Loại: **Ứng dụng web (Web app)**
-   - Thực thi với quyền của (Execute as): **Tôi (email của bạn)**
-   - Người có quyền truy cập (Who has access): **Bất kỳ ai (Anyone)**
-5. Lần đầu triển khai, Google sẽ yêu cầu **cấp quyền** truy cập 4 Google Sheet
-   — bấm cho phép (chọn tài khoản Google có quyền xem 4 sheet đó).
-6. Sau khi triển khai xong, copy **URL ứng dụng web**, dạng:
-   `https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxxxx/exec`
+button, input, select { font-family: inherit; font-size: inherit; }
 
-   Kiểm tra nhanh: dán URL đó + `?type=ping` vào trình duyệt, ví dụ:
-   `.../exec?type=ping&key=thay-doi-chuoi-nay` → phải thấy
-   `{"ok":true, ... "data":{"pong":true}}`.
+.hidden { display: none !important; }
 
-**Lưu ý quan trọng:** mỗi khi bạn sửa `Code.gs` sau này, phải vào **Quản lý
-triển khai (Manage deployments) → biểu tượng bút chì → Phiên bản mới (New
-version) → Triển khai** thì URL mới nhận code mới (không tự cập nhật).
+/* ============================================================================
+   LOGIN SCREEN
+   ============================================================================ */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.login-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-card);
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.login-card h1 {
+  font-size: 19px;
+  margin: 4px 0 6px;
+}
+.login-card p.sub {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  margin: 0 0 24px;
+}
+.login-card input[type="password"],
+.login-card input[type="text"] {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--baseline);
+  border-radius: var(--radius-s);
+  font-size: 14px;
+  margin-bottom: 14px;
+  outline: none;
+}
+.login-card input[type="password"]:focus,
+.login-card input[type="text"]:focus {
+  border-color: var(--series-1);
+  box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.15);
+}
+.login-card button {
+  width: 100%;
+  padding: 11px 14px;
+  border: none;
+  border-radius: var(--radius-s);
+  background: var(--series-1);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.login-card button:hover { background: #2166b8; }
+.login-card button:disabled { opacity: .6; cursor: default; }
+.login-error {
+  color: var(--status-critical);
+  font-size: 13px;
+  margin-top: 12px;
+  min-height: 16px;
+}
+.login-logo {
+  width: 44px; height: 44px;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 58%, 79% 91%, 50% 70%, 21% 91%, 32% 58%, 2% 35%, 39% 35%);
+  -webkit-clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 58%, 79% 91%, 50% 70%, 21% 91%, 32% 58%, 2% 35%, 39% 35%);
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA5MCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjkwIj4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCw2KSBzY2FsZSgxKSI+PHBhdGggZD0iTTgsMjAgTDU2LDIwIEw1NiwyNiBDNTYsMjggNTQsMjkgNTIsMjkgTDEyLDI5IEMxMCwyOSA4LDI4IDgsMjYgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik04LDIwIEwxNCw2IEwyMCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTIwLDIwIEwyNiwtMiBMMzIsMjAgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik0yNiwyMCBMMzIsLTggTDM4LDIwIFoiIGZpbGw9IiNjOTg2MWEiLz48cGF0aCBkPSJNMzIsMjAgTDM4LC0yIEw0NCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTQ0LDIwIEw1MCw2IEw1NiwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PGNpcmNsZSBjeD0iMTQiIGN5PSI5IiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMjYiIGN5PSIxIiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSItNSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjM4IiBjeT0iMSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iOSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwyMikgcm90YXRlKDAsMzIsMzQpIHNjYWxlKDEpIiBvcGFjaXR5PSIxIj48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjMWUzYTcwIi8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiMwZjFiM2QiLz48L2c+Cjwvc3ZnPg==') center / 60% no-repeat, linear-gradient(135deg, #ff3b3b 0%, #ff9f3b 18%, #ffe93b 36%, #4bdc6c 54%, #3bb8ff 72%, #8a5cff 88%, #ff3bd6 100%);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25));
+  margin: 0 auto 16px;
+}
 
-## BƯỚC 2 — Cập nhật URL vào frontend
 
-Mở `site/config.js`, sửa:
+/* ============================================================================
+   TRANG TRÍ HOA & BƯỚM — nền màn hình đăng nhập
+   (chỉ trang trí góc màn hình, không che nội dung/thẻ đăng nhập)
+   ============================================================================ */
+#login-screen { position: relative; overflow: hidden; }
+#login-screen::before,
+#login-screen::after {
+  content: "";
+  position: fixed;
+  background: var(--decor-flowers) no-repeat center / contain;
+  pointer-events: none;
+  z-index: 0;
+}
+#login-screen::before {
+  width: 620px;
+  height: 620px;
+  bottom: -60px;
+  right: -60px;
+  opacity: 1;
+}
+#login-screen::after {
+  width: 460px;
+  height: 460px;
+  top: -60px;
+  left: -60px;
+  transform: rotate(180deg);
+  opacity: 0.9;
+}
+.login-card { position: relative; z-index: 1; }
 
-```js
-API_URL: 'https://script.google.com/macros/s/.../exec',   // URL từ bước 1
-API_KEY: 'thay-doi-chuoi-nay',                             // giống hệt Code.gs
-```
+@media (max-width: 520px) {
+  #login-screen::before { width: 360px; height: 360px; }
+  #login-screen::after { width: 260px; height: 260px; }
+}
 
-## BƯỚC 3 — Đưa lên Netlify
+/* ============================================================================
+   APP SHELL — sidebar tối (navy) + khu vực nội dung sáng
+   ============================================================================ */
+:root {
+  --sidebar-bg: #0f1b3d;
+  --sidebar-bg-2: #16234a;
+  --sidebar-text: #aab4d4;
+  --sidebar-text-active: #ffffff;
+  --sidebar-active-bg: #1e3a70;
+  --sidebar-width: 210px;
+}
 
-**Cách A — kéo thả (nhanh nhất, không cần Git):**
-1. Vào https://app.netlify.com/ → **Add new site → Deploy manually**.
-2. Kéo thả **toàn bộ thư mục** `webapp/` (chứa `netlify.toml`, `site/`,
-   `netlify/functions/`) vào ô upload.
+#app { min-height: 100vh; position: relative; z-index: 0; }
+.app-shell { display: flex; min-height: 100vh; }
 
-**Cách B — qua GitHub (khuyến nghị nếu sẽ sửa code nhiều lần):**
-1. Đẩy toàn bộ thư mục này lên một repo GitHub.
-2. Trên Netlify: **Add new site → Import from Git** → chọn repo đó.
-3. Build command: để trống. Publish directory: `site`. Functions directory:
-   `netlify/functions` (đã khai báo sẵn trong `netlify.toml`, Netlify sẽ tự
-   nhận).
+/* Hoa & bướm trang trí góc màn hình khi đã đăng nhập — mờ, nằm dưới mọi khối dữ liệu
+   nên không bao giờ che số liệu (khối panel/bảng nào phủ lên trên sẽ tự động che nó). */
+#app::before,
+#app::after {
+  content: "";
+  position: fixed;
+  background: var(--decor-flowers) no-repeat center / contain;
+  pointer-events: none;
+  z-index: -1;
+}
+#app::before { width: 460px; height: 460px; bottom: -30px; right: -30px; opacity: 0.85; }
+#app::after { width: 320px; height: 320px; top: -30px; left: -30px; transform: rotate(180deg); opacity: 0.55; }
 
-## BƯỚC 4 — Đặt mật khẩu chung
+/* ---- Sidebar ---- */
+.sidebar {
+  width: var(--sidebar-width);
+  flex: 0 0 var(--sidebar-width);
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-2) 100%);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+/* hoa & bướm phủ SUỐT chiều cao thanh menu — chỉ để trang trí, mix-blend-mode giúp màu pastel nổi nhẹ trên nền navy */
+.sidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--decor-tile) repeat;
+  background-size: 130px 130px;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+  z-index: 1;
+}
+.sidebar-brand .login-logo { margin: 0; width: 38px; height: 38px; border-radius: 8px; flex: none; }
+.sidebar-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: .015em;
+  color: #fff;
+  line-height: 1.25;
+}
+.side-nav { display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; position: relative; z-index: 1; }
+.side-nav .tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: none;
+  color: var(--sidebar-text);
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background .15s ease, color .15s ease;
+}
+.side-nav .tab-btn .tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  flex: none;
+  transition: background .15s ease;
+}
+.side-nav .tab-btn svg { width: 19px; height: 19px; stroke-width: 1.9; flex: none; opacity: 0.9; }
+.side-nav .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.06); color: #fff; }
+.side-nav .tab-btn:hover:not(.active) .tab-icon { background: rgba(255,255,255,0.13); }
+.side-nav .tab-btn.active { background: var(--sidebar-active-bg); color: var(--sidebar-text-active); }
+.side-nav .tab-btn.active .tab-icon { background: rgba(255,255,255,0.2); }
+.side-nav .tab-btn.active svg { opacity: 1; }
 
-Trên Netlify: **Site settings → Environment variables → Add a variable**:
+/* ---- Main column ---- */
+.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
-| Key | Value |
-|---|---|
-| `SITE_PASSWORD` | mật khẩu bạn muốn dùng chung cho cả team |
-| `AUTH_SECRET` | một chuỗi bất kỳ, càng dài random càng tốt (dùng để ký token nội bộ) |
+header.topbar {
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar .updated {
+  font-size: 12.5px; color: var(--text-muted);
+}
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.btn {
+  border: 1px solid var(--baseline);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  padding: 7px 13px;
+  border-radius: var(--radius-s);
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover { background: var(--page-plane); }
+.btn-primary { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+.btn-primary:hover { background: #2166b8; }
+.user-badge {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--page-plane);
+  border: 1px solid var(--border);
+}
+.user-badge b { color: var(--text-primary); }
 
-Sau khi thêm biến môi trường, vào **Deploys → Trigger deploy → Deploy site**
-để Netlify build lại và nhận biến mới.
+main { flex: 1; padding: 20px 24px 60px; max-width: 1400px; width: 100%; margin: 0 auto; }
 
-## BƯỚC 5 — Kiểm tra
+/* ============================================================================
+   FILTER BAR — dạng viên thuốc (pill) giống mẫu
+   ============================================================================ */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+  align-items: center;
+}
+.filter-bar select, .filter-bar input[type="text"], .filter-bar input[type="date"] {
+  padding: 8px 14px;
+  border: 1px solid var(--baseline);
+  border-radius: 999px;
+  background: var(--surface-1);
+  font-size: 13px;
+  color: var(--text-primary);
+  min-width: 130px;
+}
+.filter-bar .search-box { min-width: 220px; flex: 1 1 220px; border-radius: var(--radius-s) !important; }
+.filter-bar .clear-filters {
+  font-size: 12.5px;
+  color: var(--series-1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 4px;
+}
 
-Mở URL Netlify (dạng `https://ten-site.netlify.app`) → nhập mật khẩu →
-dashboard sẽ tự gọi Apps Script và hiển thị dữ liệu.
+@media (max-width: 900px) {
+  .app-shell { flex-direction: column; }
+  .sidebar { width: 100%; flex: none; height: auto; position: static; }
+  .side-nav { flex-direction: row; overflow-x: auto; padding: 10px 14px 14px; }
+  .side-nav .tab-btn { flex: none; }
+  .sidebar::after { display: none; }
+  #app::before { width: 200px; height: 200px; }
+  #app::after { display: none; }
+}
 
----
+/* ============================================================================
+   STAT TILES
+   ============================================================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-tile {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card);
+}
+.stat-tile .label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+.stat-tile .value {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-## Cách dữ liệu được đọc & tính toán
+/* ============================================================================
+   CARD / PANEL
+   ============================================================================ */
+.panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  padding: 18px 18px 8px;
+  margin-bottom: 20px;
+}
+.panel h2 {
+  font-size: 14px;
+  margin: 0 0 14px;
+  font-weight: 700;
+}
+.panel h2 .count { color: var(--text-muted); font-weight: 500; }
 
-- **Thầu**: đọc trực tiếp sheet `THAU`. Tỷ lệ hoàn thành = SL thực hiện / SL
-  kế hoạch thực (nếu có), hoặc / SL kế hoạch nếu chưa có kế hoạch thực. Mục
-  "cảnh báo" lọc hợp đồng còn ≤ 60 ngày hiệu lực và tỷ lệ thực hiện < 60%.
-- **KPI**: đọc tab **cuối cùng** (bên phải nhất) trong file KPI — quy ước là
-  tab của tháng gần nhất. Bảng gốc có ~230 cột chia theo nhiều nhóm chỉ tiêu;
-  script tự nhận diện các nhóm theo tiêu đề (không hard-code số cột) và gộp
-  thành: Doanh số kê đơn, Doanh số thầu, SP trọng tâm, Nhân sự, Coaching
-  call, Điểm cộng/trừ, và Tổng điểm TH/KH/Xếp hạng lấy trực tiếp từ 5 cột
-  tổng kết cuối bảng. Khi bạn thêm tab tháng mới, script tự động dùng tab mới
-  nhất — **không cần sửa code**, miễn tab mới có cùng cấu trúc tiêu đề.
-- **Checkin**: sheet log GPS được gộp theo nhân viên (tổng lượt checkin, số
-  khách hàng đã ghé thăm, lượt trong 7/30 ngày gần nhất) để hiển thị trong
-  phần chi tiết mỗi nhân viên ở tab KPI — không hiển thị toàn bộ 10,000+ dòng
-  thô để tránh nặng trang.
-- **Sale**: đọc trực tiếp sheet `Sale T1-T7`, filter theo tỉnh / nhân viên /
-  nhóm hàng / khoảng ngày ngay trên trình duyệt (dữ liệu ~2,000 dòng nên lọc
-  phía client cho nhanh, không cần gọi lại server mỗi lần đổi bộ lọc).
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+.chart-box { position: relative; height: 260px; }
+.chart-box.tall { height: 320px; }
 
-## Giới hạn bảo mật cần biết
+/* ============================================================================
+   TABLE
+   ============================================================================ */
+.table-wrap { overflow-x: auto; border-radius: var(--radius-m); border: 1px solid var(--border); }
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.data-table th {
+  position: sticky; top: 0;
+  background: var(--sidebar-active-bg);
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: #dfe6f7;
+  border-bottom: 1px solid var(--sidebar-active-bg);
+  cursor: pointer;
+  white-space: nowrap;
+}
+table.data-table th.sorted { color: #fff; }
+table.data-table tbody tr:nth-child(even) { background: rgba(15,27,61,0.025); }
+table.data-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--gridline);
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+table.data-table tbody tr:hover { background: var(--page-plane); }
+table.data-table td.num, table.data-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.muted { color: var(--text-muted); }
+.small { font-size: 12px; }
 
-Đây là giải pháp **mật khẩu chung, dễ triển khai** theo đúng lựa chọn ban
-đầu — không phải bảo mật cấp doanh nghiệp:
+/* progress bar cell */
+.progress-cell { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--gridline);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 4px; }
+.progress-fill.good { background: var(--status-good); }
+.progress-fill.warn { background: var(--status-warning); }
+.progress-fill.critical { background: var(--status-critical); }
+.progress-pct { font-size: 12px; font-weight: 600; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
 
-- Mật khẩu (`SITE_PASSWORD`) được kiểm tra qua Netlify Function phía server
-  nên **không** bị lộ trong code frontend.
-- Tuy nhiên, `API_KEY` trong `site/config.js` và URL Apps Script **có nằm
-  trong code JS công khai** của trang — ai xem được mã nguồn trình duyệt
-  (F12) đều có thể lấy URL này và gọi thẳng API mà không cần qua trang đăng
-  nhập. `API_KEY` chỉ giúp chặn người lạ dò URL Apps Script ngẫu nhiên trên
-  Internet, không chặn được người đã từng đăng nhập hợp lệ vào trang.
-- Nếu cần bảo mật chặt hơn (ví dụ dữ liệu doanh thu/KPI rất nhạy cảm), nên
-  nâng cấp lên đăng nhập bằng **tài khoản Google giới hạn theo email công
-  ty** — có thể làm ở lần sau, cấu trúc code hiện tại (Apps Script tách
-  riêng khỏi frontend) hỗ trợ nâng cấp này mà không phải viết lại từ đầu.
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.chip.good { background: rgba(12,163,12,0.12); color: #086b08; }
+.chip.warn { background: rgba(250,178,25,0.18); color: #8a5c00; }
+.chip.critical { background: rgba(208,59,59,0.12); color: #a02323; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-## Khi cần chỉnh sửa / mở rộng sau này
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
 
-- Đổi ngưỡng màu tốt/vàng/đỏ của thanh tiến độ: sửa `THRESHOLDS` trong
-  `site/config.js`.
-- Đổi tên công ty / tiêu đề trang: sửa `APP_TITLE` trong `site/config.js`.
-- Muốn tự động làm mới dữ liệu định kỳ (không cần bấm nút): có thể thêm
-  `setInterval(loadAll, ...)` trong `site/app.js` — hỏi lại nếu cần, mình sẽ
-  bổ sung.
-- Nếu một trong 4 Google Sheet đổi cấu trúc cột/tiêu đề, phần đọc dữ liệu
-  tương ứng trong `Code.gs` có thể cần cập nhật lại theo tên cột mới.
+/* Employee detail row */
+tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.detail-metric {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+}
+.detail-metric .k { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+.detail-metric .v { font-size: 15px; font-weight: 700; }
+.detail-metric .v2 { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+
+.chip.muted { background: var(--page-plane); color: var(--text-muted); }
+.chip.muted::before { display: none; }
+
+/* ============================================================================
+   TAB: KPI — chọn nhân viên xem/sửa bảng KPI chi tiết của riêng người đó
+   ============================================================================ */
+.kpi-emp-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.kpi-emp-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 14px;
+  border-radius: var(--radius-m);
+  border: 1px solid var(--border);
+  background: var(--page-plane);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  min-width: 130px;
+}
+.kpi-emp-chip .kpi-emp-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.kpi-emp-chip .kpi-emp-pct { font-size: 12px; font-weight: 700; }
+.kpi-emp-chip.good .kpi-emp-pct { color: #086b08; }
+.kpi-emp-chip.warn .kpi-emp-pct { color: #8a5c00; }
+.kpi-emp-chip.critical .kpi-emp-pct { color: #a02323; }
+.kpi-emp-chip:hover { border-color: var(--series-1); }
+.kpi-emp-chip.active {
+  background: var(--sidebar-active-bg);
+  border-color: var(--sidebar-active-bg);
+}
+.kpi-emp-chip.active .kpi-emp-name { color: #fff; }
+.kpi-emp-chip.active .kpi-emp-pct { color: #dfe6f7; }
+
+.kpi-detail-header { margin-bottom: 16px; }
+.kpi-detail-title {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+.kpi-detail-meta { font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; }
+.kpi-checkin-summary {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  background: var(--page-plane);
+  border: 1px solid var(--border-soft, #e1e0d9);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 12px 0 16px;
+}
+
+/* Ô tóm tắt "ĐẠT KPI" / "BỊ LIỆT KPI" + lý do, hiển thị ngay đầu chi tiết */
+.kpi-result-summary {
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-soft, #e1e0d9);
+}
+.kpi-result-summary.ok { background: rgba(12,163,12,0.07); border-color: rgba(12,163,12,0.3); }
+.kpi-result-summary.fail { background: rgba(208,59,59,0.07); border-color: rgba(208,59,59,0.3); }
+.kpi-result-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.kpi-result-score { font-size: 12.5px; color: var(--text-secondary); }
+.kpi-result-reasons { margin: 8px 0 0; padding-left: 20px; font-size: 12.5px; color: var(--status-critical); }
+.kpi-result-reasons li { margin-bottom: 3px; }
+
+.kpi-group-title { font-size: 14.5px; margin: 26px 0 10px; font-weight: 700; }
+.kpi-group-title:first-of-type { margin-top: 4px; }
+.kpi-subgroup-title { font-size: 13px; margin: 16px 0 8px; color: var(--text-secondary); font-weight: 700; }
+
+.kpi-detail-table tfoot td { padding: 0; border-top: none; }
+.kpi-bonus-title, .kpi-tru-title { font-size: 13.5px; margin: 22px 0 10px; }
+
+/* Dòng tổng điểm của MỖI NHÓM chỉ tiêu (Doanh số / Sản phẩm trọng tâm) — dùng
+   chung 1 kiểu: căn giữa, chữ đậm, có nền nổi bật, đặt ngay dưới bảng/nhóm đó
+   để dễ thấy ngay không cần dò từng cột. Nhóm 1 dùng trong 1 ô <td colspan>
+   của tfoot bảng; Nhóm 2 dùng trong 1 <div> riêng (không phải bảng) — cùng
+   class nên nhìn giống hệt nhau. */
+.kpi-group-total-bar {
+  display: block;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(42,120,214,0.09);
+  border: 1px solid rgba(42,120,214,0.25);
+  border-radius: var(--radius-s);
+  padding: 10px 14px;
+  margin: 6px 0 14px;
+}
+.kpi-group-total-bar b { color: var(--series-1); font-size: 16px; }
+
+/* Mục tổng điểm cuối cùng "X điểm kpis / 1000 điểm kpis" ở cuối trang chi tiết
+   KPI, sau khi đã cộng "Điểm cộng thêm" và trừ "Điểm trừ KPI" — nền xanh navy
+   đậm cùng tông với sidebar/header của trang để thật nổi bật, chữ trắng/sáng
+   màu để tương phản rõ (khác bản trước dùng chữ xám mờ trên nền tối, khó đọc). */
+.kpi-final-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  padding: 20px 22px;
+  border-radius: var(--radius-m);
+  background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--sidebar-active-bg) 100%);
+  border: 1px solid var(--sidebar-active-bg);
+  box-shadow: var(--shadow-card);
+}
+.kpi-final-score-label {
+  width: 100%;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #dfe6f7;
+  margin-bottom: 2px;
+}
+.kpi-final-score-value { font-size: 32px; font-weight: 800; color: #ffffff; font-variant-numeric: tabular-nums; }
+.kpi-final-score-sep { font-size: 20px; color: #9db2e0; }
+.kpi-final-score-max { font-size: 18px; font-weight: 600; color: #cddaf5; font-variant-numeric: tabular-nums; }
+
+.kpi-input {
+  width: 100px;
+  padding: 6px 8px;
+  border: 1px solid var(--baseline);
+  border-radius: var(--radius-s);
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.15); outline: none; }
+.kpi-input:disabled { opacity: .6; }
+.kpi-input-text { width: 100%; min-width: 160px; text-align: left; }
+.kpi-select.kpi-input { width: auto; min-width: 120px; text-align: left; }
+.kpi-input-number { width: 128px; } /* đủ rộng cho số có dấu chấm, vd "250.000.000" */
+
+/* Bảng xếp hạng huy chương trên panel "Tỉ lệ hoàn thành KPI" */
+.kpi-leaderboard { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.kpi-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-s);
+  background: var(--page-plane);
+  border: 1px solid var(--border-soft, #e1e0d9);
+}
+.kpi-leaderboard-row.top3 { background: rgba(250,178,25,0.08); border-color: rgba(250,178,25,0.3); }
+.kpi-medal { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.kpi-rank-num { font-size: 12.5px; font-weight: 700; color: var(--text-muted); width: 26px; text-align: center; flex-shrink: 0; }
+.kpi-leaderboard-name { font-size: 13px; font-weight: 600; flex: 1; }
+.kpi-leaderboard-score { font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+.kpi-save-status {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  min-height: 16px;
+}
+.kpi-save-status.ok { color: var(--status-good); }
+.kpi-save-status.error { color: var(--status-critical); }
+
+/* ============================================================================
+   TAB: TRAO ĐỔI (chat riêng Admin ↔ từng nhân viên)
+   ============================================================================ */
+.chat-shell {
+  display: flex;
+  gap: 16px;
+  height: calc(100vh - 210px);
+  min-height: 420px;
+}
+.chat-contacts {
+  width: 240px;
+  flex: none;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chat-contacts-title {
+  padding: 14px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.chat-contacts-list { flex: 1; overflow-y: auto; padding: 6px; }
+.chat-contact-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 10px 10px;
+  border-radius: var(--radius-s);
+  font-size: 13.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.chat-contact-item:hover { background: var(--page-plane); }
+.chat-contact-item.active { background: var(--series-1); color: #fff; }
+.chat-contact-item.active .chip { color: inherit; }
+.chat-contact-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.chat-thread-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.chat-thread-header {
+  padding: 14px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--page-plane);
+}
+.chat-bubble-row { display: flex; }
+.chat-bubble-row.mine { justify-content: flex-end; }
+.chat-bubble-row.theirs { justify-content: flex-start; }
+.chat-bubble {
+  max-width: 70%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  box-shadow: 0 1px 2px rgba(11,11,11,0.06);
+}
+.chat-bubble-row.mine .chat-bubble { background: var(--series-1); color: #fff; border-bottom-right-radius: 4px; }
+.chat-bubble-row.theirs .chat-bubble { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.chat-bubble-sender { font-size: 11px; font-weight: 700; color: var(--series-1); margin-bottom: 2px; }
+.chat-bubble-text { white-space: pre-wrap; word-break: break-word; }
+.chat-bubble-time { font-size: 10.5px; opacity: .7; margin-top: 3px; text-align: right; }
+
+.chat-input-bar {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.chat-input-bar input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--baseline);
+  border-radius: 999px;
+  font-size: 13.5px;
+  outline: none;
+}
+.chat-input-bar input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42,120,214,0.15); }
+.chat-error { padding: 0 16px 10px; color: var(--status-critical); font-size: 12px; min-height: 4px; }
+
+@media (max-width: 900px) {
+  .chat-shell { flex-direction: column; height: auto; }
+  .chat-contacts { width: 100%; max-height: 200px; }
+  .chat-thread-wrap { height: 60vh; }
+}
+
+/* ---- Giao việc ---- */
+.giaoviec-form { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.giaoviec-field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+.giaoviec-field select,
+.giaoviec-field input[type="text"],
+.giaoviec-field textarea {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--text-primary);
+  padding: 9px 12px;
+  border: 1px solid var(--baseline);
+  border-radius: var(--radius-s);
+  outline: none;
+  resize: vertical;
+}
+.giaoviec-field select:focus,
+.giaoviec-field input[type="text"]:focus,
+.giaoviec-field textarea:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42,120,214,0.15); }
+.giaoviec-form-actions { display: flex; align-items: center; gap: 12px; }
+.giaoviec-form-status, .giaoviec-fb-status-text { font-size: 12px; color: var(--text-muted); }
+.btn-small { padding: 5px 11px; font-size: 12px; }
+
+.giaoviec-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  background: var(--surface-1);
+}
+.giaoviec-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.giaoviec-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.giaoviec-card-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.giaoviec-card-meta b { color: var(--text-secondary); font-weight: 600; }
+.giaoviec-card-content {
+  font-size: 13.5px;
+  color: var(--text-primary);
+  background: var(--page-plane);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+.giaoviec-card-mail { margin-bottom: 12px; }
+.giaoviec-feedback-form { border-top: 1px dashed var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+.giaoviec-feedback-form .giaoviec-field { max-width: 320px; }
+
+/* footer */
+footer.app-footer {
+  text-align: center;
+  padding: 18px;
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+@media (max-width: 640px) {
+  header.topbar { padding: 12px 14px; }
+  main { padding: 14px 14px 40px; }
+  .stat-tile .value { font-size: 20px; }
+}
