@@ -38,19 +38,23 @@
     </div>
     <nav class="side-nav">
       <button class="tab-btn active" data-tab="thau">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 2.5h7l3 3v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z"/><path d="M12 2.5V6h3"/><path d="M6.5 10.5h7M6.5 13h7M6.5 15.5h4"/></svg>
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 2.5h7l3 3v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z"/><path d="M12 2.5V6h3"/><path d="M6.5 10.5h7M6.5 13h7M6.5 15.5h4"/></svg></span>
         <span>Thầu</span>
       </button>
       <button class="tab-btn" data-tab="kpi">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17V3M3 17h14"/><rect x="6" y="10" width="2.4" height="5"/><rect x="10.3" y="7" width="2.4" height="8"/><rect x="14.6" y="4.5" width="2.4" height="10.5"/></svg>
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17V3M3 17h14"/><rect x="6" y="10" width="2.4" height="5"/><rect x="10.3" y="7" width="2.4" height="8"/><rect x="14.6" y="4.5" width="2.4" height="10.5"/></svg></span>
         <span>KPI</span>
       </button>
       <button class="tab-btn" data-tab="sales">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7.2" cy="6.5" r="2.5"/><path d="M2.5 17c0-3 2.2-5 4.7-5s4.7 2 4.7 5"/><circle cx="14.3" cy="7.5" r="2"/><path d="M12.8 12.3c1.9.3 3.7 2 3.7 4.7"/></svg>
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7.2" cy="6.5" r="2.5"/><path d="M2.5 17c0-3 2.2-5 4.7-5s4.7 2 4.7 5"/><circle cx="14.3" cy="7.5" r="2"/><path d="M12.8 12.3c1.9.3 3.7 2 3.7 4.7"/></svg></span>
         <span>Khách hàng</span>
       </button>
+      <button class="tab-btn" data-tab="giaoviec">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V3a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 12.5 3v.5"/><path d="M7 10.6l2 2 4-4.6"/></svg></span>
+        <span>Giao việc</span>
+      </button>
       <button class="tab-btn" data-tab="chat">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8l-3.8 3v-3H4.5a2 2 0 0 1-2-2v-6Z"/></svg>
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8l-3.8 3v-3H4.5a2 2 0 0 1-2-2v-6Z"/></svg></span>
         <span>Trao đổi</span>
       </button>
     </nav>
@@ -261,6 +265,40 @@
             <tbody></tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: GIAO VIỆC ===================== -->
+    <section id="tab-giaoviec" class="tab-panel hidden">
+      <div class="panel" id="giaoviec-new-panel">
+        <h2>Giao việc mới</h2>
+        <form class="giaoviec-form" id="giaoviec-form">
+          <label class="giaoviec-field">
+            <span>Chọn nhân viên</span>
+            <select id="giaoviec-nv" required><option value="">— Chọn nhân viên —</option></select>
+          </label>
+          <label class="giaoviec-field">
+            <span>Tên nhiệm vụ</span>
+            <input type="text" id="giaoviec-ten" required maxlength="200" placeholder="VD: Khảo sát nhà thuốc khu vực A" />
+          </label>
+          <label class="giaoviec-field">
+            <span>Nội dung công việc</span>
+            <textarea id="giaoviec-noidung" rows="4" maxlength="4000" placeholder="Mô tả chi tiết công việc cần làm…"></textarea>
+          </label>
+          <label class="giaoviec-field">
+            <span>Ngày thực hiện</span>
+            <input type="text" id="giaoviec-ngay" maxlength="100" placeholder="VD: 20/08/2026" />
+          </label>
+          <div class="giaoviec-form-actions">
+            <button type="submit" class="btn btn-primary" id="giaoviec-submit-btn">Giao việc</button>
+            <span class="giaoviec-form-status" id="giaoviec-form-status"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Danh sách nhiệm vụ <span class="count" id="giaoviec-count"></span></h2>
+        <div id="giaoviec-list"></div>
       </div>
     </section>
 
