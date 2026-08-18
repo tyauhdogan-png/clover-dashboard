@@ -1,1139 +1,402 @@
-/* ============================================================================
-   DESIGN TOKENS (nguồn: dataviz skill – palette.md, light mode)
-   ============================================================================ */
-:root {
-  color-scheme: light;
-  /* ==== Bảng màu PASTEL DỄ THƯƠNG (vòng 8) — thay cho bảng màu trung tính/đậm trước đây.
-     Giữ nguyên TÊN biến để toàn bộ CSS phía dưới (mọi tab: Thầu, KPI, Khách hàng,
-     SP trọng tâm, Doanh số, Giao việc, Trao đổi) tự động ăn theo bảng màu mới. ==== */
-  --surface-1: #fffbfd;
-  --page-plane: #f2f5fb;
-  --text-primary: #5a4358;
-  --text-secondary: #8c7288;
-  --text-muted: #b39aae;
-  --gridline: #e4e8f6;
-  --baseline: #cdd6ee;
-  --border: rgba(110, 120, 170, 0.16);
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TEAM CLOVER CPC1HN</title>
+<link rel="stylesheet" href="style.css" />
+<!-- Chart.js được đóng gói NGAY TRONG site (vendor/chart.umd.min.js) thay vì tải
+     từ CDN ngoài (cdnjs) — trước đây nếu mạng của người dùng chặn/không vào
+     được CDN đó (hay gặp với mạng công ty/mạng di động ở VN) thì biểu đồ toàn
+     bộ trang bị trống, chỉ hiện dòng "Không tải được thư viện biểu đồ". Giờ
+     Chart.js nằm cùng domain với chính trang web nên luôn tải được. -->
+<script src="vendor/chart.umd.min.js"></script>
+</head>
+<body>
 
-  --series-1: #6fa8dc; /* blue pastel */
-  --series-2: #f3a879; /* orange pastel */
-  --series-3: #5bccbb; /* aqua/teal pastel */
-  --series-4: #f7cb6e; /* yellow pastel */
-  --series-5: #f2a4c4; /* magenta/hồng pastel */
-  --series-6: #8bcf7e; /* green pastel */
-  --series-7: #b3a0e6; /* violet pastel */
-  --series-8: #f0847f; /* red/cam san hô pastel */
+<!-- ============================== LOGIN ============================== -->
+<div id="login-screen">
+  <form class="login-card" id="login-form">
+    <div class="login-logo" role="img" aria-label="CPC1HN"></div>
+    <h1 id="login-title">TEAM CLOVER CPC1HN</h1>
+    <p class="sub">Đăng nhập bằng tài khoản của bạn</p>
+    <input type="text" id="login-username" placeholder="Tên đăng nhập" autocomplete="username" required />
+    <input type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password" required />
+    <button type="submit" id="login-btn">Đăng nhập</button>
+    <div class="login-error" id="login-error"></div>
+  </form>
+</div>
 
-  --status-good: #6fbf73;
-  --status-warning: #f6c877;
-  --status-serious: #f3a879;
-  --status-critical: #ee7e79;
+<!-- ============================== APP ============================== -->
+<div id="app" class="hidden">
+<div class="app-shell">
 
-  --seq-100: #e6f0ff;
-  --seq-400: #8fb8ea;
-  --seq-550: #5b8fc9;
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="login-logo" role="img" aria-label="CPC1HN"></div>
+      <div class="sidebar-title" id="app-title">TEAM CLOVER CPC1HN</div>
+    </div>
+    <nav class="side-nav">
+      <button class="tab-btn active" data-tab="thau">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 2.5h7l3 3v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z"/><path d="M12 2.5V6h3"/><path d="M6.5 10.5h7M6.5 13h7M6.5 15.5h4"/></svg></span>
+        <span>Thầu</span>
+      </button>
+      <button class="tab-btn" data-tab="kpi">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17V3M3 17h14"/><rect x="6" y="10" width="2.4" height="5"/><rect x="10.3" y="7" width="2.4" height="8"/><rect x="14.6" y="4.5" width="2.4" height="10.5"/></svg></span>
+        <span>KPI</span>
+      </button>
+      <button class="tab-btn" data-tab="sales">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7.2" cy="6.5" r="2.5"/><path d="M2.5 17c0-3 2.2-5 4.7-5s4.7 2 4.7 5"/><circle cx="14.3" cy="7.5" r="2"/><path d="M12.8 12.3c1.9.3 3.7 2 3.7 4.7"/></svg></span>
+        <span>Khách hàng</span>
+      </button>
+      <button class="tab-btn" data-tab="sptt">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="4.2"/><circle cx="10" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+        <span>SP trọng tâm</span>
+      </button>
+      <button class="tab-btn" data-tab="doanhso">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.5v9M12.6 7.6c0-1-1-1.7-2.3-1.7-1.4 0-2.5.7-2.5 1.9 0 2.6 4.8 1.3 4.8 3.9 0 1.2-1.1 1.9-2.5 1.9-1.3 0-2.3-.7-2.3-1.7"/></svg></span>
+        <span>Doanh số</span>
+      </button>
+      <button class="tab-btn" data-tab="giaoviec">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3.5" width="12" height="14" rx="1.5"/><path d="M7.5 3.5V3a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 12.5 3v.5"/><path d="M7 10.6l2 2 4-4.6"/></svg></span>
+        <span>Giao việc</span>
+      </button>
+      <button class="tab-btn" data-tab="chat">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 5.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8l-3.8 3v-3H4.5a2 2 0 0 1-2-2v-6Z"/></svg></span>
+        <span>Trao đổi</span>
+      </button>
+    </nav>
+  </aside>
 
-  /* Gradient "hero" dùng riêng cho khối số điểm nổi bật (KPI cuối trang) — tách
-     khỏi màu sidebar để sidebar có thể pastel nhạt mà khối hero vẫn nổi bật rõ. */
-  --hero-grad-1: #f6a8c9;
-  --hero-grad-2: #93c9f2;
-  --hero-text-soft: #fdeef8;
-  --hero-text-strong: #ffffff;
-  /* Tông đậm nhất trong bảng pastel — dùng cho tiêu đề bảng / chip đang chọn để
-     chữ trắng vẫn đủ tương phản đọc rõ, tách riêng khỏi --sidebar-active-bg (giờ
-     đã rất sáng vì sidebar chuyển pastel). */
-  --accent-deep: #4f6ba3;
+  <div class="main-col">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="updated" id="updated-at">Đang tải dữ liệu…</div>
+      </div>
+      <div class="topbar-right">
+        <span class="user-badge" id="user-badge"></span>
+        <button class="btn" id="refresh-btn">↻ Làm mới</button>
+        <button class="btn" id="logout-btn">Đăng xuất</button>
+      </div>
+    </header>
 
-  --radius-s: 6px;
-  --radius-m: 10px;
-  --radius-l: 16px;
-  --shadow-card: 0 1px 2px rgba(110, 120, 170, 0.08), 0 4px 16px rgba(110, 120, 170, 0.08);
-  font-variant-numeric: proportional-nums;
+  <main>
+    <div id="global-error" class="hidden empty-state"></div>
 
-  /* 1 chú gấu bông chibi rất mờ, đặt chính giữa nền website — hình vẽ gốc, thay cho logo/đầu lâu cũ */
-  --decor-watermark: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KPGcgb3BhY2l0eT0iMC4wNzUiPjxnPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0OSIgcng9IjE1LjUiIHJ5PSIxMy41IiBmaWxsPSIjY2FhMDZlIi8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjUxIiByeD0iOC41IiByeT0iNy41IiBmaWxsPSIjZjdlY2Q5Ii8+CjxlbGxpcHNlIGN4PSIxNC41IiBjeT0iNDciIHJ4PSI1LjIiIHJ5PSI4LjUiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAxNC41IDQ3KSIgZmlsbD0iI2NhYTA2ZSIvPgo8ZWxsaXBzZSBjeD0iNDkuNSIgY3k9IjQ3IiByeD0iNS4yIiByeT0iOC41IiB0cmFuc2Zvcm09InJvdGF0ZSgxOCA0OS41IDQ3KSIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSIxOCIgY3k9IjEyLjUiIHI9IjcuMiIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSIxOCIgY3k9IjEyLjUiIHI9IjMuNiIgZmlsbD0iI2E5N2M0ZiIvPgo8Y2lyY2xlIGN4PSI0NiIgY3k9IjEyLjUiIHI9IjcuMiIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSI0NiIgY3k9IjEyLjUiIHI9IjMuNiIgZmlsbD0iI2E5N2M0ZiIvPgo8Y2lyY2xlIGN4PSIzMiIgY3k9IjI2IiByPSIxNi41IiBmaWxsPSIjY2FhMDZlIi8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMxLjUiIHJ4PSI5IiByeT0iNyIgZmlsbD0iI2Y3ZWNkOSIvPgo8Y2lyY2xlIGN4PSIyMS41IiBjeT0iMjkiIHI9IjIuNiIgZmlsbD0iI2YyYTRjNCIgb3BhY2l0eT0iMC43Ii8+CjxjaXJjbGUgY3g9IjQyLjUiIGN5PSIyOSIgcj0iMi42IiBmaWxsPSIjZjJhNGM0IiBvcGFjaXR5PSIwLjciLz4KPGNpcmNsZSBjeD0iMjciIGN5PSIyNCIgcj0iMS43IiBmaWxsPSIjNWE0MzU4Ii8+CjxjaXJjbGUgY3g9IjM3IiBjeT0iMjQiIHI9IjEuNyIgZmlsbD0iIzVhNDM1OCIvPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSIyOS4zIiByeD0iMi4xIiByeT0iMS41IiBmaWxsPSIjNmI0NDIzIi8+CjxwYXRoIGQ9Ik0yOS41IDMyLjUgUTMyIDM0LjMgMzQuNSAzMi41IiBzdHJva2U9IiM2YjQ0MjMiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjwvZz48L2c+Cjwvc3ZnPg==');
+    <!-- ===================== TAB: THẦU ===================== -->
+    <section id="tab-thau" class="tab-panel">
+      <div class="filter-bar">
+        <select id="thau-filter-tinh"><option value="">Tất cả tỉnh</option></select>
+        <select id="thau-filter-nv"><option value="">Tất cả nhân sự phụ trách</option></select>
+        <input type="text" class="search-box" id="thau-filter-search" placeholder="Tìm khách hàng, mặt hàng, số HĐ…" />
+        <button class="clear-filters" id="thau-clear">Xoá bộ lọc</button>
+      </div>
 
-  /* mẫu hoa cúc nhỏ + gấu bông tí xíu, lặp lại (tileable) — phủ khắp nền trang/sidebar, phía sau mọi khối nội dung */
-  --decor-tile: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI2LDMyKSBzY2FsZSgwLjg1KSIgb3BhY2l0eT0iMC42Ij48Zz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgwLjApIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNkY2VlZmMiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNTEuNDI4NTcxNDI4NTcxNDMpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNkY2VlZmMiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTAyLjg1NzE0Mjg1NzE0Mjg2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZGNlZWZjIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDE1NC4yODU3MTQyODU3MTQyOCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2RjZWVmYyIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyMDUuNzE0Mjg1NzE0Mjg1NzIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNkY2VlZmMiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjU3LjE0Mjg1NzE0Mjg1NzE3KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZGNlZWZjIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDMwOC41NzE0Mjg1NzE0Mjg1NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2RjZWVmYyIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNC40IiBmaWxsPSIjNmZhOGRjIi8+PC9nPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTUyLDI0KSBzY2FsZSgwLjcpIiBvcGFjaXR5PSIwLjU1Ij48Zz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgwLjApIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmUzZWYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNTEuNDI4NTcxNDI4NTcxNDMpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmUzZWYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTAyLjg1NzE0Mjg1NzE0Mjg2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZlM2VmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDE1NC4yODU3MTQyODU3MTQyOCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZTNlZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyMDUuNzE0Mjg1NzE0Mjg1NzIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmUzZWYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjU3LjE0Mjg1NzE0Mjg1NzE3KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZlM2VmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDMwOC41NzE0Mjg1NzE0Mjg1NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZTNlZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNC40IiBmaWxsPSIjZjJhNGM0Ii8+PC9nPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOTYsODIpIHNjYWxlKDAuNDYpIHRyYW5zbGF0ZSgwLDgpIiBvcGFjaXR5PSIwLjkyIj48Zz4KPGVsbGlwc2UgY3g9IjMyIiBjeT0iNDkiIHJ4PSIxNS41IiByeT0iMTMuNSIgZmlsbD0iI2NhYTA2ZSIvPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSI1MSIgcng9IjguNSIgcnk9IjcuNSIgZmlsbD0iI2Y3ZWNkOSIvPgo8ZWxsaXBzZSBjeD0iMTQuNSIgY3k9IjQ3IiByeD0iNS4yIiByeT0iOC41IiB0cmFuc2Zvcm09InJvdGF0ZSgtMTggMTQuNSA0NykiIGZpbGw9IiNjYWEwNmUiLz4KPGVsbGlwc2UgY3g9IjQ5LjUiIGN5PSI0NyIgcng9IjUuMiIgcnk9IjguNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTggNDkuNSA0NykiIGZpbGw9IiNjYWEwNmUiLz4KPGNpcmNsZSBjeD0iMTgiIGN5PSIxMi41IiByPSI3LjIiIGZpbGw9IiNjYWEwNmUiLz4KPGNpcmNsZSBjeD0iMTgiIGN5PSIxMi41IiByPSIzLjYiIGZpbGw9IiNhOTdjNGYiLz4KPGNpcmNsZSBjeD0iNDYiIGN5PSIxMi41IiByPSI3LjIiIGZpbGw9IiNjYWEwNmUiLz4KPGNpcmNsZSBjeD0iNDYiIGN5PSIxMi41IiByPSIzLjYiIGZpbGw9IiNhOTdjNGYiLz4KPGNpcmNsZSBjeD0iMzIiIGN5PSIyNiIgcj0iMTYuNSIgZmlsbD0iI2NhYTA2ZSIvPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSIzMS41IiByeD0iOSIgcnk9IjciIGZpbGw9IiNmN2VjZDkiLz4KPGNpcmNsZSBjeD0iMjEuNSIgY3k9IjI5IiByPSIyLjYiIGZpbGw9IiNmMmE0YzQiIG9wYWNpdHk9IjAuNyIvPgo8Y2lyY2xlIGN4PSI0Mi41IiBjeT0iMjkiIHI9IjIuNiIgZmlsbD0iI2YyYTRjNCIgb3BhY2l0eT0iMC43Ii8+CjxjaXJjbGUgY3g9IjI3IiBjeT0iMjQiIHI9IjEuNyIgZmlsbD0iIzVhNDM1OCIvPgo8Y2lyY2xlIGN4PSIzNyIgY3k9IjI0IiByPSIxLjciIGZpbGw9IiM1YTQzNTgiLz4KPGVsbGlwc2UgY3g9IjMyIiBjeT0iMjkuMyIgcng9IjIuMSIgcnk9IjEuNSIgZmlsbD0iIzZiNDQyMyIvPgo8cGF0aCBkPSJNMjkuNSAzMi41IFEzMiAzNC4zIDM0LjUgMzIuNSIgc3Ryb2tlPSIjNmI0NDIzIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L2c+PC9nPgo8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMiwxMzIpIHNjYWxlKDAuNjUpIiBvcGFjaXR5PSIwLjU1Ij48Zz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgwLjApIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNTEuNDI4NTcxNDI4NTcxNDMpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTAyLjg1NzE0Mjg1NzE0Mjg2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDE1NC4yODU3MTQyODU3MTQyOCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyMDUuNzE0Mjg1NzE0Mjg1NzIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjU3LjE0Mjg1NzE0Mjg1NzE3KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDMwOC41NzE0Mjg1NzE0Mjg1NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNC40IiBmaWxsPSIjNmZhOGRjIi8+PC9nPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTY2LDE0Mikgc2NhbGUoMC44KSIgb3BhY2l0eT0iMC42Ij48Zz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgwLjApIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmY0ZDYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNTEuNDI4NTcxNDI4NTcxNDMpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmY0ZDYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTAyLjg1NzE0Mjg1NzE0Mjg2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmNGQ2IiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDE1NC4yODU3MTQyODU3MTQyOCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZjRkNiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyMDUuNzE0Mjg1NzE0Mjg1NzIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmY0ZDYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjU3LjE0Mjg1NzE0Mjg1NzE3KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmNGQ2IiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDMwOC41NzE0Mjg1NzE0Mjg1NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZjRkNiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNC40IiBmaWxsPSIjZjdjYjZlIi8+PC9nPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTc4LDE4Nikgc2NhbGUoMC4zNikgdHJhbnNsYXRlKDAsOCkiIG9wYWNpdHk9IjAuODUiPjxnPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0OSIgcng9IjE1LjUiIHJ5PSIxMy41IiBmaWxsPSIjY2FhMDZlIi8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjUxIiByeD0iOC41IiByeT0iNy41IiBmaWxsPSIjZjdlY2Q5Ii8+CjxlbGxpcHNlIGN4PSIxNC41IiBjeT0iNDciIHJ4PSI1LjIiIHJ5PSI4LjUiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAxNC41IDQ3KSIgZmlsbD0iI2NhYTA2ZSIvPgo8ZWxsaXBzZSBjeD0iNDkuNSIgY3k9IjQ3IiByeD0iNS4yIiByeT0iOC41IiB0cmFuc2Zvcm09InJvdGF0ZSgxOCA0OS41IDQ3KSIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSIxOCIgY3k9IjEyLjUiIHI9IjcuMiIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSIxOCIgY3k9IjEyLjUiIHI9IjMuNiIgZmlsbD0iI2E5N2M0ZiIvPgo8Y2lyY2xlIGN4PSI0NiIgY3k9IjEyLjUiIHI9IjcuMiIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSI0NiIgY3k9IjEyLjUiIHI9IjMuNiIgZmlsbD0iI2E5N2M0ZiIvPgo8Y2lyY2xlIGN4PSIzMiIgY3k9IjI2IiByPSIxNi41IiBmaWxsPSIjY2FhMDZlIi8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMxLjUiIHJ4PSI5IiByeT0iNyIgZmlsbD0iI2Y3ZWNkOSIvPgo8Y2lyY2xlIGN4PSIyMS41IiBjeT0iMjkiIHI9IjIuNiIgZmlsbD0iI2YyYTRjNCIgb3BhY2l0eT0iMC43Ii8+CjxjaXJjbGUgY3g9IjQyLjUiIGN5PSIyOSIgcj0iMi42IiBmaWxsPSIjZjJhNGM0IiBvcGFjaXR5PSIwLjciLz4KPGNpcmNsZSBjeD0iMjciIGN5PSIyNCIgcj0iMS43IiBmaWxsPSIjNWE0MzU4Ii8+CjxjaXJjbGUgY3g9IjM3IiBjeT0iMjQiIHI9IjEuNyIgZmlsbD0iIzVhNDM1OCIvPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSIyOS4zIiByeD0iMi4xIiByeT0iMS41IiBmaWxsPSIjNmI0NDIzIi8+CjxwYXRoIGQ9Ik0yOS41IDMyLjUgUTMyIDM0LjMgMzQuNSAzMi41IiBzdHJva2U9IiM2YjQ0MjMiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjwvZz48L2c+Cjwvc3ZnPg==');
+      <div class="stat-grid" id="thau-stats"></div>
 
-  /* bó hoa cúc pastel + 1 chú gấu bông ngồi (tự vẽ, dạng SVG nhúng) — điểm nhấn to, rõ ở góc màn hình */
-  --decor-flowers: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MjAgNDIwIiB3aWR0aD0iNDIwIiBoZWlnaHQ9IjQyMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI1NSUiIGN5PSI0NSUiIHI9IjYwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNkYmU2ZjgiIHN0b3Atb3BhY2l0eT0iMC40NSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNkYmU2ZjgiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iMjMwIiBjeT0iMjAwIiByPSIyMDAiIGZpbGw9InVybCgjZ2xvdykiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMjAsMzAwKSIgb3BhY2l0eT0iMC41NSI+PHBhdGggZD0iTTAsMCBDIDgsLTIgMTQsNCA4LDEwIEMgMiw4IC0yLDQgMCwwIFoiIGZpbGw9IiNiN2UwYTgiLz48L2c+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAwLDkwKSByb3RhdGUoNDApIiBvcGFjaXR5PSIwLjUiPjxwYXRoIGQ9Ik0wLDAgQyA4LC0yIDE0LDQgOCwxMCBDIDIsOCAtMiw0IDAsMCBaIiBmaWxsPSIjYzdlOGJhIi8+PC9nPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI1NSwxMjApIHNjYWxlKDMuMCkiIG9wYWNpdHk9IjAuOTUiPjxnPjxnIHRyYW5zZm9ybT0icm90YXRlKDAuMCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSg1MS40Mjg1NzE0Mjg1NzE0MykiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgxMDIuODU3MTQyODU3MTQyODYpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTU0LjI4NTcxNDI4NTcxNDI4KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDIwNS43MTQyODU3MTQyODU3MikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyNTcuMTQyODU3MTQyODU3MTcpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMzA4LjU3MTQyODU3MTQyODU2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSI0LjQiIGZpbGw9IiM2ZmE4ZGMiLz48L2c+PC9nPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE1MCw5MCkgc2NhbGUoMi4yKSIgb3BhY2l0eT0iMC44NSI+PGc+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMC4wKSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZlM2VmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDUxLjQyODU3MTQyODU3MTQzKSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZlM2VmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDEwMi44NTcxNDI4NTcxNDI4NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZTNlZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgxNTQuMjg1NzE0Mjg1NzE0MjgpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmUzZWYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjA1LjcxNDI4NTcxNDI4NTcyKSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZlM2VmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDI1Ny4xNDI4NTcxNDI4NTcxNykiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZTNlZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgzMDguNTcxNDI4NTcxNDI4NTYpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmUzZWYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGNpcmNsZSBjeD0iMCIgY3k9IjAiIHI9IjQuNCIgZmlsbD0iI2YyYTRjNCIvPjwvZz48L2c+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzIwLDE5MCkgc2NhbGUoMS43KSIgb3BhY2l0eT0iMC44Ij48Zz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgwLjApIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNkY2VlZmMiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNTEuNDI4NTcxNDI4NTcxNDMpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNkY2VlZmMiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTAyLjg1NzE0Mjg1NzE0Mjg2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZGNlZWZjIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDE1NC4yODU3MTQyODU3MTQyOCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2RjZWVmYyIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyMDUuNzE0Mjg1NzE0Mjg1NzIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNkY2VlZmMiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjU3LjE0Mjg1NzE0Mjg1NzE3KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZGNlZWZjIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDMwOC41NzE0Mjg1NzE0Mjg1NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2RjZWVmYyIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNC40IiBmaWxsPSIjZjdjYjZlIi8+PC9nPjwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNzUsMTkwKSBzY2FsZSgxLjUpIiBvcGFjaXR5PSIwLjc1Ij48Zz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgwLjApIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNTEuNDI4NTcxNDI4NTcxNDMpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTAyLjg1NzE0Mjg1NzE0Mjg2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDE1NC4yODU3MTQyODU3MTQyOCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyMDUuNzE0Mjg1NzE0Mjg1NzIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjU3LjE0Mjg1NzE0Mjg1NzE3KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDMwOC41NzE0Mjg1NzE0Mjg1NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNC40IiBmaWxsPSIjNmZhOGRjIi8+PC9nPjwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMzAsMzAwKSBzY2FsZSgyLjM1KSB0cmFuc2xhdGUoMCw4KSI+PGc+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjQ5IiByeD0iMTUuNSIgcnk9IjEzLjUiIGZpbGw9IiNjYWEwNmUiLz4KPGVsbGlwc2UgY3g9IjMyIiBjeT0iNTEiIHJ4PSI4LjUiIHJ5PSI3LjUiIGZpbGw9IiNmN2VjZDkiLz4KPGVsbGlwc2UgY3g9IjE0LjUiIGN5PSI0NyIgcng9IjUuMiIgcnk9IjguNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE4IDE0LjUgNDcpIiBmaWxsPSIjY2FhMDZlIi8+CjxlbGxpcHNlIGN4PSI0OS41IiBjeT0iNDciIHJ4PSI1LjIiIHJ5PSI4LjUiIHRyYW5zZm9ybT0icm90YXRlKDE4IDQ5LjUgNDcpIiBmaWxsPSIjY2FhMDZlIi8+CjxjaXJjbGUgY3g9IjE4IiBjeT0iMTIuNSIgcj0iNy4yIiBmaWxsPSIjY2FhMDZlIi8+CjxjaXJjbGUgY3g9IjE4IiBjeT0iMTIuNSIgcj0iMy42IiBmaWxsPSIjYTk3YzRmIi8+CjxjaXJjbGUgY3g9IjQ2IiBjeT0iMTIuNSIgcj0iNy4yIiBmaWxsPSIjY2FhMDZlIi8+CjxjaXJjbGUgY3g9IjQ2IiBjeT0iMTIuNSIgcj0iMy42IiBmaWxsPSIjYTk3YzRmIi8+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMjYiIHI9IjE2LjUiIGZpbGw9IiNjYWEwNmUiLz4KPGVsbGlwc2UgY3g9IjMyIiBjeT0iMzEuNSIgcng9IjkiIHJ5PSI3IiBmaWxsPSIjZjdlY2Q5Ii8+CjxjaXJjbGUgY3g9IjIxLjUiIGN5PSIyOSIgcj0iMi42IiBmaWxsPSIjZjJhNGM0IiBvcGFjaXR5PSIwLjciLz4KPGNpcmNsZSBjeD0iNDIuNSIgY3k9IjI5IiByPSIyLjYiIGZpbGw9IiNmMmE0YzQiIG9wYWNpdHk9IjAuNyIvPgo8Y2lyY2xlIGN4PSIyNyIgY3k9IjI0IiByPSIxLjciIGZpbGw9IiM1YTQzNTgiLz4KPGNpcmNsZSBjeD0iMzciIGN5PSIyNCIgcj0iMS43IiBmaWxsPSIjNWE0MzU4Ii8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjI5LjMiIHJ4PSIyLjEiIHJ5PSIxLjUiIGZpbGw9IiM2YjQ0MjMiLz4KPHBhdGggZD0iTTI5LjUgMzIuNSBRMzIgMzQuMyAzNC41IDMyLjUiIHN0cm9rZT0iIzZiNDQyMyIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9nPjwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNDAsMzAwKSBzY2FsZSgxLjMpIiBvcGFjaXR5PSIwLjgiPjxnPjxnIHRyYW5zZm9ybT0icm90YXRlKDAuMCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSg1MS40Mjg1NzE0Mjg1NzE0MykiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgxMDIuODU3MTQyODU3MTQyODYpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTU0LjI4NTcxNDI4NTcxNDI4KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDIwNS43MTQyODU3MTQyODU3MikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyNTcuMTQyODU3MTQyODU3MTcpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMzA4LjU3MTQyODU3MTQyODU2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSI0LjQiIGZpbGw9IiNmMmE0YzQiLz48L2c+PC9nPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDkwLDIzMCkgc2NhbGUoMS4yKSIgb3BhY2l0eT0iMC43Ij48Zz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgwLjApIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNlM2YwZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoNTEuNDI4NTcxNDI4NTcxNDMpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNlM2YwZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMTAyLjg1NzE0Mjg1NzE0Mjg2KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZTNmMGZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDE1NC4yODU3MTQyODU3MTQyOCkiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2UzZjBmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgyMDUuNzE0Mjg1NzE0Mjg1NzIpIj48ZWxsaXBzZSBjeD0iMCIgY3k9Ii01LjgiIHJ4PSIyLjkiIHJ5PSI2LjQiIGZpbGw9IiNlM2YwZmYiIHN0cm9rZT0icmdiYSgxMTAsMTIwLDE3MCwwLjEwKSIgc3Ryb2tlLXdpZHRoPSIwLjYiLz48L2c+PGcgdHJhbnNmb3JtPSJyb3RhdGUoMjU3LjE0Mjg1NzE0Mjg1NzE3KSI+PGVsbGlwc2UgY3g9IjAiIGN5PSItNS44IiByeD0iMi45IiByeT0iNi40IiBmaWxsPSIjZTNmMGZmIiBzdHJva2U9InJnYmEoMTEwLDEyMCwxNzAsMC4xMCkiIHN0cm9rZS13aWR0aD0iMC42Ii8+PC9nPjxnIHRyYW5zZm9ybT0icm90YXRlKDMwOC41NzE0Mjg1NzE0Mjg1NikiPjxlbGxpcHNlIGN4PSIwIiBjeT0iLTUuOCIgcng9IjIuOSIgcnk9IjYuNCIgZmlsbD0iI2UzZjBmZiIgc3Ryb2tlPSJyZ2JhKDExMCwxMjAsMTcwLDAuMTApIiBzdHJva2Utd2lkdGg9IjAuNiIvPjwvZz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNC40IiBmaWxsPSIjZjdjYjZlIi8+PC9nPjwvZz4KPC9zdmc+');
-}
+      <div class="thau-alert-cols">
+        <div class="panel thau-alert-panel thau-alert-panel--vet">
+          <h2>🚨 Cảnh báo vét thầu <span class="muted small">(gói thầu còn dưới 3 tháng hiệu lực)</span></h2>
+          <div class="thau-alert-list" id="thau-vetthau-list"></div>
+        </div>
+        <div class="panel thau-alert-panel thau-alert-panel--newpkg">
+          <h2>🆕 Cài gói thầu mới <span class="muted small">(gói thầu còn khoảng 6 tháng hiệu lực)</span></h2>
+          <div class="thau-alert-list" id="thau-caigoimoi-list"></div>
+        </div>
+      </div>
 
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  background-color: var(--page-plane);
-  /* Lớp 1 (trên): watermark logo CPC1HN rất to, rất mờ, luôn đứng yên ở chính giữa màn hình.
-     Lớp 2 (dưới): hoa văn hoa & bướm lặp khắp nền trang.
-     Cả hai đều là nền của <body> nên luôn nằm dưới mọi thẻ/bảng/biểu đồ — không bao giờ che dữ liệu. */
-  background-image: var(--decor-watermark), var(--decor-tile);
-  background-repeat: no-repeat, repeat;
-  background-position: center center, 0 0;
-  background-size: min(60vw, 640px) auto, 200px 200px;
-  background-attachment: fixed, fixed;
-  color: var(--text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
+      <div class="panel">
+        <h2>👥 Tổng hợp theo nhân sự phụ trách</h2>
+        <div class="thau-emp-grid" id="thau-emp-summary"></div>
+      </div>
 
-@media (max-width: 640px) {
-  body { background-size: min(85vw, 420px) auto, 200px 200px; }
-}
+      <div class="panel">
+        <h2>Tỷ lệ hoàn thành theo Tỉnh</h2>
+        <div class="charts-row">
+          <div class="chart-box"><canvas id="chart-thau-tinh"></canvas></div>
+          <div class="chart-box"><canvas id="chart-thau-nv"></canvas></div>
+        </div>
+      </div>
 
-button, input, select { font-family: inherit; font-size: inherit; }
+      <div class="panel">
+        <h2>Hợp đồng sắp hết hạn &amp; tỷ lệ thực hiện thấp (≤ 60 ngày, &lt; 60%)</h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-thau-canhbao">
+            <thead><tr>
+              <th>Khách hàng</th><th>Tỉnh</th><th>Mặt hàng</th><th>Phụ trách</th>
+              <th>Hết hạn</th><th class="num">% thực hiện</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
 
-.hidden { display: none !important; }
+      <div class="panel">
+        <h2>Chi tiết tiến độ thầu <span class="count" id="thau-row-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-thau">
+            <thead><tr>
+              <th data-sort="tenKhach">Khách hàng</th>
+              <th data-sort="tinh">Tỉnh</th>
+              <th data-sort="phuTrach">Phụ trách</th>
+              <th data-sort="tenHang">Mặt hàng</th>
+              <th data-sort="soHD">Số HĐ</th>
+              <th class="num" data-sort="slKeHoach">SL kế hoạch</th>
+              <th class="num" data-sort="slThucHien">SL thực hiện</th>
+              <th data-sort="tyLe">Tiến độ</th>
+              <th data-sort="ngayHetHan">Hết hạn</th>
+              <th>Đối chiếu</th>
+              <th class="thau-ghichu-col">Ghi chú (theo hợp đồng)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-/* ============================================================================
-   LOGIN SCREEN
-   ============================================================================ */
-#login-screen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.login-card {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l);
-  box-shadow: var(--shadow-card);
-  padding: 40px 36px;
-  width: 100%;
-  max-width: 380px;
-  text-align: center;
-}
-.login-card h1 {
-  font-size: 19px;
-  margin: 4px 0 6px;
-}
-.login-card p.sub {
-  color: var(--text-secondary);
-  font-size: 13.5px;
-  margin: 0 0 24px;
-}
-.login-card input[type="password"],
-.login-card input[type="text"] {
-  width: 100%;
-  padding: 11px 14px;
-  border: 1px solid var(--baseline);
-  border-radius: var(--radius-s);
-  font-size: 14px;
-  margin-bottom: 14px;
-  outline: none;
-}
-.login-card input[type="password"]:focus,
-.login-card input[type="text"]:focus {
-  border-color: var(--series-1);
-  box-shadow: 0 0 0 3px rgba(111, 168, 220, 0.15);
-}
-.login-card button {
-  width: 100%;
-  padding: 11px 14px;
-  border: none;
-  border-radius: var(--radius-s);
-  background: var(--series-1);
-  color: #fff;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-}
-.login-card button:hover { background: #5b93c9; }
-.login-card button:disabled { opacity: .6; cursor: default; }
-.login-error {
-  color: var(--status-critical);
-  font-size: 13px;
-  margin-top: 12px;
-  min-height: 16px;
-}
-/* Huy hiệu thương hiệu CPC1HN — huy hiệu tròn gradient pastel 7 sắc + gấu bông
-   chibi nhỏ ở giữa (tự vẽ, thay cho hình vương miện/đầu lâu điểm danh cũ). */
-.login-logo {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KPGRlZnM+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJiYWRnZWdyYWQiIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmQ2ZWMiLz4KICAgIDxzdG9wIG9mZnNldD0iMzUlIiBzdG9wLWNvbG9yPSIjZmZlOGM5Ii8+CiAgICA8c3RvcCBvZmZzZXQ9IjY1JSIgc3RvcC1jb2xvcj0iI2Q3ZjVkYSIvPgogICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjY2ZlMGZmIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIzMSIgZmlsbD0idXJsKCNiYWRnZWdyYWQpIi8+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIsNCkgc2NhbGUoMC45MikiPjxnPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSI0OSIgcng9IjE1LjUiIHJ5PSIxMy41IiBmaWxsPSIjY2FhMDZlIi8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjUxIiByeD0iOC41IiByeT0iNy41IiBmaWxsPSIjZjdlY2Q5Ii8+CjxlbGxpcHNlIGN4PSIxNC41IiBjeT0iNDciIHJ4PSI1LjIiIHJ5PSI4LjUiIHRyYW5zZm9ybT0icm90YXRlKC0xOCAxNC41IDQ3KSIgZmlsbD0iI2NhYTA2ZSIvPgo8ZWxsaXBzZSBjeD0iNDkuNSIgY3k9IjQ3IiByeD0iNS4yIiByeT0iOC41IiB0cmFuc2Zvcm09InJvdGF0ZSgxOCA0OS41IDQ3KSIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSIxOCIgY3k9IjEyLjUiIHI9IjcuMiIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSIxOCIgY3k9IjEyLjUiIHI9IjMuNiIgZmlsbD0iI2E5N2M0ZiIvPgo8Y2lyY2xlIGN4PSI0NiIgY3k9IjEyLjUiIHI9IjcuMiIgZmlsbD0iI2NhYTA2ZSIvPgo8Y2lyY2xlIGN4PSI0NiIgY3k9IjEyLjUiIHI9IjMuNiIgZmlsbD0iI2E5N2M0ZiIvPgo8Y2lyY2xlIGN4PSIzMiIgY3k9IjI2IiByPSIxNi41IiBmaWxsPSIjY2FhMDZlIi8+CjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMxLjUiIHJ4PSI5IiByeT0iNyIgZmlsbD0iI2Y3ZWNkOSIvPgo8Y2lyY2xlIGN4PSIyMS41IiBjeT0iMjkiIHI9IjIuNiIgZmlsbD0iI2YyYTRjNCIgb3BhY2l0eT0iMC43Ii8+CjxjaXJjbGUgY3g9IjQyLjUiIGN5PSIyOSIgcj0iMi42IiBmaWxsPSIjZjJhNGM0IiBvcGFjaXR5PSIwLjciLz4KPGNpcmNsZSBjeD0iMjciIGN5PSIyNCIgcj0iMS43IiBmaWxsPSIjNWE0MzU4Ii8+CjxjaXJjbGUgY3g9IjM3IiBjeT0iMjQiIHI9IjEuNyIgZmlsbD0iIzVhNDM1OCIvPgo8ZWxsaXBzZSBjeD0iMzIiIGN5PSIyOS4zIiByeD0iMi4xIiByeT0iMS41IiBmaWxsPSIjNmI0NDIzIi8+CjxwYXRoIGQ9Ik0yOS41IDMyLjUgUTMyIDM0LjMgMzQuNSAzMi41IiBzdHJva2U9IiM2YjQ0MjMiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjwvZz48L2c+Cjwvc3ZnPg==') center / cover no-repeat;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25));
-  margin: 0 auto 16px;
-}
+    <!-- ===================== TAB: KPI ===================== -->
+    <section id="tab-kpi" class="tab-panel hidden">
+      <div class="filter-bar">
+        <input type="text" class="search-box" id="kpi-filter-search" placeholder="Tìm nhân viên…" />
+      </div>
 
+      <div class="stat-grid" id="kpi-stats"></div>
 
-/* ============================================================================
-   TRANG TRÍ HOA & BƯỚM — nền màn hình đăng nhập
-   (chỉ trang trí góc màn hình, không che nội dung/thẻ đăng nhập)
-   ============================================================================ */
-#login-screen { position: relative; overflow: hidden; }
-#login-screen::before,
-#login-screen::after {
-  content: "";
-  position: fixed;
-  background: var(--decor-flowers) no-repeat center / contain;
-  pointer-events: none;
-  z-index: 0;
-}
-#login-screen::before {
-  width: 620px;
-  height: 620px;
-  bottom: -60px;
-  right: -60px;
-  opacity: 1;
-}
-#login-screen::after {
-  width: 460px;
-  height: 460px;
-  top: -60px;
-  left: -60px;
-  transform: rotate(180deg);
-  opacity: 0.9;
-}
-.login-card { position: relative; z-index: 1; }
+      <div class="panel">
+        <h2>Tỉ lệ hoàn thành KPI theo nhân viên — <span id="kpi-thang"></span></h2>
+        <div class="chart-box tall"><canvas id="chart-kpi-tyle"></canvas></div>
+        <h3 class="kpi-subgroup-title">Bảng xếp hạng (theo tổng điểm cuối cùng)</h3>
+        <div class="kpi-leaderboard" id="kpi-leaderboard"></div>
+      </div>
 
-@media (max-width: 520px) {
-  #login-screen::before { width: 360px; height: 360px; }
-  #login-screen::after { width: 260px; height: 260px; }
-}
+      <div class="panel">
+        <h2>Chọn nhân viên để xem chi tiết KPI <span class="count" id="kpi-row-count"></span></h2>
+        <div class="kpi-emp-picker" id="kpi-emp-picker"></div>
+      </div>
 
-/* ============================================================================
-   APP SHELL — sidebar tối (navy) + khu vực nội dung sáng
-   ============================================================================ */
-:root {
-  /* Sidebar chuyển hẳn sang pastel (hồng phấn → tím lavender) theo yêu cầu "càng
-     cute càng tốt" — chữ dùng tông tím than đậm để vẫn đọc rõ trên nền sáng. */
-  --sidebar-bg: #ffd9ec;
-  --sidebar-bg-2: #bfe0f7;
-  --sidebar-text: #8a6a92;
-  --sidebar-text-active: #4a2f52;
-  --sidebar-active-bg: #fff6fb;
-  --sidebar-hover-bg: rgba(120, 70, 120, 0.08);
-  --sidebar-hover-bg-strong: rgba(120, 70, 120, 0.14);
-  --sidebar-width: 210px;
-}
+      <div class="panel" id="kpi-detail-panel" style="display:none;">
+        <div class="kpi-detail-header" id="kpi-detail-header"></div>
+        <div class="kpi-checkin-summary" id="kpi-checkin-summary"></div>
+        <div class="kpi-result-summary" id="kpi-result-summary"></div>
 
-#app { min-height: 100vh; position: relative; z-index: 0; }
-.app-shell { display: flex; min-height: 100vh; }
+        <h3 class="kpi-group-title">Nhóm 1 · Doanh số</h3>
+        <div class="table-wrap">
+          <table class="data-table kpi-detail-table" id="table-kpi-doanhso">
+            <thead><tr>
+              <th>Chỉ tiêu</th>
+              <th>Kế hoạch</th>
+              <th class="num">Thực hiện</th>
+              <th class="num">Điểm KH</th>
+              <th class="num">Điểm TH</th>
+              <th>Vượt max</th>
+              <th>Ghi chú</th>
+            </tr></thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
 
-/* Hoa & bướm trang trí góc màn hình khi đã đăng nhập — mờ, nằm dưới mọi khối dữ liệu
-   nên không bao giờ che số liệu (khối panel/bảng nào phủ lên trên sẽ tự động che nó). */
-#app::before,
-#app::after {
-  content: "";
-  position: fixed;
-  background: var(--decor-flowers) no-repeat center / contain;
-  pointer-events: none;
-  z-index: -1;
-}
-#app::before { width: 480px; height: 480px; bottom: -30px; right: -30px; opacity: 0.9; }
-#app::after { width: 360px; height: 360px; top: -30px; left: -30px; transform: rotate(180deg); opacity: 0.7; }
+        <h3 class="kpi-group-title">Nhóm 2 · Sản phẩm trọng tâm</h3>
+        <div id="kpi-sp-groups"></div>
+        <div class="kpi-group-total-bar" id="kpi-sp-subtotal"></div>
 
-/* ---- Sidebar ---- */
-.sidebar {
-  width: var(--sidebar-width);
-  flex: 0 0 var(--sidebar-width);
-  background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-2) 100%);
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-/* hoa cúc + gấu bông nhỏ phủ suốt chiều cao thanh menu — trang trí mờ, nằm dưới nút bấm */
-.sidebar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--decor-tile) repeat;
-  background-size: 130px 130px;
-  mix-blend-mode: multiply;
-  opacity: 0.5;
-  pointer-events: none;
-  z-index: 0;
-}
-.sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 18px;
-  border-bottom: 1px solid rgba(120, 70, 120, 0.14);
-  position: relative;
-  z-index: 1;
-}
-.sidebar-brand .login-logo { margin: 0; width: 38px; height: 38px; border-radius: 50%; flex: none; box-shadow: 0 1px 4px rgba(120,70,120,0.25); }
-.sidebar-title {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: .015em;
-  color: var(--sidebar-text-active);
-  line-height: 1.25;
-}
-.side-nav { display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; position: relative; z-index: 1; }
-.side-nav .tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: none;
-  background: none;
-  color: var(--sidebar-text);
-  padding: 11px 14px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: .01em;
-  cursor: pointer;
-  text-align: left;
-  white-space: nowrap;
-  transition: background .15s ease, color .15s ease;
-}
-.side-nav .tab-btn .tab-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.55);
-  flex: none;
-  transition: background .15s ease;
-}
-.side-nav .tab-btn svg { width: 19px; height: 19px; stroke-width: 1.9; flex: none; opacity: 0.9; }
-.side-nav .tab-btn:hover:not(.active) { background: var(--sidebar-hover-bg); color: var(--sidebar-text-active); }
-.side-nav .tab-btn:hover:not(.active) .tab-icon { background: rgba(255,255,255,0.8); }
-.side-nav .tab-btn.active {
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-text-active);
-  box-shadow: 0 2px 10px rgba(120, 70, 120, 0.18);
-}
-.side-nav .tab-btn.active .tab-icon { background: linear-gradient(135deg, var(--series-5), var(--series-1)); box-shadow: 0 1px 4px rgba(120,70,120,0.25); }
-.side-nav .tab-btn.active .tab-icon svg { color: #fff; opacity: 1; }
-.side-nav .tab-btn.active svg { opacity: 1; }
+        <h3 class="kpi-bonus-title">Điểm cộng thêm</h3>
+        <div class="table-wrap">
+          <table class="data-table kpi-detail-table" id="table-kpi-bonus">
+            <thead><tr>
+              <th>Mô tả</th>
+              <th>Điểm tối đa</th>
+              <th class="num">Điểm đạt được</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
 
-/* ---- Main column ---- */
-.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        <h3 class="kpi-tru-title">Điểm trừ KPI</h3>
+        <div class="table-wrap">
+          <table class="data-table kpi-detail-table" id="table-kpi-tru">
+            <thead><tr>
+              <th>Mục</th>
+              <th>Trạng thái</th>
+              <th class="num">Mức trừ</th>
+              <th class="num">Điểm trừ thực tế</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
 
-header.topbar {
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-}
-.topbar-left { display: flex; align-items: center; gap: 12px; }
-.topbar .updated {
-  font-size: 12.5px; color: var(--text-muted);
-}
-.topbar-right { display: flex; align-items: center; gap: 10px; }
-.btn {
-  border: 1px solid var(--baseline);
-  background: var(--surface-1);
-  color: var(--text-primary);
-  padding: 7px 13px;
-  border-radius: var(--radius-s);
-  font-size: 13px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn:hover { background: var(--page-plane); }
-.btn-primary { background: var(--series-1); border-color: var(--series-1); color: #fff; }
-.btn-primary:hover { background: #5b93c9; }
-.user-badge {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: var(--page-plane);
-  border: 1px solid var(--border);
-}
-.user-badge b { color: var(--text-primary); }
+        <div class="kpi-final-score" id="kpi-final-score"></div>
 
-main { flex: 1; padding: 20px 24px 60px; max-width: 1400px; width: 100%; margin: 0 auto; }
+        <div class="kpi-save-status" id="kpi-save-status"></div>
+      </div>
+    </section>
 
-/* ============================================================================
-   FILTER BAR — dạng viên thuốc (pill) giống mẫu
-   ============================================================================ */
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 18px;
-  align-items: center;
-}
-.filter-bar select, .filter-bar input[type="text"], .filter-bar input[type="date"] {
-  padding: 8px 14px;
-  border: 1px solid var(--baseline);
-  border-radius: 999px;
-  background: var(--surface-1);
-  font-size: 13px;
-  color: var(--text-primary);
-  min-width: 130px;
-}
-.filter-bar .search-box { min-width: 220px; flex: 1 1 220px; border-radius: var(--radius-s) !important; }
-.filter-bar .clear-filters {
-  font-size: 12.5px;
-  color: var(--series-1);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 4px;
-}
+    <!-- ===================== TAB: SALE ===================== -->
+    <section id="tab-sales" class="tab-panel hidden">
+      <div class="filter-bar">
+        <select id="sales-filter-tinh"><option value="">Tất cả tỉnh</option></select>
+        <select id="sales-filter-nv"><option value="">Tất cả nhân viên</option></select>
+        <select id="sales-filter-nhom"><option value="">Tất cả nhóm hàng</option></select>
+        <input type="date" id="sales-filter-from" title="Từ ngày" />
+        <input type="date" id="sales-filter-to" title="Đến ngày" />
+        <input type="text" class="search-box" id="sales-filter-search" placeholder="Tìm khách hàng, mặt hàng…" />
+        <button class="clear-filters" id="sales-clear">Xoá bộ lọc</button>
+      </div>
 
-@media (max-width: 900px) {
-  .app-shell { flex-direction: column; }
-  .sidebar { width: 100%; flex: none; height: auto; position: static; }
-  .side-nav { flex-direction: row; overflow-x: auto; padding: 10px 14px 14px; }
-  .side-nav .tab-btn { flex: none; }
-  .sidebar::after { display: none; }
-  #app::before { width: 200px; height: 200px; }
-  #app::after { display: none; }
-}
+      <div class="stat-grid" id="sales-stats"></div>
 
-/* ============================================================================
-   STAT TILES
-   ============================================================================ */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.stat-tile {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-card);
-}
-.stat-tile .label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-}
-.stat-tile .value {
-  font-size: 24px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+      <div class="panel">
+        <h2>Doanh thu theo thời gian</h2>
+        <div class="chart-box tall"><canvas id="chart-sales-time"></canvas></div>
+      </div>
 
-/* ============================================================================
-   CARD / PANEL
-   ============================================================================ */
-.panel {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-card);
-  padding: 18px 18px 8px;
-  margin-bottom: 20px;
-}
-.panel h2 {
-  font-size: 14px;
-  margin: 0 0 14px;
-  font-weight: 700;
-}
-.panel h2 .count { color: var(--text-muted); font-weight: 500; }
+      <div class="panel">
+        <h2>Doanh thu theo Tỉnh &amp; Nhóm hàng</h2>
+        <div class="charts-row">
+          <div class="chart-box"><canvas id="chart-sales-tinh"></canvas></div>
+          <div class="chart-box"><canvas id="chart-sales-nhom"></canvas></div>
+        </div>
+      </div>
 
-.charts-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-}
-.chart-box { position: relative; height: 260px; }
-.chart-box.tall { height: 320px; }
+      <div class="panel">
+        <h2>Top khách hàng theo doanh thu <span class="count" id="sales-cust-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-sales-cust">
+            <thead><tr>
+              <th data-sort="tenKhach">Khách hàng</th>
+              <th data-sort="tinh">Tỉnh</th>
+              <th data-sort="nhanVien">Nhân viên</th>
+              <th class="num" data-sort="soDon">Số đơn</th>
+              <th class="num" data-sort="doanhThu">Tổng doanh thu</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
 
-/* ============================================================================
-   TABLE
-   ============================================================================ */
-.table-wrap { overflow-x: auto; border-radius: var(--radius-m); border: 1px solid var(--border); }
-table.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-table.data-table th {
-  position: sticky; top: 0;
-  background: var(--accent-deep);
-  text-align: left;
-  padding: 10px 12px;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-  color: var(--hero-text-soft);
-  border-bottom: 1px solid var(--accent-deep);
-  cursor: pointer;
-  white-space: nowrap;
-}
-table.data-table th.sorted { color: #fff; }
-table.data-table tbody tr:nth-child(even) { background: rgba(110, 120, 170, 0.05); }
-table.data-table td {
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--gridline);
-  vertical-align: middle;
-  color: var(--text-primary);
-}
-table.data-table tbody tr:hover { background: var(--page-plane); }
-table.data-table td.num, table.data-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.muted { color: var(--text-muted); }
-.small { font-size: 12px; }
+      <div class="panel">
+        <h2>Chi tiết đơn hàng <span class="count" id="sales-row-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-sales">
+            <thead><tr>
+              <th data-sort="ngay">Ngày</th>
+              <th data-sort="nhanVien">Nhân viên</th>
+              <th data-sort="tenKhach">Khách hàng</th>
+              <th data-sort="tinh">Tỉnh</th>
+              <th data-sort="nhomHang">Nhóm hàng</th>
+              <th data-sort="tenHang">Mặt hàng</th>
+              <th class="num" data-sort="soLuong">SL</th>
+              <th class="num" data-sort="doanhThu">Doanh thu</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-/* progress bar cell */
-.progress-cell { display: flex; align-items: center; gap: 8px; min-width: 130px; }
-.progress-track {
-  flex: 1;
-  height: 6px;
-  background: var(--gridline);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.progress-fill { height: 100%; border-radius: 4px; }
-.progress-fill.good { background: var(--status-good); }
-.progress-fill.warn { background: var(--status-warning); }
-.progress-fill.critical { background: var(--status-critical); }
-.progress-pct { font-size: 12px; font-weight: 600; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+    <!-- ===================== TAB: SẢN PHẨM TRỌNG TÂM ===================== -->
+    <section id="tab-sptt" class="tab-panel hidden">
+      <div class="sptt-team-header">
+        <h2 class="sptt-team-title">🎯 Lũy kế Quý 3/2026 — Team SS Tạ Hoàng Duy</h2>
+        <div class="sptt-updated" id="sptt-updated"></div>
+      </div>
+      <div class="sptt-team-grid" id="sptt-team-cards"></div>
 
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-.chip.good { background: rgba(111,191,115,0.12); color: #3f7a45; }
-.chip.warn { background: rgba(246,200,119,0.18); color: #9c6b1f; }
-.chip.critical { background: rgba(238,126,121,0.12); color: #b8474a; }
-.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+      <div class="panel">
+        <h2>🏅 Lũy kế theo từng nhân viên — Tháng 8/2026</h2>
+        <div class="sptt-emp-grid" id="sptt-emp-cards"></div>
+      </div>
+    </section>
 
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
-  font-size: 13.5px;
-}
+    <!-- ===================== TAB: DOANH SỐ ===================== -->
+    <section id="tab-doanhso" class="tab-panel hidden">
+      <div class="ds-team-header">
+        <h2 class="ds-team-title">💰 Doanh số Tháng 8/2026 — Team SS Tạ Hoàng Duy</h2>
+        <div class="ds-updated" id="ds-updated"></div>
+      </div>
+      <div class="ds-team-grid" id="ds-team-cards"></div>
 
-/* Employee detail row */
-tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-}
-.detail-metric {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-s);
-  padding: 10px 12px;
-}
-.detail-metric .k { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-.detail-metric .v { font-size: 15px; font-weight: 700; }
-.detail-metric .v2 { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+      <div class="panel">
+        <h2>🐣 Xếp hạng hoàn thành chỉ tiêu — từng nhân viên</h2>
+        <div class="ds-emp-grid" id="ds-emp-cards"></div>
+      </div>
 
-.chip.muted { background: var(--page-plane); color: var(--text-muted); }
-.chip.muted::before { display: none; }
+      <div class="panel">
+        <h2>👑 Top 10 khách hàng doanh số cao nhất</h2>
+        <div class="ds-cust-list" id="ds-cust-list"></div>
+      </div>
+    </section>
 
-/* ============================================================================
-   TAB: KPI — chọn nhân viên xem/sửa bảng KPI chi tiết của riêng người đó
-   ============================================================================ */
-.kpi-emp-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.kpi-emp-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 8px 14px;
-  border-radius: var(--radius-m);
-  border: 1px solid var(--border);
-  background: var(--page-plane);
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-  min-width: 130px;
-}
-.kpi-emp-chip .kpi-emp-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.kpi-emp-chip .kpi-emp-pct { font-size: 12px; font-weight: 700; }
-.kpi-emp-chip.good .kpi-emp-pct { color: #3f7a45; }
-.kpi-emp-chip.warn .kpi-emp-pct { color: #9c6b1f; }
-.kpi-emp-chip.critical .kpi-emp-pct { color: #b8474a; }
-.kpi-emp-chip:hover { border-color: var(--series-1); }
-.kpi-emp-chip.active {
-  background: var(--accent-deep);
-  border-color: var(--accent-deep);
-}
-.kpi-emp-chip.active .kpi-emp-name { color: #fff; }
-.kpi-emp-chip.active .kpi-emp-pct { color: var(--hero-text-soft); }
+    <!-- ===================== TAB: GIAO VIỆC ===================== -->
+    <section id="tab-giaoviec" class="tab-panel hidden">
+      <div class="panel" id="giaoviec-new-panel">
+        <h2>Giao việc mới</h2>
+        <form class="giaoviec-form" id="giaoviec-form">
+          <label class="giaoviec-field">
+            <span>Chọn nhân viên</span>
+            <select id="giaoviec-nv" required><option value="">— Chọn nhân viên —</option></select>
+          </label>
+          <div class="giaoviec-form-row">
+            <label class="giaoviec-field">
+              <span>Tên nhiệm vụ</span>
+              <input type="text" id="giaoviec-ten" required maxlength="200" placeholder="VD: Khảo sát nhà thuốc khu vực A" />
+            </label>
+            <label class="giaoviec-field">
+              <span>Ngày thực hiện</span>
+              <input type="date" id="giaoviec-ngay" />
+            </label>
+          </div>
+          <label class="giaoviec-field">
+            <span>Nội dung công việc</span>
+            <textarea id="giaoviec-noidung" rows="4" maxlength="4000" placeholder="Mô tả chi tiết công việc cần làm…"></textarea>
+          </label>
+          <div class="giaoviec-form-actions">
+            <button type="submit" class="btn btn-primary" id="giaoviec-submit-btn">Giao việc</button>
+            <span class="giaoviec-form-status" id="giaoviec-form-status"></span>
+          </div>
+        </form>
+      </div>
 
-.kpi-detail-header { margin-bottom: 16px; }
-.kpi-detail-title {
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-}
-.kpi-detail-meta { font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; }
-.kpi-checkin-summary {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  background: var(--page-plane);
-  border: 1px solid var(--border-soft, #f4dcec);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin: 12px 0 16px;
-}
+      <div class="panel" id="giaoviec-byemployee-panel">
+        <h2>Nhiệm vụ theo từng nhân viên</h2>
+        <div id="giaoviec-by-employee"></div>
+      </div>
 
-/* Ô tóm tắt "ĐẠT KPI" / "BỊ LIỆT KPI" + lý do, hiển thị ngay đầu chi tiết */
-.kpi-result-summary {
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-bottom: 20px;
-  border: 1px solid var(--border-soft, #f4dcec);
-}
-.kpi-result-summary.ok { background: rgba(111,191,115,0.07); border-color: rgba(111,191,115,0.3); }
-.kpi-result-summary.fail { background: rgba(238,126,121,0.07); border-color: rgba(238,126,121,0.3); }
-.kpi-result-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.kpi-result-score { font-size: 12.5px; color: var(--text-secondary); }
-.kpi-result-reasons { margin: 8px 0 0; padding-left: 20px; font-size: 12.5px; color: var(--status-critical); }
-.kpi-result-reasons li { margin-bottom: 3px; }
+      <div class="panel">
+        <h2>Danh sách nhiệm vụ <span class="count" id="giaoviec-count"></span></h2>
+        <div id="giaoviec-list"></div>
+      </div>
+    </section>
 
-.kpi-group-title { font-size: 14.5px; margin: 26px 0 10px; font-weight: 700; }
-.kpi-group-title:first-of-type { margin-top: 4px; }
-.kpi-subgroup-title { font-size: 13px; margin: 16px 0 8px; color: var(--text-secondary); font-weight: 700; }
+    <!-- ===================== TAB: TRAO ĐỔI ===================== -->
+    <section id="tab-chat" class="tab-panel hidden">
+      <div class="chat-shell">
+        <aside class="chat-contacts" id="chat-contacts">
+          <div class="chat-contacts-title">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6.7 8.7a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2Z"/><path d="M2 16.3c.5-3.3 2.1-4.9 4.7-4.9s4.2 1.6 4.7 4.9"/><path d="M13.6 8.4a2.05 2.05 0 1 0 0-4.1 2.05 2.05 0 0 0 0 4.1Z"/><path d="M13.1 11.5c1.9.4 3 1.8 3.4 4.5"/></svg>
+            <span>Nhân viên</span>
+          </div>
+          <div class="chat-contacts-list" id="chat-contacts-list"></div>
+        </aside>
+        <div class="chat-thread-wrap">
+          <div class="chat-thread-header" id="chat-thread-header">Đang tải…</div>
+          <div class="chat-messages" id="chat-messages"></div>
+          <form class="chat-input-bar" id="chat-form">
+            <input type="text" id="chat-input" placeholder="Nhập tin nhắn…" autocomplete="off" maxlength="2000" />
+            <button type="submit" class="btn btn-primary" id="chat-send-btn">Gửi</button>
+          </form>
+          <div class="chat-error" id="chat-error"></div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-.kpi-detail-table tfoot td { padding: 0; border-top: none; }
-.kpi-bonus-title, .kpi-tru-title { font-size: 13.5px; margin: 22px 0 10px; }
+  <footer class="app-footer">Dữ liệu lấy trực tiếp từ Google Sheets qua Apps Script API.</footer>
+  </div>
+</div>
+</div>
 
-/* Dòng tổng điểm của MỖI NHÓM chỉ tiêu (Doanh số / Sản phẩm trọng tâm) — dùng
-   chung 1 kiểu: căn giữa, chữ đậm, có nền nổi bật, đặt ngay dưới bảng/nhóm đó
-   để dễ thấy ngay không cần dò từng cột. Nhóm 1 dùng trong 1 ô <td colspan>
-   của tfoot bảng; Nhóm 2 dùng trong 1 <div> riêng (không phải bảng) — cùng
-   class nên nhìn giống hệt nhau. */
-.kpi-group-total-bar {
-  display: block;
-  text-align: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  background: rgba(111,168,220,0.09);
-  border: 1px solid rgba(111,168,220,0.25);
-  border-radius: var(--radius-s);
-  padding: 10px 14px;
-  margin: 6px 0 14px;
-}
-.kpi-group-total-bar b { color: var(--series-1); font-size: 16px; }
-
-/* Mục tổng điểm cuối cùng "X điểm kpis / 1000 điểm kpis" ở cuối trang chi tiết
-   KPI, sau khi đã cộng "Điểm cộng thêm" và trừ "Điểm trừ KPI" — dùng gradient
-   hồng-tím pastel đậm (--hero-grad-1/2) riêng để thật nổi bật giữa các thẻ pastel
-   nhạt xung quanh, chữ trắng/sáng màu để tương phản rõ. */
-.kpi-final-score {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  text-align: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 26px;
-  padding: 20px 22px;
-  border-radius: var(--radius-m);
-  background: linear-gradient(135deg, var(--hero-grad-1) 0%, var(--hero-grad-2) 100%);
-  border: 1px solid var(--hero-grad-2);
-  box-shadow: var(--shadow-card);
-}
-.kpi-final-score-label {
-  width: 100%;
-  font-size: 12.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  color: var(--hero-text-soft);
-  margin-bottom: 2px;
-}
-.kpi-final-score-value { font-size: 32px; font-weight: 800; color: var(--hero-text-strong); font-variant-numeric: tabular-nums; }
-.kpi-final-score-sep { font-size: 20px; color: var(--hero-text-soft); }
-.kpi-final-score-max { font-size: 18px; font-weight: 600; color: var(--hero-text-soft); font-variant-numeric: tabular-nums; }
-
-.kpi-input {
-  width: 100px;
-  padding: 6px 8px;
-  border: 1px solid var(--baseline);
-  border-radius: var(--radius-s);
-  font-size: 13px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.kpi-input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(111, 168, 220, 0.15); outline: none; }
-.kpi-input:disabled { opacity: .6; }
-.kpi-input-text { width: 100%; min-width: 160px; text-align: left; }
-.kpi-select.kpi-input { width: auto; min-width: 120px; text-align: left; }
-.kpi-input-number { width: 128px; } /* đủ rộng cho số có dấu chấm, vd "250.000.000" */
-
-/* Bảng xếp hạng huy chương trên panel "Tỉ lệ hoàn thành KPI" */
-.kpi-leaderboard { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-.kpi-leaderboard-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: var(--radius-s);
-  background: var(--page-plane);
-  border: 1px solid var(--border-soft, #f4dcec);
-}
-.kpi-leaderboard-row.top3 { background: rgba(246,200,119,0.08); border-color: rgba(246,200,119,0.3); }
-.kpi-medal { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
-.kpi-rank-num { font-size: 12.5px; font-weight: 700; color: var(--text-muted); width: 26px; text-align: center; flex-shrink: 0; }
-.kpi-leaderboard-name { font-size: 13px; font-weight: 600; flex: 1; }
-.kpi-leaderboard-score { font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-
-.kpi-save-status {
-  margin-top: 14px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  min-height: 16px;
-}
-.kpi-save-status.ok { color: var(--status-good); }
-.kpi-save-status.error { color: var(--status-critical); }
-
-/* ============================================================================
-   TAB: TRAO ĐỔI (chat riêng Admin ↔ từng nhân viên)
-   ============================================================================ */
-.chat-shell {
-  display: flex;
-  gap: 16px;
-  height: calc(100vh - 210px);
-  min-height: 420px;
-}
-.chat-contacts {
-  width: 240px;
-  flex: none;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.chat-contacts-title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 16px 16px;
-  font-size: 14px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .03em;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(111,168,220,0.07), transparent);
-}
-.chat-contacts-title svg { width: 18px; height: 18px; color: var(--series-1); flex: none; }
-.chat-contacts-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 3px; }
-.chat-contact-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  border: 1px solid transparent;
-  background: none;
-  padding: 8px 10px;
-  border-radius: var(--radius-s);
-  font-size: 14px;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background .12s ease, border-color .12s ease, transform .12s ease;
-}
-.chat-contact-main { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-.chat-contact-item:hover { background: var(--page-plane); border-color: var(--border); transform: translateX(1px); }
-.chat-contact-item.active { background: var(--series-1); color: #fff; border-color: var(--series-1); box-shadow: 0 2px 8px rgba(111,168,220,0.35); }
-.chat-contact-item.active .chip { color: inherit; }
-.chat-contact-item.active .chat-avatar { box-shadow: 0 0 0 2px rgba(255,255,255,0.75); }
-.chat-contact-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-
-.chat-avatar {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-primary);
-  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-  font-size: 13px;
-  font-weight: 800;
-  box-shadow: 0 1px 3px rgba(120,70,110,0.22);
-}
-
-.chat-thread-wrap {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-card);
-  overflow: hidden;
-}
-.chat-thread-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 18px;
-  font-size: 15px;
-  font-weight: 800;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-primary);
-  background: linear-gradient(180deg, rgba(111,168,220,0.06), transparent);
-}
-.chat-thread-header-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chat-thread-placeholder-icon { width: 20px; height: 20px; color: var(--text-muted); flex: none; }
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--page-plane);
-}
-.chat-bubble-row { display: flex; }
-.chat-bubble-row.mine { justify-content: flex-end; }
-.chat-bubble-row.theirs { justify-content: flex-start; }
-.chat-bubble {
-  max-width: 70%;
-  padding: 8px 12px;
-  border-radius: 14px;
-  font-size: 13.5px;
-  line-height: 1.4;
-  box-shadow: 0 1px 2px rgba(120,70,110,0.08);
-}
-.chat-bubble-row.mine .chat-bubble { background: var(--series-1); color: #fff; border-bottom-right-radius: 4px; }
-.chat-bubble-row.theirs .chat-bubble { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-.chat-bubble-sender { font-size: 11px; font-weight: 700; color: var(--series-1); margin-bottom: 2px; }
-.chat-bubble-text { white-space: pre-wrap; word-break: break-word; }
-.chat-bubble-time { font-size: 10.5px; opacity: .7; margin-top: 3px; text-align: right; }
-
-.chat-input-bar {
-  display: flex;
-  gap: 10px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-}
-.chat-input-bar input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1px solid var(--baseline);
-  border-radius: 999px;
-  font-size: 13.5px;
-  outline: none;
-}
-.chat-input-bar input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(111,168,220,0.15); }
-.chat-error { padding: 0 16px 10px; color: var(--status-critical); font-size: 12px; min-height: 4px; }
-
-@media (max-width: 900px) {
-  .chat-shell { flex-direction: column; height: auto; }
-  .chat-contacts { width: 100%; max-height: 200px; }
-  .chat-thread-wrap { height: 60vh; }
-}
-
-/* ---- Giao việc ---- */
-.giaoviec-form { display: flex; flex-direction: column; gap: 14px; max-width: 980px; width: 100%; }
-.giaoviec-form-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
-.giaoviec-field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
-.giaoviec-field select,
-.giaoviec-field input[type="text"],
-.giaoviec-field input[type="date"],
-.giaoviec-field textarea {
-  font: inherit;
-  font-size: 13.5px;
-  font-weight: 400;
-  color: var(--text-primary);
-  padding: 9px 12px;
-  border: 1px solid var(--baseline);
-  border-radius: var(--radius-s);
-  outline: none;
-  resize: vertical;
-}
-.giaoviec-field input[type="date"] { min-height: 38px; }
-.giaoviec-field select:focus,
-.giaoviec-field input[type="text"]:focus,
-.giaoviec-field input[type="date"]:focus,
-.giaoviec-field textarea:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(111,168,220,0.15); }
-.giaoviec-form-actions { display: flex; align-items: center; gap: 12px; }
-.giaoviec-form-status, .giaoviec-fb-status-text { font-size: 12px; color: var(--text-muted); }
-.btn-small { padding: 5px 11px; font-size: 12px; }
-
-.giaoviec-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  background: var(--surface-1);
-}
-.giaoviec-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.giaoviec-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.giaoviec-card-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
-.giaoviec-card-meta b { color: var(--text-secondary); font-weight: 600; }
-.giaoviec-card-content {
-  font-size: 13.5px;
-  color: var(--text-primary);
-  background: var(--page-plane);
-  border-radius: var(--radius-s);
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  white-space: pre-wrap;
-}
-.giaoviec-card-mail { margin-bottom: 12px; }
-.giaoviec-feedback-form { border-top: 1px dashed var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
-.giaoviec-feedback-form .giaoviec-field { max-width: 320px; }
-
-.giaoviec-emp-group {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  margin-bottom: 12px;
-  background: var(--page-plane);
-  overflow: hidden;
-}
-.giaoviec-emp-group[open] { background: var(--surface-1); }
-.giaoviec-emp-summary {
-  cursor: pointer;
-  list-style: none;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-.giaoviec-emp-summary::-webkit-details-marker { display: none; }
-.giaoviec-emp-summary::before {
-  content: '▸';
-  display: inline-block;
-  margin-right: 8px;
-  color: var(--text-muted);
-  transition: transform .15s ease;
-}
-.giaoviec-emp-group[open] > .giaoviec-emp-summary::before { transform: rotate(90deg); }
-.giaoviec-emp-summary .chip { font-weight: 600; }
-.giaoviec-emp-body { padding: 4px 16px 16px; }
-.giaoviec-emp-empty { font-size: 12.5px; color: var(--text-muted); padding: 0 0 4px; }
-
-/* ============================================================================
-   TAB: SẢN PHẨM TRỌNG TÂM
-   ============================================================================ */
-.sptt-team-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.sptt-team-title {
-  font-size: 19px;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -.01em;
-}
-.sptt-updated { font-size: 12px; color: var(--text-muted); }
-
-.sptt-team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
-  margin-bottom: 22px;
-}
-.sptt-team-card {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-card);
-  padding: 18px 20px;
-  background-image: linear-gradient(135deg, rgba(111,168,220,0.06), transparent 60%);
-}
-.sptt-team-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.sptt-card-icon { font-size: 26px; line-height: 1; }
-.sptt-team-card-name { font-size: 17px; font-weight: 800; }
-.sptt-team-card-nums { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
-.sptt-luyke { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--series-1); }
-.sptt-target { font-size: 12.5px; color: var(--text-muted); }
-
-.sptt-emp-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 14px;
-  margin-top: 4px;
-}
-.sptt-emp-card {
-  background: var(--page-plane);
-  border: 1px solid var(--border-soft, #f4dcec);
-  border-radius: var(--radius-m);
-  padding: 14px 16px;
-  transition: box-shadow .15s ease, transform .15s ease;
-}
-.sptt-emp-card:hover { box-shadow: var(--shadow-card); transform: translateY(-1px); }
-.sptt-emp-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.sptt-emp-medal { font-size: 18px; line-height: 1; }
-.sptt-emp-name { font-size: 16px; font-weight: 800; }
-.sptt-product-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 8px 10px;
-  padding: 7px 0;
-  border-top: 1px dashed var(--border-soft, #f4dcec);
-}
-.sptt-product-row:first-of-type { border-top: none; }
-.sptt-product-icon { font-size: 18px; grid-row: 1; }
-.sptt-product-label { font-size: 13px; font-weight: 700; grid-row: 1; }
-.sptt-product-nums { font-size: 12px; color: var(--text-muted); grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; }
-.sptt-product-row .progress-cell { grid-column: 1 / -1; }
-
-/* ============================================================================
-   TAB: DOANH SỐ — phong cách chibi dễ thương (bo tròn lớn, gradient pastel,
-   icon to, hiệu ứng nảy nhẹ khi hover)
-   ============================================================================ */
-.ds-team-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.ds-team-title { font-size: 19px; font-weight: 800; margin: 0; letter-spacing: -.01em; }
-.ds-updated { font-size: 12px; color: var(--text-muted); }
-
-.ds-team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin-bottom: 22px;
-}
-.ds-team-card {
-  background: var(--surface-1);
-  border: 2px solid var(--border);
-  border-radius: 22px;
-  box-shadow: var(--shadow-card);
-  padding: 20px 22px;
-  position: relative;
-  overflow: hidden;
-  transition: transform .15s ease, box-shadow .15s ease;
-}
-.ds-team-card:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 6px 22px rgba(120,70,110,0.14); }
-.ds-team-card--kedon {
-  background-image: linear-gradient(135deg, rgba(111,168,220,0.12), rgba(91,204,187,0.05) 70%);
-  border-color: rgba(111,168,220,0.35);
-}
-.ds-team-card--thau {
-  background-image: linear-gradient(135deg, rgba(242,164,196,0.14), rgba(247,203,110,0.06) 70%);
-  border-color: rgba(242,164,196,0.35);
-}
-.ds-team-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.ds-card-icon { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.08)); }
-.ds-team-card-name { font-size: 17px; font-weight: 800; }
-.ds-team-card-nums { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
-.ds-luyke { font-size: 27px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--series-1); }
-.ds-team-card--thau .ds-luyke { color: var(--series-5); }
-.ds-target { font-size: 12.5px; color: var(--text-muted); }
-
-.ds-emp-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 14px;
-  margin-top: 4px;
-}
-.ds-emp-card {
-  background: var(--page-plane);
-  border: 2px solid var(--border-soft, #f4dcec);
-  border-radius: 20px;
-  padding: 16px 18px;
-  transition: box-shadow .15s ease, transform .15s ease;
-}
-.ds-emp-card:hover { box-shadow: var(--shadow-card); transform: translateY(-2px) scale(1.005); border-color: var(--series-5); }
-.ds-emp-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.ds-emp-medal { font-size: 19px; line-height: 1; }
-.ds-emp-name { font-size: 16px; font-weight: 800; }
-.ds-product-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 8px 10px;
-  padding: 7px 0;
-  border-top: 1px dashed var(--border-soft, #f4dcec);
-}
-.ds-product-row:first-of-type { border-top: none; }
-.ds-product-icon { font-size: 18px; grid-row: 1; }
-.ds-product-label { font-size: 13px; font-weight: 700; grid-row: 1; }
-.ds-product-nums { font-size: 12px; color: var(--text-muted); grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; }
-.ds-product-row .progress-cell { grid-column: 1 / -1; }
-
-.ds-cust-list { display: flex; flex-direction: column; gap: 8px; }
-.ds-cust-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: var(--page-plane);
-  border: 1px solid var(--border-soft, #f4dcec);
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.ds-cust-row:hover { transform: translateX(2px); box-shadow: var(--shadow-card); }
-.ds-cust-row:nth-child(odd) { background: var(--surface-1); }
-.ds-cust-rank {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  background: var(--series-1);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 800;
-  flex: 0 0 auto;
-}
-.ds-cust-crown { font-size: 16px; flex: 0 0 auto; }
-.ds-cust-name { flex: 1 1 auto; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ds-cust-amount { font-size: 14.5px; font-weight: 800; color: var(--series-5); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
-.ds-cust-share { font-size: 11px; color: var(--text-muted); flex: 0 0 auto; min-width: 92px; text-align: right; }
-
-/* footer */
-footer.app-footer {
-  text-align: center;
-  padding: 18px;
-  color: var(--text-muted);
-  font-size: 11.5px;
-}
-
-@media (max-width: 640px) {
-  header.topbar { padding: 12px 14px; }
-  main { padding: 14px 14px 40px; }
-  .stat-tile .value { font-size: 20px; }
-  .giaoviec-form-row { grid-template-columns: 1fr; }
-  .sptt-team-title { font-size: 16px; }
-  .sptt-luyke { font-size: 22px; }
-  .ds-team-title { font-size: 16px; }
-  .ds-luyke { font-size: 22px; }
-  .ds-cust-share { display: none; }
-}
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
