@@ -468,6 +468,13 @@
 
   function kpiNormName(s) { return String(s || '').trim().toUpperCase(); }
 
+  // Lấy riêng "tên gọi" (từ cuối cùng) từ họ tên đầy đủ, dùng cho nhãn trục
+  // biểu đồ cho gọn — VD "Trương Thị Hồng Sen" -> "Sen".
+  function kpiShortName(hoTen) {
+    var parts = String(hoTen || '').trim().split(/\s+/);
+    return parts.length ? parts[parts.length - 1] : hoTen;
+  }
+
   function kpiCanEdit(emp) {
     var session = getSession();
     if (!session || !emp) return false;
@@ -500,20 +507,34 @@
     ].join('');
 
     var ranked = all.slice().sort(function (a, b) { return kpiFinalScore(b) - kpiFinalScore(a); });
+    // Cột đứng: trục hoành (x) = tên nhân viên (chỉ lấy tên gọi cho gọn),
+    // trục tung (y) = điểm KPI cuối cùng (đã gồm cộng/trừ). Màu xanh/đỏ theo
+    // đúng kết quả Đạt KPI / Bị liệt (đồng bộ với bảng xếp hạng bên dưới).
     var colors = ranked.map(function (e) {
-      var cls = progressClass(e.tyLeTong);
-      return cls === 'good' ? '#0ca30c' : (cls === 'warn' ? '#fab219' : '#d03b3b');
+      var dat = e.ketQuaKpi && e.ketQuaKpi.dat;
+      return dat ? '#0ca30c' : '#d03b3b';
     });
     upsertChart('chart-kpi-tyle', {
       type: 'bar',
       data: {
-        labels: ranked.map(function (e) { return e.hoTen; }),
-        datasets: [{ data: ranked.map(function (e) { return +(e.tyLeTong * 100).toFixed(1); }), backgroundColor: colors, borderRadius: 4, maxBarThickness: 40 }]
+        labels: ranked.map(function (e) { return kpiShortName(e.hoTen); }),
+        datasets: [{ data: ranked.map(function (e) { return kpiFinalScore(e); }), backgroundColor: colors, borderRadius: 4, maxBarThickness: 48 }]
       },
       options: Object.assign({}, CHART_BASE_OPTS, {
-        indexAxis: 'y',
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (ctx) { return ctx.parsed.x + '% TH/KH'; } } } },
-        scales: { x: { beginAtZero: true, suggestedMax: 100, grid: { color: '#e1e0d9' } }, y: { grid: { display: false } } }
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            padding: 10,
+            callbacks: {
+              title: function (items) { return ranked[items[0].dataIndex].hoTen; },
+              label: function (ctx) { return fmtNum.format(ctx.parsed.y) + ' điểm KPI'; }
+            }
+          }
+        },
+        scales: Object.assign({}, CHART_BASE_OPTS.scales, {
+          y: Object.assign({}, CHART_BASE_OPTS.scales.y, { suggestedMax: 1000 }),
+          x: Object.assign({}, CHART_BASE_OPTS.scales.x, { ticks: { color: '#3a3830', font: { size: 12, weight: '600' } } })
+        })
       })
     });
 
