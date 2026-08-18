@@ -1015,6 +1015,26 @@
     return session ? { 'Authorization': 'Bearer ' + session.token } : {};
   }
 
+  // Màu + chữ cái đầu avatar cho từng nhân viên trong mục Trao đổi — hash tên
+  // đăng nhập ra 1 màu cố định trong PALETTE (đã khai báo ở phần biểu đồ) để
+  // mỗi người luôn có cùng 1 màu, giúp danh sách sinh động và dễ phân biệt.
+  function chatColorForUser(key) {
+    var s = String(key || '');
+    var hash = 0;
+    for (var i = 0; i < s.length; i++) { hash = (hash * 31 + s.charCodeAt(i)) >>> 0; }
+    return PALETTE[hash % PALETTE.length];
+  }
+
+  function chatInitial(name) {
+    var shortName = kpiShortName(name);
+    return shortName ? shortName.charAt(0).toUpperCase() : '?';
+  }
+
+  function chatAvatarHtml(name, key) {
+    var color = chatColorForUser(key || name);
+    return '<span class="chat-avatar" style="background:' + color + '">' + escapeHtml(chatInitial(name)) + '</span>';
+  }
+
   function chatFmtTime(iso) {
     if (!iso) return '';
     var d = new Date(iso);
@@ -1034,10 +1054,12 @@
     if (isAdmin) {
       if (!CHAT.contactsLoaded) loadChatContacts();
       if (CHAT.thread) startChatPolling();
-      else setText('chat-thread-header', 'Chọn 1 nhân viên bên trái để bắt đầu trao đổi');
+      else $('chat-thread-header').innerHTML = '<svg class="chat-thread-placeholder-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4.5h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H8l-3.5 3v-3H3a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z"/></svg>' +
+        '<span class="chat-thread-header-name">Chọn 1 nhân viên bên trái để bắt đầu trao đổi</span>';
     } else {
       CHAT.thread = session.username;
-      setText('chat-thread-header', 'Trao đổi với Quản trị');
+      $('chat-thread-header').innerHTML = chatAvatarHtml('Quản trị', 'admin') +
+        '<span class="chat-thread-header-name">Trao đổi với Quản trị</span>';
       loadChatMessages(true);
       startChatPolling();
     }
@@ -1058,7 +1080,10 @@
         }
         list.innerHTML = contacts.map(function (c) {
           return '<button type="button" class="chat-contact-item" data-user="' + escapeHtml(c.username) + '">' +
+            '<span class="chat-contact-main">' +
+            chatAvatarHtml(c.hoTen || c.username, c.username) +
             '<span class="chat-contact-name">' + escapeHtml(c.hoTen || c.username) + '</span>' +
+            '</span>' +
             (c.active === false ? '<span class="chip warn small">Đã khoá</span>' : '') +
             '</button>';
         }).join('');
@@ -1076,7 +1101,8 @@
     $('chat-contacts-list').querySelectorAll('.chat-contact-item').forEach(function (b) { b.classList.remove('active'); });
     if (btnEl) btnEl.classList.add('active');
     var name = btnEl ? btnEl.querySelector('.chat-contact-name').textContent : username;
-    setText('chat-thread-header', 'Trao đổi với ' + name);
+    $('chat-thread-header').innerHTML = chatAvatarHtml(name, username) +
+      '<span class="chat-thread-header-name">Trao đổi với ' + escapeHtml(name) + '</span>';
     $('chat-messages').innerHTML = '';
     loadChatMessages(true);
     startChatPolling();
