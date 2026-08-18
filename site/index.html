@@ -94,6 +94,22 @@
 
       <div class="stat-grid" id="thau-stats"></div>
 
+      <div class="thau-alert-cols">
+        <div class="panel thau-alert-panel thau-alert-panel--vet">
+          <h2>🚨 Cảnh báo vét thầu <span class="muted small">(gói thầu còn dưới 3 tháng hiệu lực)</span></h2>
+          <div class="thau-alert-list" id="thau-vetthau-list"></div>
+        </div>
+        <div class="panel thau-alert-panel thau-alert-panel--newpkg">
+          <h2>🆕 Cài gói thầu mới <span class="muted small">(gói thầu còn khoảng 6 tháng hiệu lực)</span></h2>
+          <div class="thau-alert-list" id="thau-caigoimoi-list"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>👥 Tổng hợp theo nhân sự phụ trách</h2>
+        <div class="thau-emp-grid" id="thau-emp-summary"></div>
+      </div>
+
       <div class="panel">
         <h2>Tỷ lệ hoàn thành theo Tỉnh</h2>
         <div class="charts-row">
@@ -129,6 +145,8 @@
               <th class="num" data-sort="slThucHien">SL thực hiện</th>
               <th data-sort="tyLe">Tiến độ</th>
               <th data-sort="ngayHetHan">Hết hạn</th>
+              <th>Đối chiếu</th>
+              <th class="thau-ghichu-col">Ghi chú (theo hợp đồng)</th>
             </tr></thead>
             <tbody></tbody>
           </table>
