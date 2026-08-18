@@ -277,23 +277,30 @@
             <span>Chọn nhân viên</span>
             <select id="giaoviec-nv" required><option value="">— Chọn nhân viên —</option></select>
           </label>
-          <label class="giaoviec-field">
-            <span>Tên nhiệm vụ</span>
-            <input type="text" id="giaoviec-ten" required maxlength="200" placeholder="VD: Khảo sát nhà thuốc khu vực A" />
-          </label>
+          <div class="giaoviec-form-row">
+            <label class="giaoviec-field">
+              <span>Tên nhiệm vụ</span>
+              <input type="text" id="giaoviec-ten" required maxlength="200" placeholder="VD: Khảo sát nhà thuốc khu vực A" />
+            </label>
+            <label class="giaoviec-field">
+              <span>Ngày thực hiện</span>
+              <input type="date" id="giaoviec-ngay" />
+            </label>
+          </div>
           <label class="giaoviec-field">
             <span>Nội dung công việc</span>
             <textarea id="giaoviec-noidung" rows="4" maxlength="4000" placeholder="Mô tả chi tiết công việc cần làm…"></textarea>
-          </label>
-          <label class="giaoviec-field">
-            <span>Ngày thực hiện</span>
-            <input type="text" id="giaoviec-ngay" maxlength="100" placeholder="VD: 20/08/2026" />
           </label>
           <div class="giaoviec-form-actions">
             <button type="submit" class="btn btn-primary" id="giaoviec-submit-btn">Giao việc</button>
             <span class="giaoviec-form-status" id="giaoviec-form-status"></span>
           </div>
         </form>
+      </div>
+
+      <div class="panel" id="giaoviec-byemployee-panel">
+        <h2>Nhiệm vụ theo từng nhân viên</h2>
+        <div id="giaoviec-by-employee"></div>
       </div>
 
       <div class="panel">
