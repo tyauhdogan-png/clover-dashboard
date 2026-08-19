@@ -1,862 +1,479 @@
-/* ============================================================================
-   DESIGN TOKENS (nguồn: dataviz skill – palette.md, light mode)
-   ============================================================================ */
-:root {
-  color-scheme: light;
-  --surface-1: #fcfcfb;
-  --page-plane: #f4f4f1;
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #898781;
-  --gridline: #e1e0d9;
-  --baseline: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.10);
-
-  --series-1: #2a78d6; /* blue */
-  --series-2: #eb6834; /* orange */
-  --series-3: #1baf7a; /* aqua */
-  --series-4: #eda100; /* yellow */
-  --series-5: #e87ba4; /* magenta */
-  --series-6: #008300; /* green */
-  --series-7: #4a3aa7; /* violet */
-  --series-8: #e34948; /* red */
-
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-serious: #ec835a;
-  --status-critical: #d03b3b;
-
-  --seq-100: #cde2fb;
-  --seq-400: #3987e5;
-  --seq-550: #1c5cab;
-
-  --radius-s: 6px;
-  --radius-m: 10px;
-  --radius-l: 16px;
-  --shadow-card: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 16px rgba(11, 11, 11, 0.05);
-  font-variant-numeric: proportional-nums;
-
-  /* watermark logo CPC1HN rất mờ, đặt chính giữa nền website (tự tạo từ logo, giảm độ đậm) */
-  --decor-watermark: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA5MCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjkwIj4KICA8ZyBvcGFjaXR5PSIwLjA2Ij4KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAsNikgc2NhbGUoMSkiPjxwYXRoIGQ9Ik04LDIwIEw1NiwyMCBMNTYsMjYgQzU2LDI4IDU0LDI5IDUyLDI5IEwxMiwyOSBDMTAsMjkgOCwyOCA4LDI2IFoiIGZpbGw9IiMxZTNhNzAiLz48cGF0aCBkPSJNOCwyMCBMMTQsNiBMMjAsMjAgWiIgZmlsbD0iIzFlM2E3MCIvPjxwYXRoIGQ9Ik0yMCwyMCBMMjYsLTIgTDMyLDIwIFoiIGZpbGw9IiMxZTNhNzAiLz48cGF0aCBkPSJNMjYsMjAgTDMyLC04IEwzOCwyMCBaIiBmaWxsPSIjMWUzYTcwIi8+PHBhdGggZD0iTTMyLDIwIEwzOCwtMiBMNDQsMjAgWiIgZmlsbD0iIzFlM2E3MCIvPjxwYXRoIGQ9Ik00NCwyMCBMNTAsNiBMNTYsMjAgWiIgZmlsbD0iIzFlM2E3MCIvPjxjaXJjbGUgY3g9IjE0IiBjeT0iOSIgcj0iMyIgZmlsbD0iIzFlM2E3MCIvPjxjaXJjbGUgY3g9IjI2IiBjeT0iMSIgcj0iMyIgZmlsbD0iIzFlM2E3MCIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iLTUiIHI9IjMiIGZpbGw9IiMxZTNhNzAiLz48Y2lyY2xlIGN4PSIzOCIgY3k9IjEiIHI9IjMiIGZpbGw9IiMxZTNhNzAiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjkiIHI9IjMiIGZpbGw9IiMxZTNhNzAiLz48L2c+CiAgICA8cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjMWUzYTcwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLDIyKSIvPgogIDwvZz4KPC9zdmc+');
-
-  /* mẫu hoa văn hoa & bướm nhỏ, lặp lại (tileable) — phủ khắp nền trang, phía sau mọi khối nội dung */
-  --decor-tile: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE4LDIwKSByb3RhdGUoLTEyLDMyLDM0KSBzY2FsZSgwLjU1KSIgb3BhY2l0eT0iMC41NSI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iI2I5YzZlNiIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE0MCwxMCkgcm90YXRlKDE4LDMyLDM0KSBzY2FsZSgwLjQyKSIgb3BhY2l0eT0iMC40MiI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iIzlmYjBkOSIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDcwLDkwKSByb3RhdGUoOCwzMiwzNCkgc2NhbGUoMC42KSIgb3BhY2l0eT0iMC41Ij48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjYzdkMGVjIi8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiM1NDcwYWQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTUwLDEyMCkgcm90YXRlKC0yMCwzMiwzNCkgc2NhbGUoMC40NikiIG9wYWNpdHk9IjAuNCI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iIzhmYTNkMSIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwLDE0MCkgcm90YXRlKDI1LDMyLDM0KSBzY2FsZSgwLjQpIiBvcGFjaXR5PSIwLjM4Ij48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjYjljNmU2Ii8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiM1NDcwYWQiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTEwLDE3MCkgcm90YXRlKC04LDMyLDM0KSBzY2FsZSgwLjM2KSIgb3BhY2l0eT0iMC40MiI+PHBhdGggZD0iTTMyLDMgQzQ4LjUsMyA1OSwxNSA1OSwzMSBDNTksNDEuNSA1Myw0OCA0Ni41LDUyLjUgTDQ2LjUsNjAgQzQ2LjUsNjMgNDQsNjUuNSA0MSw2NS41IEwzOCw2NS41IEwzOCw1OC41IEwzNC41LDU4LjUgTDM0LjUsNjUuNSBMMzAsNjUuNSBMMjYsNjUuNSBDMjMsNjUuNSAyMC41LDYzIDIwLjUsNjAgTDIwLjUsNTIuNSBDMTQsNDggNSw0MS41IDUsMzEgQzUsMTUgMTUuNSwzIDMyLDMgWiIgZmlsbD0iIzlmYjBkOSIvPjxlbGxpcHNlIGN4PSIyMC41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxlbGxpcHNlIGN4PSI0My41IiBjeT0iMjkiIHJ4PSI4IiByeT0iMTAuNSIgZmlsbD0iIzU0NzBhZCIvPjxwYXRoIGQ9Ik0zMiwzNSBMMjcuNSw0NCBMMzYuNSw0NCBaIiBmaWxsPSIjNTQ3MGFkIi8+PC9nPgo8L3N2Zz4=');
-
-  /* cụm hoa & bướm lớn (tự vẽ, dạng SVG nhúng) dùng làm điểm nhấn ở góc màn hình */
-  --decor-flowers: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MjAgNDIwIiB3aWR0aD0iNDIwIiBoZWlnaHQ9IjQyMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI1NSUiIGN5PSI0NSUiIHI9IjYwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM5ZmIwZDkiIHN0b3Atb3BhY2l0eT0iMC4zNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM5ZmIwZDkiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iMjMwIiBjeT0iMjAwIiByPSIyMDAiIGZpbGw9InVybCgjZ2xvdykiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxOTAsMTUwKSByb3RhdGUoLTYsMzIsMzQpIHNjYWxlKDIuMikiIG9wYWNpdHk9IjAuNTUiPjxwYXRoIGQ9Ik0zMiwzIEM0OC41LDMgNTksMTUgNTksMzEgQzU5LDQxLjUgNTMsNDggNDYuNSw1Mi41IEw0Ni41LDYwIEM0Ni41LDYzIDQ0LDY1LjUgNDEsNjUuNSBMMzgsNjUuNSBMMzgsNTguNSBMMzQuNSw1OC41IEwzNC41LDY1LjUgTDMwLDY1LjUgTDI2LDY1LjUgQzIzLDY1LjUgMjAuNSw2MyAyMC41LDYwIEwyMC41LDUyLjUgQzE0LDQ4IDUsNDEuNSA1LDMxIEM1LDE1IDE1LjUsMyAzMiwzIFoiIGZpbGw9IiM4ZmEzZDEiLz48ZWxsaXBzZSBjeD0iMjAuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiMzZTU1OTAiLz48ZWxsaXBzZSBjeD0iNDMuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiMzZTU1OTAiLz48cGF0aCBkPSJNMzIsMzUgTDI3LjUsNDQgTDM2LjUsNDQgWiIgZmlsbD0iIzNlNTU5MCIvPjwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg3MCwyNzApIHJvdGF0ZSgxNCwzMiwzNCkgc2NhbGUoMS4xKSIgb3BhY2l0eT0iMC41Ij48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjYjljNmU2Ii8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjNTQ3MGFkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiM1NDcwYWQiLz48L2c+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzAwLDI5MCkgcm90YXRlKC0xOCwzMiwzNCkgc2NhbGUoMC44NSkiIG9wYWNpdHk9IjAuNDUiPjxwYXRoIGQ9Ik0zMiwzIEM0OC41LDMgNTksMTUgNTksMzEgQzU5LDQxLjUgNTMsNDggNDYuNSw1Mi41IEw0Ni41LDYwIEM0Ni41LDYzIDQ0LDY1LjUgNDEsNjUuNSBMMzgsNjUuNSBMMzgsNTguNSBMMzQuNSw1OC41IEwzNC41LDY1LjUgTDMwLDY1LjUgTDI2LDY1LjUgQzIzLDY1LjUgMjAuNSw2MyAyMC41LDYwIEwyMC41LDUyLjUgQzE0LDQ4IDUsNDEuNSA1LDMxIEM1LDE1IDE1LjUsMyAzMiwzIFoiIGZpbGw9IiNjN2QwZWMiLz48ZWxsaXBzZSBjeD0iMjAuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiM1NDcwYWQiLz48ZWxsaXBzZSBjeD0iNDMuNSIgY3k9IjI5IiByeD0iOCIgcnk9IjEwLjUiIGZpbGw9IiM1NDcwYWQiLz48cGF0aCBkPSJNMzIsMzUgTDI3LjUsNDQgTDM2LjUsNDQgWiIgZmlsbD0iIzU0NzBhZCIvPjwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMzAsMzMwKSByb3RhdGUoNDUpIHNjYWxlKDAuOSkiIG9wYWNpdHk9IjAuNCI+PHJlY3QgeD0iLTIyIiB5PSItMyIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjYTZiNmRlIi8+PGNpcmNsZSBjeD0iLTIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9Ii0yMiIgY3k9IjMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMyIgcj0iNC41IiBmaWxsPSIjYTZiNmRlIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIzMCwzMzApIHJvdGF0ZSgtNDUpIHNjYWxlKDAuOSkiIG9wYWNpdHk9IjAuNCI+PHJlY3QgeD0iLTIyIiB5PSItMyIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjYiIHJ4PSIzIiBmaWxsPSIjYTZiNmRlIi8+PGNpcmNsZSBjeD0iLTIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9Ii0yMiIgY3k9IjMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iLTMiIHI9IjQuNSIgZmlsbD0iI2E2YjZkZSIvPjxjaXJjbGUgY3g9IjIyIiBjeT0iMyIgcj0iNC41IiBmaWxsPSIjYTZiNmRlIi8+PC9nPgo8L3N2Zz4=');
-}
-
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  background-color: var(--page-plane);
-  /* Lớp 1 (trên): watermark logo CPC1HN rất to, rất mờ, luôn đứng yên ở chính giữa màn hình.
-     Lớp 2 (dưới): hoa văn hoa & bướm lặp khắp nền trang.
-     Cả hai đều là nền của <body> nên luôn nằm dưới mọi thẻ/bảng/biểu đồ — không bao giờ che dữ liệu. */
-  background-image: var(--decor-watermark), var(--decor-tile);
-  background-repeat: no-repeat, repeat;
-  background-position: center center, 0 0;
-  background-size: min(60vw, 640px) auto, 200px 200px;
-  background-attachment: fixed, fixed;
-  color: var(--text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-@media (max-width: 640px) {
-  body { background-size: min(85vw, 420px) auto, 200px 200px; }
-}
-
-button, input, select { font-family: inherit; font-size: inherit; }
-
-.hidden { display: none !important; }
-
-/* ============================================================================
-   LOGIN SCREEN
-   ============================================================================ */
-#login-screen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.login-card {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-l);
-  box-shadow: var(--shadow-card);
-  padding: 40px 36px;
-  width: 100%;
-  max-width: 380px;
-  text-align: center;
-}
-.login-card h1 {
-  font-size: 19px;
-  margin: 4px 0 6px;
-}
-.login-card p.sub {
-  color: var(--text-secondary);
-  font-size: 13.5px;
-  margin: 0 0 24px;
-}
-.login-card input[type="password"],
-.login-card input[type="text"] {
-  width: 100%;
-  padding: 11px 14px;
-  border: 1px solid var(--baseline);
-  border-radius: var(--radius-s);
-  font-size: 14px;
-  margin-bottom: 14px;
-  outline: none;
-}
-.login-card input[type="password"]:focus,
-.login-card input[type="text"]:focus {
-  border-color: var(--series-1);
-  box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.15);
-}
-.login-card button {
-  width: 100%;
-  padding: 11px 14px;
-  border: none;
-  border-radius: var(--radius-s);
-  background: var(--series-1);
-  color: #fff;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-}
-.login-card button:hover { background: #2166b8; }
-.login-card button:disabled { opacity: .6; cursor: default; }
-.login-error {
-  color: var(--status-critical);
-  font-size: 13px;
-  margin-top: 12px;
-  min-height: 16px;
-}
-.login-logo {
-  width: 44px; height: 44px;
-  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 58%, 79% 91%, 50% 70%, 21% 91%, 32% 58%, 2% 35%, 39% 35%);
-  -webkit-clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 58%, 79% 91%, 50% 70%, 21% 91%, 32% 58%, 2% 35%, 39% 35%);
-  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA5MCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjkwIj4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCw2KSBzY2FsZSgxKSI+PHBhdGggZD0iTTgsMjAgTDU2LDIwIEw1NiwyNiBDNTYsMjggNTQsMjkgNTIsMjkgTDEyLDI5IEMxMCwyOSA4LDI4IDgsMjYgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik04LDIwIEwxNCw2IEwyMCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTIwLDIwIEwyNiwtMiBMMzIsMjAgWiIgZmlsbD0iI2M5ODYxYSIvPjxwYXRoIGQ9Ik0yNiwyMCBMMzIsLTggTDM4LDIwIFoiIGZpbGw9IiNjOTg2MWEiLz48cGF0aCBkPSJNMzIsMjAgTDM4LC0yIEw0NCwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PHBhdGggZD0iTTQ0LDIwIEw1MCw2IEw1NiwyMCBaIiBmaWxsPSIjYzk4NjFhIi8+PGNpcmNsZSBjeD0iMTQiIGN5PSI5IiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMjYiIGN5PSIxIiByPSIzIiBmaWxsPSIjZjZlMmIwIi8+PGNpcmNsZSBjeD0iMzIiIGN5PSItNSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjM4IiBjeT0iMSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iOSIgcj0iMyIgZmlsbD0iI2Y2ZTJiMCIvPjwvZz4KPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwyMikgcm90YXRlKDAsMzIsMzQpIHNjYWxlKDEpIiBvcGFjaXR5PSIxIj48cGF0aCBkPSJNMzIsMyBDNDguNSwzIDU5LDE1IDU5LDMxIEM1OSw0MS41IDUzLDQ4IDQ2LjUsNTIuNSBMNDYuNSw2MCBDNDYuNSw2MyA0NCw2NS41IDQxLDY1LjUgTDM4LDY1LjUgTDM4LDU4LjUgTDM0LjUsNTguNSBMMzQuNSw2NS41IEwzMCw2NS41IEwyNiw2NS41IEMyMyw2NS41IDIwLjUsNjMgMjAuNSw2MCBMMjAuNSw1Mi41IEMxNCw0OCA1LDQxLjUgNSwzMSBDNSwxNSAxNS41LDMgMzIsMyBaIiBmaWxsPSIjMWUzYTcwIi8+PGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PGVsbGlwc2UgY3g9IjQzLjUiIGN5PSIyOSIgcng9IjgiIHJ5PSIxMC41IiBmaWxsPSIjMGYxYjNkIi8+PHBhdGggZD0iTTMyLDM1IEwyNy41LDQ0IEwzNi41LDQ0IFoiIGZpbGw9IiMwZjFiM2QiLz48L2c+Cjwvc3ZnPg==') center / 60% no-repeat, linear-gradient(135deg, #ff3b3b 0%, #ff9f3b 18%, #ffe93b 36%, #4bdc6c 54%, #3bb8ff 72%, #8a5cff 88%, #ff3bd6 100%);
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.25));
-  margin: 0 auto 16px;
-}
-
-
-/* ============================================================================
-   TRANG TRÍ HOA & BƯỚM — nền màn hình đăng nhập
-   (chỉ trang trí góc màn hình, không che nội dung/thẻ đăng nhập)
-   ============================================================================ */
-#login-screen { position: relative; overflow: hidden; }
-#login-screen::before,
-#login-screen::after {
-  content: "";
-  position: fixed;
-  background: var(--decor-flowers) no-repeat center / contain;
-  pointer-events: none;
-  z-index: 0;
-}
-#login-screen::before {
-  width: 620px;
-  height: 620px;
-  bottom: -60px;
-  right: -60px;
-  opacity: 1;
-}
-#login-screen::after {
-  width: 460px;
-  height: 460px;
-  top: -60px;
-  left: -60px;
-  transform: rotate(180deg);
-  opacity: 0.9;
-}
-.login-card { position: relative; z-index: 1; }
-
-@media (max-width: 520px) {
-  #login-screen::before { width: 360px; height: 360px; }
-  #login-screen::after { width: 260px; height: 260px; }
-}
-
-/* ============================================================================
-   APP SHELL — sidebar tối (navy) + khu vực nội dung sáng
-   ============================================================================ */
-:root {
-  --sidebar-bg: #0f1b3d;
-  --sidebar-bg-2: #16234a;
-  --sidebar-text: #aab4d4;
-  --sidebar-text-active: #ffffff;
-  --sidebar-active-bg: #1e3a70;
-  --sidebar-width: 210px;
-}
-
-#app { min-height: 100vh; position: relative; z-index: 0; }
-.app-shell { display: flex; min-height: 100vh; }
-
-/* Hoa & bướm trang trí góc màn hình khi đã đăng nhập — mờ, nằm dưới mọi khối dữ liệu
-   nên không bao giờ che số liệu (khối panel/bảng nào phủ lên trên sẽ tự động che nó). */
-#app::before,
-#app::after {
-  content: "";
-  position: fixed;
-  background: var(--decor-flowers) no-repeat center / contain;
-  pointer-events: none;
-  z-index: -1;
-}
-#app::before { width: 460px; height: 460px; bottom: -30px; right: -30px; opacity: 0.85; }
-#app::after { width: 320px; height: 320px; top: -30px; left: -30px; transform: rotate(180deg); opacity: 0.55; }
-
-/* ---- Sidebar ---- */
-.sidebar {
-  width: var(--sidebar-width);
-  flex: 0 0 var(--sidebar-width);
-  background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-2) 100%);
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-/* hoa & bướm phủ SUỐT chiều cao thanh menu — chỉ để trang trí, mix-blend-mode giúp màu pastel nổi nhẹ trên nền navy */
-.sidebar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--decor-tile) repeat;
-  background-size: 130px 130px;
-  mix-blend-mode: screen;
-  opacity: 0.6;
-  pointer-events: none;
-  z-index: 0;
-}
-.sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  position: relative;
-  z-index: 1;
-}
-.sidebar-brand .login-logo { margin: 0; width: 38px; height: 38px; border-radius: 8px; flex: none; }
-.sidebar-title {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: .015em;
-  color: #fff;
-  line-height: 1.25;
-}
-.side-nav { display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; position: relative; z-index: 1; }
-.side-nav .tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: none;
-  background: none;
-  color: var(--sidebar-text);
-  padding: 11px 14px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: .01em;
-  cursor: pointer;
-  text-align: left;
-  white-space: nowrap;
-  transition: background .15s ease, color .15s ease;
-}
-.side-nav .tab-btn .tab-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.07);
-  flex: none;
-  transition: background .15s ease;
-}
-.side-nav .tab-btn svg { width: 19px; height: 19px; stroke-width: 1.9; flex: none; opacity: 0.9; }
-.side-nav .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.06); color: #fff; }
-.side-nav .tab-btn:hover:not(.active) .tab-icon { background: rgba(255,255,255,0.13); }
-.side-nav .tab-btn.active { background: var(--sidebar-active-bg); color: var(--sidebar-text-active); }
-.side-nav .tab-btn.active .tab-icon { background: rgba(255,255,255,0.2); }
-.side-nav .tab-btn.active svg { opacity: 1; }
-
-/* ---- Main column ---- */
-.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-
-header.topbar {
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 20;
-}
-.topbar-left { display: flex; align-items: center; gap: 12px; }
-.topbar .updated {
-  font-size: 12.5px; color: var(--text-muted);
-}
-.topbar-right { display: flex; align-items: center; gap: 10px; }
-.btn {
-  border: 1px solid var(--baseline);
-  background: var(--surface-1);
-  color: var(--text-primary);
-  padding: 7px 13px;
-  border-radius: var(--radius-s);
-  font-size: 13px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn:hover { background: var(--page-plane); }
-.btn-primary { background: var(--series-1); border-color: var(--series-1); color: #fff; }
-.btn-primary:hover { background: #2166b8; }
-.user-badge {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: var(--page-plane);
-  border: 1px solid var(--border);
-}
-.user-badge b { color: var(--text-primary); }
-
-main { flex: 1; padding: 20px 24px 60px; max-width: 1400px; width: 100%; margin: 0 auto; }
-
-/* ============================================================================
-   FILTER BAR — dạng viên thuốc (pill) giống mẫu
-   ============================================================================ */
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 18px;
-  align-items: center;
-}
-.filter-bar select, .filter-bar input[type="text"], .filter-bar input[type="date"] {
-  padding: 8px 14px;
-  border: 1px solid var(--baseline);
-  border-radius: 999px;
-  background: var(--surface-1);
-  font-size: 13px;
-  color: var(--text-primary);
-  min-width: 130px;
-}
-.filter-bar .search-box { min-width: 220px; flex: 1 1 220px; border-radius: var(--radius-s) !important; }
-.filter-bar .clear-filters {
-  font-size: 12.5px;
-  color: var(--series-1);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px 4px;
-}
-
-@media (max-width: 900px) {
-  .app-shell { flex-direction: column; }
-  .sidebar { width: 100%; flex: none; height: auto; position: static; }
-  .side-nav { flex-direction: row; overflow-x: auto; padding: 10px 14px 14px; }
-  .side-nav .tab-btn { flex: none; }
-  .sidebar::after { display: none; }
-  #app::before { width: 200px; height: 200px; }
-  #app::after { display: none; }
-}
-
-/* ============================================================================
-   STAT TILES
-   ============================================================================ */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.stat-tile {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-card);
-}
-.stat-tile .label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-}
-.stat-tile .value {
-  font-size: 24px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.stat-tile .sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-
-/* ============================================================================
-   CARD / PANEL
-   ============================================================================ */
-.panel {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-card);
-  padding: 18px 18px 8px;
-  margin-bottom: 20px;
-}
-.panel h2 {
-  font-size: 14px;
-  margin: 0 0 14px;
-  font-weight: 700;
-}
-.panel h2 .count { color: var(--text-muted); font-weight: 500; }
-
-.charts-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
-}
-.chart-box { position: relative; height: 260px; }
-.chart-box.tall { height: 320px; }
-
-/* ============================================================================
-   TABLE
-   ============================================================================ */
-.table-wrap { overflow-x: auto; border-radius: var(--radius-m); border: 1px solid var(--border); }
-table.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-table.data-table th {
-  position: sticky; top: 0;
-  background: var(--sidebar-active-bg);
-  text-align: left;
-  padding: 10px 12px;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-  color: #dfe6f7;
-  border-bottom: 1px solid var(--sidebar-active-bg);
-  cursor: pointer;
-  white-space: nowrap;
-}
-table.data-table th.sorted { color: #fff; }
-table.data-table tbody tr:nth-child(even) { background: rgba(15,27,61,0.025); }
-table.data-table td {
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--gridline);
-  vertical-align: middle;
-  color: var(--text-primary);
-}
-table.data-table tbody tr:hover { background: var(--page-plane); }
-table.data-table td.num, table.data-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.muted { color: var(--text-muted); }
-.small { font-size: 12px; }
-
-/* progress bar cell */
-.progress-cell { display: flex; align-items: center; gap: 8px; min-width: 130px; }
-.progress-track {
-  flex: 1;
-  height: 6px;
-  background: var(--gridline);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.progress-fill { height: 100%; border-radius: 4px; }
-.progress-fill.good { background: var(--status-good); }
-.progress-fill.warn { background: var(--status-warning); }
-.progress-fill.critical { background: var(--status-critical); }
-.progress-pct { font-size: 12px; font-weight: 600; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-.chip.good { background: rgba(12,163,12,0.12); color: #086b08; }
-.chip.warn { background: rgba(250,178,25,0.18); color: #8a5c00; }
-.chip.critical { background: rgba(208,59,59,0.12); color: #a02323; }
-.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
-  font-size: 13.5px;
-}
-
-/* Employee detail row */
-tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-}
-.detail-metric {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-s);
-  padding: 10px 12px;
-}
-.detail-metric .k { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-.detail-metric .v { font-size: 15px; font-weight: 700; }
-.detail-metric .v2 { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
-
-.chip.muted { background: var(--page-plane); color: var(--text-muted); }
-.chip.muted::before { display: none; }
-
-/* ============================================================================
-   TAB: KPI — chọn nhân viên xem/sửa bảng KPI chi tiết của riêng người đó
-   ============================================================================ */
-.kpi-emp-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.kpi-emp-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 8px 14px;
-  border-radius: var(--radius-m);
-  border: 1px solid var(--border);
-  background: var(--page-plane);
-  cursor: pointer;
-  font-family: inherit;
-  text-align: left;
-  min-width: 130px;
-}
-.kpi-emp-chip .kpi-emp-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-.kpi-emp-chip .kpi-emp-pct { font-size: 12px; font-weight: 700; }
-.kpi-emp-chip.good .kpi-emp-pct { color: #086b08; }
-.kpi-emp-chip.warn .kpi-emp-pct { color: #8a5c00; }
-.kpi-emp-chip.critical .kpi-emp-pct { color: #a02323; }
-.kpi-emp-chip:hover { border-color: var(--series-1); }
-.kpi-emp-chip.active {
-  background: var(--sidebar-active-bg);
-  border-color: var(--sidebar-active-bg);
-}
-.kpi-emp-chip.active .kpi-emp-name { color: #fff; }
-.kpi-emp-chip.active .kpi-emp-pct { color: #dfe6f7; }
-
-.kpi-detail-header { margin-bottom: 16px; }
-.kpi-detail-title {
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-}
-.kpi-detail-meta { font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; }
-.kpi-checkin-summary {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  background: var(--page-plane);
-  border: 1px solid var(--border-soft, #e1e0d9);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin: 12px 0 16px;
-}
-
-/* Ô tóm tắt "ĐẠT KPI" / "BỊ LIỆT KPI" + lý do, hiển thị ngay đầu chi tiết */
-.kpi-result-summary {
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-bottom: 20px;
-  border: 1px solid var(--border-soft, #e1e0d9);
-}
-.kpi-result-summary.ok { background: rgba(12,163,12,0.07); border-color: rgba(12,163,12,0.3); }
-.kpi-result-summary.fail { background: rgba(208,59,59,0.07); border-color: rgba(208,59,59,0.3); }
-.kpi-result-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.kpi-result-score { font-size: 12.5px; color: var(--text-secondary); }
-.kpi-result-reasons { margin: 8px 0 0; padding-left: 20px; font-size: 12.5px; color: var(--status-critical); }
-.kpi-result-reasons li { margin-bottom: 3px; }
-
-.kpi-group-title { font-size: 14.5px; margin: 26px 0 10px; font-weight: 700; }
-.kpi-group-title:first-of-type { margin-top: 4px; }
-.kpi-subgroup-title { font-size: 13px; margin: 16px 0 8px; color: var(--text-secondary); font-weight: 700; }
-
-.kpi-detail-table tfoot td { padding: 0; border-top: none; }
-.kpi-bonus-title, .kpi-tru-title { font-size: 13.5px; margin: 22px 0 10px; }
-
-/* Dòng tổng điểm của MỖI NHÓM chỉ tiêu (Doanh số / Sản phẩm trọng tâm) — dùng
-   chung 1 kiểu: căn giữa, chữ đậm, có nền nổi bật, đặt ngay dưới bảng/nhóm đó
-   để dễ thấy ngay không cần dò từng cột. Nhóm 1 dùng trong 1 ô <td colspan>
-   của tfoot bảng; Nhóm 2 dùng trong 1 <div> riêng (không phải bảng) — cùng
-   class nên nhìn giống hệt nhau. */
-.kpi-group-total-bar {
-  display: block;
-  text-align: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  background: rgba(42,120,214,0.09);
-  border: 1px solid rgba(42,120,214,0.25);
-  border-radius: var(--radius-s);
-  padding: 10px 14px;
-  margin: 6px 0 14px;
-}
-.kpi-group-total-bar b { color: var(--series-1); font-size: 16px; }
-
-/* Mục tổng điểm cuối cùng "X điểm kpis / 1000 điểm kpis" ở cuối trang chi tiết
-   KPI, sau khi đã cộng "Điểm cộng thêm" và trừ "Điểm trừ KPI" — nền xanh navy
-   đậm cùng tông với sidebar/header của trang để thật nổi bật, chữ trắng/sáng
-   màu để tương phản rõ (khác bản trước dùng chữ xám mờ trên nền tối, khó đọc). */
-.kpi-final-score {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  text-align: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 26px;
-  padding: 20px 22px;
-  border-radius: var(--radius-m);
-  background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--sidebar-active-bg) 100%);
-  border: 1px solid var(--sidebar-active-bg);
-  box-shadow: var(--shadow-card);
-}
-.kpi-final-score-label {
-  width: 100%;
-  font-size: 12.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  color: #dfe6f7;
-  margin-bottom: 2px;
-}
-.kpi-final-score-value { font-size: 32px; font-weight: 800; color: #ffffff; font-variant-numeric: tabular-nums; }
-.kpi-final-score-sep { font-size: 20px; color: #9db2e0; }
-.kpi-final-score-max { font-size: 18px; font-weight: 600; color: #cddaf5; font-variant-numeric: tabular-nums; }
-
-.kpi-input {
-  width: 100px;
-  padding: 6px 8px;
-  border: 1px solid var(--baseline);
-  border-radius: var(--radius-s);
-  font-size: 13px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.kpi-input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.15); outline: none; }
-.kpi-input:disabled { opacity: .6; }
-.kpi-input-text { width: 100%; min-width: 160px; text-align: left; }
-.kpi-select.kpi-input { width: auto; min-width: 120px; text-align: left; }
-.kpi-input-number { width: 128px; } /* đủ rộng cho số có dấu chấm, vd "250.000.000" */
-
-/* Bảng xếp hạng huy chương trên panel "Tỉ lệ hoàn thành KPI" */
-.kpi-leaderboard { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-.kpi-leaderboard-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: var(--radius-s);
-  background: var(--page-plane);
-  border: 1px solid var(--border-soft, #e1e0d9);
-}
-.kpi-leaderboard-row.top3 { background: rgba(250,178,25,0.08); border-color: rgba(250,178,25,0.3); }
-.kpi-medal { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
-.kpi-rank-num { font-size: 12.5px; font-weight: 700; color: var(--text-muted); width: 26px; text-align: center; flex-shrink: 0; }
-.kpi-leaderboard-name { font-size: 13px; font-weight: 600; flex: 1; }
-.kpi-leaderboard-score { font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-
-.kpi-save-status {
-  margin-top: 14px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  min-height: 16px;
-}
-.kpi-save-status.ok { color: var(--status-good); }
-.kpi-save-status.error { color: var(--status-critical); }
-
-/* ============================================================================
-   TAB: TRAO ĐỔI (chat riêng Admin ↔ từng nhân viên)
-   ============================================================================ */
-.chat-shell {
-  display: flex;
-  gap: 16px;
-  height: calc(100vh - 210px);
-  min-height: 420px;
-}
-.chat-contacts {
-  width: 240px;
-  flex: none;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.chat-contacts-title {
-  padding: 14px 16px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .02em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
-}
-.chat-contacts-list { flex: 1; overflow-y: auto; padding: 6px; }
-.chat-contact-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  border: none;
-  background: none;
-  padding: 10px 10px;
-  border-radius: var(--radius-s);
-  font-size: 13.5px;
-  color: var(--text-primary);
-  cursor: pointer;
-}
-.chat-contact-item:hover { background: var(--page-plane); }
-.chat-contact-item.active { background: var(--series-1); color: #fff; }
-.chat-contact-item.active .chip { color: inherit; }
-.chat-contact-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.chat-thread-wrap {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-card);
-  overflow: hidden;
-}
-.chat-thread-header {
-  padding: 14px 18px;
-  font-size: 13.5px;
-  font-weight: 700;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-primary);
-}
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--page-plane);
-}
-.chat-bubble-row { display: flex; }
-.chat-bubble-row.mine { justify-content: flex-end; }
-.chat-bubble-row.theirs { justify-content: flex-start; }
-.chat-bubble {
-  max-width: 70%;
-  padding: 8px 12px;
-  border-radius: 14px;
-  font-size: 13.5px;
-  line-height: 1.4;
-  box-shadow: 0 1px 2px rgba(11,11,11,0.06);
-}
-.chat-bubble-row.mine .chat-bubble { background: var(--series-1); color: #fff; border-bottom-right-radius: 4px; }
-.chat-bubble-row.theirs .chat-bubble { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-.chat-bubble-sender { font-size: 11px; font-weight: 700; color: var(--series-1); margin-bottom: 2px; }
-.chat-bubble-text { white-space: pre-wrap; word-break: break-word; }
-.chat-bubble-time { font-size: 10.5px; opacity: .7; margin-top: 3px; text-align: right; }
-
-.chat-input-bar {
-  display: flex;
-  gap: 10px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-}
-.chat-input-bar input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1px solid var(--baseline);
-  border-radius: 999px;
-  font-size: 13.5px;
-  outline: none;
-}
-.chat-input-bar input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42,120,214,0.15); }
-.chat-error { padding: 0 16px 10px; color: var(--status-critical); font-size: 12px; min-height: 4px; }
-
-@media (max-width: 900px) {
-  .chat-shell { flex-direction: column; height: auto; }
-  .chat-contacts { width: 100%; max-height: 200px; }
-  .chat-thread-wrap { height: 60vh; }
-}
-
-/* ---- Giao việc ---- */
-.giaoviec-form { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
-.giaoviec-field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
-.giaoviec-field select,
-.giaoviec-field input[type="text"],
-.giaoviec-field textarea {
-  font: inherit;
-  font-size: 13.5px;
-  font-weight: 400;
-  color: var(--text-primary);
-  padding: 9px 12px;
-  border: 1px solid var(--baseline);
-  border-radius: var(--radius-s);
-  outline: none;
-  resize: vertical;
-}
-.giaoviec-field select:focus,
-.giaoviec-field input[type="text"]:focus,
-.giaoviec-field textarea:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px rgba(42,120,214,0.15); }
-.giaoviec-form-actions { display: flex; align-items: center; gap: 12px; }
-.giaoviec-form-status, .giaoviec-fb-status-text { font-size: 12px; color: var(--text-muted); }
-.btn-small { padding: 5px 11px; font-size: 12px; }
-
-.giaoviec-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  background: var(--surface-1);
-}
-.giaoviec-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.giaoviec-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.giaoviec-card-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
-.giaoviec-card-meta b { color: var(--text-secondary); font-weight: 600; }
-.giaoviec-card-content {
-  font-size: 13.5px;
-  color: var(--text-primary);
-  background: var(--page-plane);
-  border-radius: var(--radius-s);
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  white-space: pre-wrap;
-}
-.giaoviec-card-mail { margin-bottom: 12px; }
-.giaoviec-feedback-form { border-top: 1px dashed var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
-.giaoviec-feedback-form .giaoviec-field { max-width: 320px; }
-
-/* footer */
-footer.app-footer {
-  text-align: center;
-  padding: 18px;
-  color: var(--text-muted);
-  font-size: 11.5px;
-}
-
-@media (max-width: 640px) {
-  header.topbar { padding: 12px 14px; }
-  main { padding: 14px 14px 40px; }
-  .stat-tile .value { font-size: 20px; }
-}
+Dashboard Kinh Doanh — Thầu / KPI / Sale
+Website theo dõi 3 mảng dữ liệu, lấy trực tiếp (live) từ 4 Google Sheet hiện có
+của bạn, không cần nhập liệu lại:
+Tiến độ Thầu theo từng tỉnh / từng khách hàng (kế hoạch vs thực hiện,
+cảnh báo hợp đồng sắp hết hạn mà tỷ lệ thực hiện còn thấp).
+KPI từng nhân viên — mỗi người có 1 bảng điểm KPI riêng (10 chỉ tiêu +
+điểm cộng thêm), xem theo tên, nhân viên tự sửa cột "Thực hiện" của
+chính mình ngay trên web (Admin sửa được của tất cả mọi người), điểm và
+tổng điểm tự tính lại theo công thức, lưu thẳng về Google Sheet.
+Data sale khách hàng (doanh thu theo thời gian / tỉnh / nhóm hàng, top
+khách hàng, chi tiết từng đơn).
+Kiến trúc
+```
+Google Sheets (4 file bạn đang dùng)
+        │  (Apps Script đọc trực tiếp, KHÔNG copy dữ liệu ra đâu khác)
+        ▼
+Google Apps Script — triển khai thành "Web app" trả về JSON
+        │  (gọi qua fetch, dữ liệu luôn mới nhất)
+        ▼
+Website tĩnh (HTML/CSS/JS thuần, không framework) — host trên Netlify
+        │  (được khoá bằng tài khoản đăng nhập riêng từng người, qua Netlify Function)
+        ▼
+Trình duyệt người dùng
+```
+Không có bước đồng bộ hay lưu trữ trung gian — mỗi lần mở trang / bấm "Làm
+mới", trang gọi thẳng vào Apps Script, Apps Script đọc trực tiếp từ 4 Google
+Sheet tại thời điểm đó.
+Cấu trúc thư mục
+```
+apps-script/Code.gs        → dán vào Google Apps Script (backend/API)
+site/                       → toàn bộ frontend, publish lên Netlify
+  index.html
+  style.css
+  app.js
+  config.js                → SỬA FILE NÀY sau khi deploy Apps Script
+netlify/functions/login.js    → kiểm tra tên đăng nhập/mật khẩu (Netlify Function)
+netlify/functions/messages.js → mục "Trao đổi" (chat Admin ↔ nhân viên)
+netlify/functions/kpi.js      → lưu số liệu "Thực hiện" trong mục KPI
+netlify/functions/thau.js     → lưu "Ghi chú" theo từng hợp đồng trong mục Thầu
+netlify/functions/tasks.js    → mục "Giao việc" (giao nhiệm vụ, phản hồi)
+netlify/functions/task-ack.js → xác nhận "Đã nhận mail" khi bấm nút trong email (công khai, không cần đăng nhập)
+netlify.toml                → cấu hình build cho Netlify
+```
+---
+BƯỚC 1 — Triển khai Apps Script (API dữ liệu)
+Mở https://script.google.com/ → Dự án mới.
+Xoá hết code mẫu trong `Code.gs`, dán toàn bộ nội dung file
+`apps-script/Code.gs` (trong bộ file này) vào.
+File đã có sẵn ID của 4 Google Sheet bạn gửi (KPI, checkin, sale, thầu) —
+không cần sửa gì nếu bạn dùng đúng 4 file đó. Nếu muốn đổi mật khẩu API,
+sửa dòng:
+```js
+   API_KEY: 'thay-doi-chuoi-nay',
+   ```
+thành một chuỗi bất kỳ do bạn đặt (nhớ đổi giống hệt trong
+`site/config.js` ở Bước 2).
+Bấm Triển khai (Deploy) → Triển khai mới (New deployment).
+Loại: Ứng dụng web (Web app)
+Thực thi với quyền của (Execute as): Tôi (email của bạn)
+Người có quyền truy cập (Who has access): Bất kỳ ai (Anyone)
+Lần đầu triển khai, Google sẽ yêu cầu cấp quyền truy cập 4 Google Sheet
+— bấm cho phép (chọn tài khoản Google có quyền xem 4 sheet đó).
+Sau khi triển khai xong, copy URL ứng dụng web, dạng:
+`https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxxxx/exec`
+Kiểm tra nhanh: dán URL đó + `?type=ping` vào trình duyệt, ví dụ:
+`.../exec?type=ping&key=thay-doi-chuoi-nay` → phải thấy
+`{"ok":true, ... "data":{"pong":true}}`.
+Lưu ý quan trọng: mỗi khi bạn sửa `Code.gs` sau này, phải vào Quản lý
+triển khai (Manage deployments) → biểu tượng bút chì → Phiên bản mới (New
+version) → Triển khai thì URL mới nhận code mới (không tự cập nhật).
+BƯỚC 2 — Cập nhật URL vào frontend
+Mở `site/config.js`, sửa:
+```js
+API_URL: 'https://script.google.com/macros/s/.../exec',   // URL từ bước 1
+API_KEY: 'thay-doi-chuoi-nay',                             // giống hệt Code.gs
+```
+BƯỚC 3 — Đưa lên Netlify
+⚠️ Lưu ý quan trọng: trang này có một phần chạy trên server (Netlify
+Function `login.js`, dùng để kiểm tra mật khẩu). Kiểu deploy "kéo thả"
+(Deploy manually / Netlify Drop) của Netlify KHÔNG chạy phần này và
+KHÔNG đọc file `netlify.toml` — nếu bạn kéo thả, trang sẽ hiển thị được
+(có giao diện, có style) nhưng bấm "Đăng nhập" sẽ luôn báo lỗi, vì
+server-side chưa được bật. Vì vậy bắt buộc phải deploy qua GitHub như
+dưới đây (không cần biết dùng dòng lệnh Git, làm hết trên trình duyệt được):
+Vào https://github.com/ → New repository → đặt tên bất kỳ (vd.
+`dashboard-kinh-doanh`) → tạo repo (để Public hoặc Private đều
+được).
+Trong trang repo vừa tạo, bấm "uploading an existing file" (hoặc
+Add file → Upload files) → kéo thả toàn bộ nội dung bên trong
+thư mục `webapp/` (tức là kéo `netlify.toml`, `site/`, `netlify/`,
+`README.md`, `package.json` — không kéo bản thân thư mục `webapp` vào
+trong, mà kéo từng thứ bên trong nó ra) → bấm Commit changes.
+Vào https://app.netlify.com/ → Add new site → Import an existing
+project → Deploy with GitHub → chọn repo vừa tạo.
+Ở màn hình cấu hình build: Build command để trống, Publish
+directory để `site` (Netlify thường tự điền đúng vì đã có
+`netlify.toml`, cứ kiểm tra lại cho chắc) → bấm Deploy.
+Sau bước này, mỗi khi bạn sửa file nào trong repo GitHub (kể cả sửa trực
+tiếp trên web GitHub), Netlify sẽ tự động deploy lại — không cần làm lại
+từ đầu.
+BƯỚC 4 — Tạo danh sách tài khoản đăng nhập (tài khoản chính + tài khoản nhân viên)
+Thay vì 1 mật khẩu chung, mỗi người có tên đăng nhập + mật khẩu riêng.
+Danh sách tài khoản được quản lý ngay trong Google Sheet — muốn thêm/xoá/khoá
+ai, chỉ cần sửa 1 dòng trong sheet, không cần đụng code.
+Mở file Google Sheet KPI (file đầu tiên trong 4 file bạn gửi) → tạo
+thêm 1 tab mới, đặt tên chính xác là `TAI_KHOAN` (viết hoa, gạch
+dưới, không dấu).
+Dòng 1 (tiêu đề), gõ đúng 5 cột theo thứ tự này:
+Tên đăng nhập	Mật khẩu	Họ tên	Vai trò	Hoạt động
+Từ dòng 2 trở đi, mỗi dòng là 1 tài khoản. Ví dụ:
+Tên đăng nhập	Mật khẩu	Họ tên	Vai trò	Hoạt động
+admin	MatKhauCuaBan123	Nguyễn Văn A	admin	TRUE
+sen.tth	123456	Trương Thị Hồng Sen	nhanvien	TRUE
+hiep.lbq	123456	Lê Bùi Quang Hiệp	nhanvien	TRUE
+Cột Vai trò: gõ `admin` cho tài khoản chính của bạn, `nhanvien` cho
+các tài khoản còn lại (chỉ để phân biệt, hiện tại ai đăng nhập cũng xem
+được toàn bộ dashboard như nhau).
+Cột Hoạt động: để `TRUE` (hoặc để trống) nếu tài khoản được phép
+đăng nhập; đổi thành `FALSE` để tạm khoá 1 người mà không cần xoá dòng.
+Tên đăng nhập nên viết liền không dấu, không khoảng trắng cho dễ gõ.
+Vì bạn vừa sửa `Code.gs` (nếu bạn tự thêm tab này sau khi đã deploy Apps
+Script) thì không cần deploy lại Apps Script — script tự đọc tab mới
+mỗi lần có người đăng nhập.
+BƯỚC 5 — Cấu hình biến môi trường trên Netlify
+Trên Netlify: vào project → Project configuration → Environment
+variables → Add a variable, thêm đúng 3 biến sau (tên phải viết hoa y hệt):
+Key	Value
+`APPS_SCRIPT_URL`	URL Apps Script từ Bước 1 (giống hệt `API_URL` trong `config.js`)
+`APPS_SCRIPT_KEY`	giống hệt `API_KEY` trong `Code.gs` (để trống nếu bạn để trống bên đó)
+`AUTH_SECRET`	một chuỗi bất kỳ, càng dài random càng tốt (dùng để ký token nội bộ, không cần nhớ)
+Sau khi thêm biến môi trường, vào Deploys → Trigger deploy → Deploy site
+để Netlify build lại và nhận biến mới.
+BƯỚC 6 — Kiểm tra
+Mở URL Netlify (dạng `https://ten-site.netlify.app`) → nhập đúng tên đăng
+nhập + mật khẩu của 1 tài khoản bạn vừa tạo trong tab `TAI_KHOAN` →
+dashboard sẽ tự gọi Apps Script và hiển thị dữ liệu, góc trên bên phải hiện
+"Xin chào, `<tên bạn>`".
+Muốn thêm nhân viên mới sau này: chỉ cần mở lại tab `TAI_KHOAN`, thêm 1 dòng
+mới — không cần deploy lại gì cả, họ đăng nhập được ngay.
+---
+Mục "Trao đổi" — chat riêng giữa Admin và từng nhân viên
+Tài khoản admin (vai trò `admin` trong tab `TAI_KHOAN`) thấy danh sách
+tất cả nhân viên bên trái, bấm vào 1 người để nhắn riêng với người đó.
+Tài khoản nhân viên chỉ thấy đúng đoạn chat của mình với Admin, không
+thấy được đoạn chat của người khác — việc này được kiểm tra ở phía server
+(Netlify Function), không phải chỉ ẩn trên giao diện, nên không thể lách
+bằng cách sửa code trình duyệt.
+Tin nhắn được lưu trong 1 tab mới tên `TIN_NHAN`, nằm trong chính file
+KPI — tab này tự động được tạo ngay lần đầu có ai gửi tin nhắn, bạn
+không cần tạo tay. Không nên tự ý sửa tay dữ liệu trong tab này.
+Trang tự động kiểm tra tin nhắn mới mỗi 12 giây khi đang mở tab Trao đổi
+(không phải chat thời gian thực tức thì, nhưng đủ dùng cho trao đổi công
+việc nội bộ).
+Không cần thêm biến môi trường nào mới trên Netlify — dùng lại đúng 3 biến
+đã có (`APPS_SCRIPT_URL`, `APPS_SCRIPT_KEY`, `AUTH_SECRET`).
+Cần 1 file MỚI trong repo: `netlify/functions/messages.js` (khác với sửa
+file có sẵn — bạn cần bấm Add file → Create new file trên GitHub, gõ
+đúng đường dẫn `netlify/functions/messages.js`, rồi dán nội dung vào).
+---
+Mục "Giao việc" — admin giao nhiệm vụ, gửi mail qua n8n, nhân viên phản hồi
+Tài khoản admin thấy khối "Giao việc mới" ở đầu trang: chọn 1 nhân
+viên, gõ tên nhiệm vụ / nội dung / ngày thực hiện, bấm Giao việc.
+Tài khoản nhân viên KHÔNG thấy khối "Giao việc mới" (chỉ admin mới giao
+được việc) — chỉ thấy danh sách đúng những nhiệm vụ được giao cho mình, và
+có thể tự cập nhật Trạng thái hoàn thành (Chưa bắt đầu / Đang làm /
+Hoàn thành) + Ghi chú phản hồi ngay trên từng nhiệm vụ. Việc này cũng
+được kiểm tra ở phía server (Netlify Function) như mục Trao đổi, không thể
+lách bằng cách sửa code trình duyệt.
+Nhiệm vụ được lưu trong 1 tab mới tên `GIAO_VIEC`, nằm trong chính file
+KPI — tab này tự động được tạo ngay lần đầu admin giao việc, bạn không
+cần tạo tay. Không nên tự ý sửa tay dữ liệu trong tab này.
+Cần 2 file MỚI trong repo: `netlify/functions/tasks.js` và
+`netlify/functions/task-ack.js` (bấm Add file → Create new file trên
+GitHub cho từng file, gõ đúng đường dẫn, rồi dán nội dung vào).
+Không cần thêm biến môi trường nào để dùng cơ bản (dùng lại đúng 3 biến đã
+có). Chỉ cần thêm biến môi trường nếu muốn tự động gửi mail báo nhiệm
+vụ mới — xem phần "Gửi mail tự động qua n8n" ngay dưới đây.
+Gửi mail tự động qua n8n (tuỳ chọn)
+Mỗi khi admin giao việc, web có thể tự gửi 1 email HTML báo cho nhân viên qua
+workflow n8n, kèm 1 nút "✅ Xác nhận đã nhận nhiệm vụ" — bấm vào nút đó trong
+mail sẽ tự ghi nhận lại trên web (cột "Đã nhận mail" trong tab `GIAO_VIEC`),
+admin thấy ngay ai đã mở mail, ai chưa.
+Mình đã dựng sẵn workflow này trong n8n của bạn, tên
+"CPC1HN - Gửi mail giao việc nhân viên"
+(`https://n8n.cpc1hn.com.vn/workflow/PNx4wfY4TQIFxrrQ`), dùng credential Gmail
+có sẵn tên `Gmail_duy` để gửi mail — nhưng CỐ Ý ĐỂ Ở TRẠNG THÁI TẮT
+(Inactive), chưa gửi được mail thật cho ai, để bạn tự kiểm tra trước khi
+bật (nội dung mail, đúng người nhận…). Muốn bật:
+Mở link workflow ở trên trong n8n → xem qua 3 bước: Webhook nhận dữ liệu →
+node "Gửi mail giao việc" (có thể mở ra xem trước mẫu email) → phản hồi
+webhook.
+Bấm nút Activate (góc trên bên phải) để bật workflow.
+Sau khi bật, bấm vào node "Nhận thông tin giao việc" (webhook đầu
+tiên) → copy Production URL (dạng
+`https://n8n.cpc1hn.com.vn/webhook/cpc1hn-giao-viec`).
+Vào Netlify → Project configuration → Environment variables → Add a
+variable, thêm:
+Key	Value
+`N8N_TASK_WEBHOOK_URL`	Production URL vừa copy ở bước 3
+Deploys → Trigger deploy → Deploy site để Netlify nhận biến mới.
+Từ lúc này, mỗi lần admin giao việc, nhân viên tương ứng sẽ nhận được mail
+ngay. Nếu CHƯA làm bước này (hoặc chưa bật workflow), việc giao việc trên web
+vẫn hoạt động bình thường, chỉ là không có mail nào được gửi — trạng thái
+"Chưa gửi được mail" sẽ hiện ngay dưới nút Giao việc để bạn biết.
+Email nhân viên đang dùng để gửi mail được khai báo sẵn trong
+`netlify/functions/tasks.js` (hằng số `EMPLOYEE_EMAILS`, khớp đúng "Tên đăng
+nhập" trong tab `TAI_KHOAN` với email nội bộ `@cpc1hn.com.vn` của từng người).
+Công ty có nhân viên mới hoặc đổi mail thì sửa trực tiếp trong file này (thêm
+1 dòng `'<tên đăng nhập>': '<email>',`) — không cần sửa Google Sheet hay Apps
+Script.
+---
+Mục "KPI" — mỗi nhân viên 1 bảng điểm riêng, sửa "Thực hiện" ngay trên web
+Mỗi nhân viên có 1 tab riêng trong file Google Sheet KPI, tên tab bắt
+đầu bằng `KPIS` (ví dụ `KPIS HỒNG SEN`, `KPIS TẠ HOÀNG DUY`...). Trang
+web tự nhận diện tất cả các tab như vậy, không quan tâm thứ tự hay số
+lượng.
+Trên tab KPI của web: chọn tên nhân viên ở khu vực "Chọn nhân viên" để
+xem bảng điểm chi tiết của người đó, chia làm 3 phần tách biệt:
+Nhóm 1 — Doanh số: Doanh số kê đơn, Doanh số thầu.
+Nhóm 2 — Sản phẩm trọng tâm: tách thành từng bảng con theo tên sản
+phẩm (hiện có `SUGAM-BFS` và `PROPOFOL-BFS`, mỗi sản phẩm 4 chỉ tiêu:
+Khảo sát / Mở mới điểm bán / Duy trì điểm bán / Sản lượng). Trang web tự
+nhận diện sản phẩm dựa vào TÊN chỉ tiêu trên sheet (không hard-code thứ
+tự dòng), nên nếu công ty đổi/thêm sản phẩm trọng tâm sau này, chỉ cần
+gõ tên chỉ tiêu theo đúng mẫu "Khảo sát <tên SP>", "Mở mới
+điểm bán <tên SP>", "Duy trì điểm bán <tên SP>", "Sản
+lượng <tên SP>" là web tự gộp đúng nhóm, không cần sửa code.
+Điểm cộng thêm và Điểm trừ KPI — hiển thị tách riêng bên dưới 2
+nhóm chỉ tiêu chính (xem "Điểm trừ KPI" ở mục riêng bên dưới).
+Mỗi chỉ tiêu có thêm cột "Ghi chú" để nhân viên ghi chú tự do (vd lý do
+chưa đạt, kế hoạch bù...).
+Ai sửa được gì:
+Nhân viên: chỉ sửa được (Thực hiện + Ghi chú + Điểm trừ) trong đúng bảng
+KPI mang tên của chính mình (đăng nhập bằng tài khoản nào thì sửa bảng
+của tài khoản đó); xem bảng của người khác thì chỉ đọc, không sửa được.
+Admin: sửa được của tất cả mọi người.
+Việc này được kiểm tra ở phía server (Netlify Function `kpi.js`), so
+khớp tên người đăng nhập với tên chủ bảng KPI lấy trực tiếp từ Apps
+Script — không thể lách bằng cách sửa code trình duyệt.
+Sửa xong 1 ô (gõ số/gõ ghi chú/chọn trạng thái rồi bấm ra ngoài ô), trang tự
+lưu ngay về đúng ô đó trên Google Sheet, đồng thời tự tính lại điểm của dòng
+đó, tổng từng nhóm, và kết quả KPI cuối cùng — không cần bấm nút lưu
+riêng, không cần tải lại trang.
+Công thức tính điểm mỗi chỉ tiêu (áp dụng như nhau cho cả Nhóm 1 Doanh
+số và Nhóm 2 Sản phẩm trọng tâm): Điểm thực hiện = (Thực hiện ÷ Kế hoạch) ×
+Điểm kế hoạch, có giới hạn theo cột "Vượt max" của chỉ tiêu đó (ví dụ
+"120%" nghĩa là dù thực hiện vượt kế hoạch bao nhiêu, tỷ lệ tính điểm cũng
+không vượt quá 120%; ghi "NO LIMIT" thì không giới hạn).
+Kết quả KPI cuối cùng (ĐẠT / BỊ LIỆT) — hiển thị ngay đầu phần chi tiết
+mỗi nhân viên, kèm lý do cụ thể nếu bị liệt. Một nhân viên ĐẠT KPI khi thoả
+TẤT CẢ các điều kiện sau (nếu thiếu dù chỉ 1 điều kiện, vẫn bị liệt dù
+các điều kiện khác đạt hết):
+Tổng điểm cuối cùng (= tổng điểm 10 chỉ tiêu + Điểm cộng thêm − Điểm trừ)
+phải ≥ 850 điểm.
+Điểm KPIs thực hiện của từng chỉ tiêu trong Nhóm 1 Doanh số (Doanh số
+kê đơn, Doanh số thầu) phải lớn hơn 50% điểm kế hoạch của chính chỉ
+tiêu đó (vd điểm kế hoạch 150 thì điểm thực hiện phải trên 75).
+Tổng điểm thực hiện của cả Nhóm 2 Sản phẩm trọng tâm (gộp cả 2 sản
+phẩm, 8 chỉ tiêu) phải từ 50% tổng điểm kế hoạch nhóm trở lên (vd
+tổng kế hoạch 800 thì tổng thực hiện phải từ 400 điểm trở lên).
+Các ngưỡng "850 điểm" và "50%" này đang cố định trong code (`Code.gs`,
+hàm `parseKpiSheet_`) — nếu sau này công ty muốn đổi ngưỡng, cần nhờ chỉnh
+lại code (không sửa được bằng cách gõ trong Sheet).
+Điểm trừ KPI — mục mới, 2 hạng mục cố định: "Học LMS 4 bài / 1 tháng"
+và "Tổ chức hội thảo trong quý". Mỗi hạng mục có trạng thái ĐẠT / KHÔNG
+ĐẠT (chọn trong ô dropdown trên web); chọn "KHÔNG ĐẠT" thì tự trừ 80 điểm
+KPI/tháng cho hạng mục đó vào tổng điểm cuối cùng. Muốn đổi mức trừ 80 điểm
+thành số khác cho 1 người cụ thể: mở tab `KPIS <Tên>` của người đó trên
+Google Sheet, sửa trực tiếp cột D ("Mức trừ") ở dòng hạng mục tương ứng
+— không cần sửa code.
+Không cần thêm biến môi trường nào mới trên Netlify — `kpi.js` dùng lại
+đúng 3 biến đã có (`APPS_SCRIPT_URL`, `APPS_SCRIPT_KEY`, `AUTH_SECRET`).
+Cần 1 file MỚI trong repo: `netlify/functions/kpi.js` (giống `messages.js`
+trước đây — bấm Add file → Create new file trên GitHub, gõ đúng đường
+dẫn `netlify/functions/kpi.js`, dán nội dung vào, Commit).
+Tự nâng cấp cấu trúc Sheet, không cần bạn làm tay: lần đầu tiên mỗi tab
+`KPIS <Tên>` được đọc sau khi bạn deploy bản `Code.gs` mới này, trang web sẽ
+tự động thêm vào cuối tab đó: cột "Ghi chú" (cột G), phần "ĐIỂM TRỪ"
+(2 hạng mục ở trên, mặc định ĐẠT), và phần "KẾT QUẢ CUỐI CÙNG" (tổng
+điểm cuối cùng + kết quả ĐẠT/BỊ LIỆT + lý do, luôn tự cập nhật mỗi lần có ai
+mở trang — mở thẳng Google Sheet cũng thấy số mới nhất, không chỉ trên
+web). Bạn không cần tự tay thêm các phần này vào 7 tab hiện có.
+Bảng xếp hạng huy chương: ở đầu tab KPI (dưới biểu đồ "Tỉ lệ hoàn
+thành"), có danh sách xếp hạng toàn bộ nhân viên theo tổng điểm cuối
+cùng (đã gồm cộng/trừ), 3 người cao nhất được gắn 🥇🥈🥉, kèm trạng thái
+Đạt KPI / Bị liệt của từng người.
+Bước một lần — tự động tạo bảng KPI cho các nhân viên còn thiếu tab
+Nếu bạn chỉ mới có sẵn 1 tab KPI mẫu (ví dụ `KPIS HỒNG SEN`) và muốn tạo
+nhanh tab tương tự cho những nhân viên còn lại (không phải gõ tay từng tab):
+Mở lại Apps Script editor (nơi bạn dán `Code.gs`).
+Ở thanh công cụ phía trên, chỗ có nút ▷ Run, mở ô chọn hàm bên cạnh nó
+(mặc định đang là `doGet` hoặc tên hàm nào đó) → chọn hàm
+`setupKpiSheetsForAllEmployees`.
+Bấm ▷ Run. Lần đầu chạy, Google có thể hỏi cấp quyền lần nữa — bấm
+cho phép.
+Hàm này sẽ tự sao chép tab KPI mẫu, đổi tên thành `KPIS <Họ Tên>` cho từng
+nhân viên đang hoạt động trong tab `TAI_KHOAN` (bỏ qua admin, bỏ qua ai
+đã có sẵn tab KPI rồi — chạy lại nhiều lần cũng không tạo trùng).
+Sau khi chạy xong, vào từng tab `KPIS <Tên>` mới được tạo, kiểm tra
+và điền lại cho đúng:
+Dòng "THÂM NIÊN" — hàm để tạm chỗ này là `(điền số tháng)`, bạn cần
+tự điền số tháng thâm niên đúng của từng người.
+Dòng "NHÓM" / "SS" — hàm mặc định copy nguyên từ tab mẫu, bạn
+nên kiểm tra lại xem có cần đổi cho đúng người đó không.
+Cột "Kế hoạch" của 10 chỉ tiêu — cũng copy từ tab mẫu, cần sửa lại
+đúng chỉ tiêu/số liệu kế hoạch riêng của từng người nếu khác nhau.
+Không cần deploy lại Apps Script cho bước này — hàm `setupKpiSheetsForAllEmployees`
+chỉ chạy tay 1 lần khi cần, không liên quan gì đến việc trang web đọc dữ
+liệu (`doGet`/`doPost` vẫn hoạt động bình thường trong lúc bạn chạy hàm
+này).
+Lưu ý — đã sửa 2 lỗi tính điểm phát hiện khi soát lại code lần này
+Trong lúc làm tính năng chia nhóm/điểm trừ ở trên, phát hiện và sửa luôn 2 lỗi
+có sẵn từ trước (chưa ai để ý vì trước giờ chưa có ai nhập số liệu "Thực
+hiện"), không liên quan tới yêu cầu chia nhóm nhưng ảnh hưởng trực tiếp tới
+độ chính xác điểm số nên cần biết:
+Cột "Vượt max" từng bị bỏ qua với mọi ô định dạng %. Google Sheets lưu
+ô định dạng phần trăm (vd hiển thị "120%") dưới dạng số thập phân (`1.2`),
+không phải chữ "120%" — code cũ chỉ nhận diện được chữ có dấu "%" nên hiểu
+nhầm mọi ô "Vượt max" dạng số là "không giới hạn", khiến điểm thực hiện có
+thể tính vượt quá mức cho phép. Đã sửa để nhận đúng cả 2 dạng.
+Dòng "TỔNG (1000 ĐIỂM)" trên sheet thật nằm ở cột D, không phải
+cột A như code cũ kiểm tra — khiến code cũ đọc lố qua dòng TỔNG, đọc luôn
+cả phần "ĐIỂM CỘNG THÊM" phía sau nhầm thành chỉ tiêu bình thường (bạn có
+thể đã thấy hiện tượng này trên web: phần "Điểm cộng thêm" hiện trống,
+trong khi 3 dòng thưởng lại bị lẫn vào bảng chỉ tiêu chính). Đã sửa lại để
+đọc đúng cột.
+Cả 2 lỗi này chỉ ảnh hưởng số liệu TÍNH TOÁN hiển thị trên web/ghi lại vào
+Sheet — không làm mất dữ liệu gốc bạn đã nhập (Kế hoạch, Điểm kế hoạch, Vượt
+max...). Sau khi deploy `Code.gs` mới này, mọi điểm số sẽ tự tính lại đúng
+ngay lần mở trang kế tiếp, không cần thao tác gì thêm.
+Cập nhật mới nhất — tổng điểm cuối trang, định dạng số, biểu đồ
+Mục tổng điểm cuối trang: cuối phần chi tiết KPI của mỗi nhân viên (dưới
+bảng "Điểm trừ KPI"), có thêm 1 ô nổi bật ghi "<X> điểm kpis / 1000
+điểm kpis" — chính là tổng điểm cuối cùng (đã cộng "Điểm cộng thêm" và trừ
+"Điểm trừ KPI") trên nền 1000 điểm cố định, để xem nhanh không cần tự cộng
+trừ các phần ở trên. Lưu ý: vì "Doanh số kê đơn" không giới hạn (NO LIMIT),
+ai vượt kế hoạch nhiều có thể ra số lớn hơn 1000 — đúng theo luật tính điểm,
+không phải lỗi.
+Định dạng số kiểu Việt Nam: cột "Kế hoạch" và "Thực hiện" giờ hiển thị có
+dấu chấm phân cách hàng nghìn, ví dụ `250.000.000` thay vì `250000000` như
+trước — kể cả ô "Thực hiện" đang SỬA ĐƯỢC (không chỉ khi chỉ xem): bấm vào ô
+để gõ thì web tự bỏ dấu chấm cho dễ gõ số, gõ xong bấm ra ngoài ô thì web tự
+thêm lại dấu chấm để dễ đọc.
+Cột "Vượt max" giờ luôn hiển thị dạng phần trăm dễ đọc (`120%`) thay vì
+số thập phân thô (`1.2`) — dù ô gốc trên Sheet là số %-format hay chữ, web
+đều quy về cùng 1 cách hiển thị.
+Biểu đồ "Tỉ lệ hoàn thành KPI" không hiện được ("Không tải được thư viện
+biểu đồ"): nguyên nhân là trang web trước đây tải thư viện vẽ biểu đồ
+(Chart.js) từ 1 địa chỉ CDN bên ngoài (`cdnjs.cloudflare.com`) — nếu mạng
+của người xem (mạng công ty, mạng di động…) chặn hoặc không vào được địa chỉ
+đó, biểu đồ trống hẳn dù số liệu vẫn đúng. Đã sửa: đóng gói thẳng file thư
+viện đó vào cùng trang web (`site/vendor/chart.umd.min.js`), không phụ
+thuộc CDN ngoài nữa. Đây là 1 FILE MỚI cần thêm vào repo (khác với sửa
+file có sẵn) — trên GitHub: Add file → Upload files (hoặc Create new
+file rồi dán đường dẫn `site/vendor/chart.umd.min.js`), tải file này lên
+đúng đường dẫn đó rồi Commit. Không cần deploy lại Apps Script cho việc
+này (chỉ cần Netlify build lại, việc này tự động sau khi commit).
+⚠️ Lỗi đang chờ xác nhận — "Điểm KPIs thực hiện" không nhảy điểm khi gõ Thực hiện
+Trên site thật, có báo lỗi là gõ số vào cột "Thực hiện" xong thì cột "Điểm
+KPIs thực hiện" vẫn hiện "—" (không tính), và tổng các nhóm hiện 0. Đã kiểm
+tra kỹ code tính điểm (`computeKpiRowDiem_`/`parseKpiSheet_` trong `Code.gs`)
+và đọc trực tiếp dữ liệu thật trên Google Sheet — KHÔNG tìm thấy lỗi logic
+nào trong code hiện tại có thể gây ra hiện tượng này với dữ liệu đang có.
+Nghi ngờ nhiều nhất là bản Apps Script đang chạy trên URL thật (`.../exec`)
+chưa phải là bản `Code.gs` mới nhất trong lần cập nhật này (quên bước
+"Deploy → Manage deployments → bấm biểu tượng bút chì sửa bản deploy ĐANG
+CHẠY → Version: New version → Deploy" — xem lại đúng BƯỚC 1 bên dưới, đặc
+biệt chú ý KHÔNG bấm nhầm "New deployment", vì thao tác đó sẽ tạo ra 1 URL
+`/exec` HOÀN TOÀN MỚI khác với URL đang dán trong `site/config.js`, khiến
+trang web vẫn gọi vào bản code CŨ dù bạn đã sửa/deploy bản mới).
+Nếu sau khi deploy lại đúng cách (kiểm tra kỹ bước trên) mà vẫn còn lỗi này,
+cần gửi lại: (1) đúng URL Apps Script `.../exec` đang dán trong `config.js`
+trên trang web thật, để kiểm tra trực tiếp, hoặc (2) mở trang web thật → nhấn
+F12 (hoặc chuột phải → "Kiểm tra"/"Inspect") → tab Network → tải lại tab
+KPI → tìm dòng gọi tới `script.google.com` → xem nội dung trả về (tab
+"Response"/"Preview") → chụp màn hình gửi lại, để xác định chính xác nguyên
+nhân thay vì đoán.
+---
+Mục "Thầu" — nâng cấp đối chiếu, cảnh báo, ghi chú (cập nhật mới nhất)
+Mục Thầu đọc sheet Thầu chi tiết hơn (mỗi dòng = 1 sản phẩm trong 1 hợp đồng
+tại 1 bệnh viện). So với bản trước, có 4 tính năng mới:
+Tự tính lại "SL còn lại"/"Tỷ lệ %" thay vì tin trực tiếp 2 cột đó trên
+sheet (một số dòng thêm sau có công thức không đúng) — công thức: SL kế
+hoạch − SL thực hiện.
+Đối chiếu với đơn kế toán: 1 workflow n8n (chạy 6h35 sáng mỗi ngày) đọc
+sheet đơn hàng, lọc các đơn phân loại "thầu" (mã vụ việc AT/TH) của team, và
+ghi tổng số lượng đã giao trong tháng vào tab `THAU_DOICHIEU` (tự tạo trong
+file KPI). Code.gs đối chiếu số này với "SL còn lại" đã tự tính — nếu vượt,
+hiện chip cảnh báo "⚠️ Chênh lệch" ở cột "Đối chiếu" trong bảng chi tiết
+(CHỈ hiển thị cảnh báo, KHÔNG tự động sửa số liệu trong sheet Thầu).
+2 khối cảnh báo tự động (tính ngay trên trình duyệt từ ngày hết hạn hợp
+đồng, không cần cấu hình gì thêm): "🚨 Cảnh báo vét thầu" cho các hợp đồng
+còn dưới 3 tháng (90 ngày) hiệu lực, và "🆕 Cài gói thầu mới" cho các hợp
+đồng còn khoảng 5–7 tháng (150–210 ngày) hiệu lực, gộp theo từng nhân sự
+phụ trách để dễ chuẩn bị trước. Cả 2 khối gộp theo Số HĐ (1 hợp đồng có
+thể có nhiều dòng sản phẩm/nhiều bệnh viện có nhiều hợp đồng khác nhau).
+Ghi chú theo từng hợp đồng: cột "Ghi chú" (tự thêm vào sheet Thầu nếu
+chưa có) cho phép gõ ghi chú áp dụng cho CẢ hợp đồng (Số HĐ) — sửa ở bất kỳ
+dòng nào thuộc hợp đồng đó trong bảng chi tiết trên web đều lưu vào đúng 1
+ô đại diện trên sheet, và hiển thị lại ở MỌI dòng cùng hợp đồng. Không phân
+quyền riêng — mọi tài khoản đã đăng nhập đều ghi chú được (giống việc xem
+dữ liệu Thầu, không giới hạn theo người phụ trách).
+Không cần thêm biến môi trường Netlify nào cho tính năng Ghi chú — file
+mới `netlify/functions/thau.js` dùng lại đúng 3 biến đã có (`APPS_SCRIPT_URL`,
+`APPS_SCRIPT_KEY`, `AUTH_SECRET`). Bắt buộc phải Deploy lại Apps Script
+(bản `Code.gs` này có sửa/thêm hàm) theo đúng BƯỚC 1 — nếu quên, cột Đối
+chiếu/Ghi chú và 2 khối cảnh báo mới sẽ không hoạt động dù đã cập nhật
+`site/`.
+---
+Mục "Sản phẩm trọng tâm" — danh sách khách hàng theo từng nhân viên (cập nhật mới nhất)
+Trong mỗi thẻ nhân viên ở tab "SP trọng tâm", bên dưới 2 thanh tiến độ
+Sugam/Propofol giờ có thêm 1 khối gấp gọn "🛍️ Khách hàng đang mua (N)" —
+bấm vào để mở ra danh sách các khách hàng người đó đang bán Sugam-BFS/
+Propofol-BFS trong tháng, mỗi khách hàng hiện kèm badge riêng từng sản phẩm:
+số lượng (ống) + số đơn hàng (đếm theo "Mã chứng từ" riêng biệt, 1 khách có
+thể mua nhiều lần trong tháng thì tính gộp). Mặc định khối này ĐÓNG để thẻ
+nhân viên vẫn gọn — chỉ mở ra khi bấm, giống cách khối "Theo từng nhân viên"
+ở tab Giao việc đã làm.
+Dữ liệu này do chính workflow n8n "Sản phẩm trọng tâm" đã có sẵn (chạy
+6h sáng mỗi ngày) tự tính thêm và ghi vào 1 tab MỚI tên `SPTT_KHACHHANG`
+trong file KPI (tự tạo nếu chưa có, ghi đè mỗi ngày cùng lúc với tab
+`SAN_PHAM_TRONG_TAM` cũ) — không cần thêm workflow n8n mới, không cần cấu
+hình gì thêm. Code.gs chỉ đọc lại tab này (hàm `getSpttKhachHangByNV_()`) và
+gộp vào kết quả trả về của mục Sản phẩm trọng tâm.
+Bắt buộc phải Deploy lại Apps Script (bản `Code.gs` này có thêm hàm mới
+1 dòng CONFIG mới) theo đúng BƯỚC 1 — nếu quên, khối "Khách hàng đang mua"
+sẽ luôn hiện "(0)" dù n8n đã có dữ liệu thật.
+---
+Cách dữ liệu được đọc & tính toán
+Thầu: đọc trực tiếp sheet `THAU` (mỗi dòng = 1 sản phẩm trong 1 hợp
+đồng tại 1 bệnh viện). Tỷ lệ hoàn thành = SL thực hiện / SL kế hoạch thực
+(nếu có), hoặc / SL kế hoạch nếu chưa có kế hoạch thực — "SL còn lại" và tỷ
+lệ này Code.gs LUÔN TỰ TÍNH LẠI, không tin trực tiếp 2 cột có sẵn trên
+sheet. Mục "cảnh báo hết hạn" (bảng) lọc dòng còn ≤ 60 ngày hiệu lực và tỷ
+lệ thực hiện < 60%; 2 khối "cảnh báo vét thầu"/"cài gói thầu mới" (thẻ, gộp
+theo Số HĐ) xem chi tiết ở mục "Mục Thầu — nâng cấp đối chiếu, cảnh báo,
+ghi chú" phía trên.
+KPI: đọc tất cả các tab có tên bắt đầu bằng `KPIS` trong file KPI —
+mỗi tab là bảng điểm riêng của 1 nhân viên (10 chỉ tiêu + điểm cộng thêm).
+Script tự tính điểm từng chỉ tiêu theo công thức Thực hiện ÷ Kế hoạch ×
+Điểm kế hoạch (có giới hạn theo cột "Vượt max"), cộng lại thành tổng điểm.
+Xem chi tiết cách sửa/lưu và cách tạo tab cho nhân viên mới ở mục "KPI —
+mỗi nhân viên 1 bảng điểm riêng" phía trên.
+Checkin: sheet log GPS được gộp theo nhân viên (tổng lượt checkin, số
+khách hàng đã ghé thăm, lượt trong 7/30 ngày gần nhất) để hiển thị trong
+phần chi tiết mỗi nhân viên ở tab KPI (khớp theo Họ tên) — không hiển thị
+toàn bộ 10,000+ dòng thô để tránh nặng trang.
+Sale: đọc trực tiếp sheet `Sale T1-T7`, filter theo tỉnh / nhân viên /
+nhóm hàng / khoảng ngày ngay trên trình duyệt (dữ liệu ~2,000 dòng nên lọc
+phía client cho nhanh, không cần gọi lại server mỗi lần đổi bộ lọc).
+Giới hạn bảo mật cần biết
+Đây là giải pháp đăng nhập bằng tài khoản riêng, quản lý qua Google
+Sheet — dễ triển khai và đủ dùng cho nội bộ team, không phải bảo mật cấp
+doanh nghiệp:
+Việc so khớp tên đăng nhập/mật khẩu diễn ra ở Netlify Function (phía
+server), danh sách tài khoản (kể cả mật khẩu) không bao giờ được gửi
+xuống trình duyệt — trình duyệt chỉ nhận về kết quả đúng/sai.
+Mật khẩu trong tab `TAI_KHOAN` đang lưu ở dạng chữ thường (không mã hoá).
+Vì vậy: (1) chỉ những ai có quyền chỉnh sửa file Sheet KPI mới nên được
+xem tab đó, (2) không nên dùng chung mật khẩu với các tài khoản quan
+trọng khác (email, ngân hàng...) của nhân viên.
+`API_KEY` và URL Apps Script trong `site/config.js` có nằm trong code JS
+công khai của trang — ai xem được mã nguồn trình duyệt (F12) đều có thể
+lấy URL này và gọi thẳng API mà không cần qua trang đăng nhập. `API_KEY`
+chỉ giúp chặn người lạ dò URL ngẫu nhiên trên Internet, không chặn được
+người đã từng đăng nhập hợp lệ vào trang.
+Nếu cần bảo mật chặt hơn (ví dụ dữ liệu doanh thu/KPI rất nhạy cảm), nên
+nâng cấp lên đăng nhập bằng tài khoản Google giới hạn theo email công
+ty — có thể làm ở lần sau, cấu trúc code hiện tại (Apps Script tách
+riêng khỏi frontend) hỗ trợ nâng cấp này mà không phải viết lại từ đầu.
+Khi cần chỉnh sửa / mở rộng sau này
+Đổi ngưỡng màu tốt/vàng/đỏ của thanh tiến độ: sửa `THRESHOLDS` trong
+`site/config.js`.
+Đổi tên công ty / tiêu đề trang: sửa `APP_TITLE` trong `site/config.js`.
+Muốn tự động làm mới dữ liệu định kỳ (không cần bấm nút): có thể thêm
+`setInterval(loadAll, ...)` trong `site/app.js` — hỏi lại nếu cần, mình sẽ
+bổ sung.
+Nếu một trong 4 Google Sheet đổi cấu trúc cột/tiêu đề, phần đọc dữ liệu
+tương ứng trong `Code.gs` có thể cần cập nhật lại theo tên cột mới.
