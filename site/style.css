@@ -1008,6 +1008,59 @@ tr.emp-detail-row td { background: var(--page-plane); padding: 14px; }
 .sptt-product-nums { font-size: 12px; color: var(--text-muted); grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; }
 .sptt-product-row .progress-cell { grid-column: 1 / -1; }
 
+/* Khối gấp "Khách hàng đang mua" bên trong mỗi thẻ nhân viên — cùng pattern
+   <details>/<summary> đã dùng ở khối "Theo từng nhân viên" tab Giao việc. */
+.sptt-cust-details {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border-soft, #f4dcec);
+  padding-top: 8px;
+}
+.sptt-cust-summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent-deep, var(--series-1));
+  padding: 4px 2px;
+  border-radius: var(--radius-s, 8px);
+  transition: background .12s ease;
+}
+.sptt-cust-summary:hover { background: var(--surface-1); }
+.sptt-cust-summary::-webkit-details-marker { display: none; }
+.sptt-cust-summary::before {
+  content: '▸';
+  display: inline-block;
+  color: var(--text-muted);
+  transition: transform .15s ease;
+}
+.sptt-cust-details[open] > .sptt-cust-summary::before { transform: rotate(90deg); }
+.sptt-cust-list { padding: 8px 2px 2px; display: flex; flex-direction: column; gap: 8px; }
+.sptt-cust-row {
+  background: var(--surface-1);
+  border: 1px solid var(--border-soft, #f4dcec);
+  border-radius: 14px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sptt-cust-name { font-size: 12.5px; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+.sptt-cust-products { display: flex; flex-wrap: wrap; gap: 6px; }
+.sptt-cust-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sptt-cust-badge--sugam { background: rgba(91, 204, 187, 0.16); color: #1f7d70; }
+.sptt-cust-badge--propofol { background: rgba(111, 168, 220, 0.16); color: #35638f; }
+.sptt-cust-list .empty-state.small { padding: 4px 2px; }
+
 /* ============================================================================
    TAB: DOANH SỐ — phong cách chibi dễ thương (bo tròn lớn, gradient pastel,
    icon to, hiệu ứng nảy nhẹ khi hover)
