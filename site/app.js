@@ -1209,6 +1209,39 @@
     return sumBy(emp.items, 'tyLe') / emp.items.length;
   }
 
+  // Danh sách khách hàng đang mua Sugam-BFS/Propofol-BFS theo từng nhân viên
+  // (số lượng + số đơn hàng trong tháng) — xem getSpttKhachHangByNV_ trong
+  // Code.gs. Gộp gọn trong 1 khối gấp (<details>) bên trong thẻ nhân viên,
+  // đúng phong cách "khối gấp theo từng nhân viên" đã dùng ở tab Giao việc,
+  // để thẻ mặc định vẫn gọn mà vẫn xem chi tiết được khi cần.
+  var SPTT_PRODUCT_SHORT = { SUGAM: 'Sugam', PROPOFOL: 'Propofol' };
+  var SPTT_PRODUCT_BADGE_ICON = { SUGAM: '🧴', PROPOFOL: '💉' };
+
+  function spttCustProductBadgeHtml(p) {
+    var icon = SPTT_PRODUCT_BADGE_ICON[p.sanPham] || '🎯';
+    var label = SPTT_PRODUCT_SHORT[p.sanPham] || p.sanPham;
+    var cls = 'sptt-cust-badge sptt-cust-badge--' + String(p.sanPham || '').toLowerCase();
+    return '<span class="' + cls + '">' + icon + ' ' + escapeHtml(label) + ': ' +
+      fmtNum.format(p.soLuong) + ' ống (' + fmtNum.format(p.soDon) + ' đơn)</span>';
+  }
+
+  function spttCustRowHtml(c) {
+    var badges = (c.products || []).map(spttCustProductBadgeHtml).join('');
+    return '<div class="sptt-cust-row">' +
+      '<span class="sptt-cust-name">🏥 ' + escapeHtml(c.tenKhach || c.maKhach || '—') + '</span>' +
+      '<span class="sptt-cust-products">' + badges + '</span></div>';
+  }
+
+  function spttEmpCustDetailsHtml(emp) {
+    var list = emp.khachHang || [];
+    var body = list.length
+      ? list.map(spttCustRowHtml).join('')
+      : '<div class="empty-state small">Chưa có khách hàng nào mua sản phẩm trọng tâm tháng này.</div>';
+    return '<details class="sptt-cust-details">' +
+      '<summary class="sptt-cust-summary">🛍️ Khách hàng đang mua (' + list.length + ')</summary>' +
+      '<div class="sptt-cust-list">' + body + '</div></details>';
+  }
+
   function spttEmpCardHtml(emp, rankIdx) {
     var medal = SPTT_MEDALS[rankIdx] ? '<span class="sptt-emp-medal">' + SPTT_MEDALS[rankIdx] + '</span>' : '';
     var rows = emp.items.map(function (it) {
@@ -1222,7 +1255,7 @@
     return '<div class="sptt-emp-card">' +
       '<div class="sptt-emp-card-head">' + medal + chatAvatarHtml(emp.hoTen, emp.maNhanVien || emp.hoTen) +
       '<span class="sptt-emp-name">' + escapeHtml(emp.hoTen) + '</span></div>' +
-      rows + '</div>';
+      rows + spttEmpCustDetailsHtml(emp) + '</div>';
   }
 
   function renderSptt() {
@@ -1745,3 +1778,4 @@
   // --------------------------------------------------------------------------
   if (isAuthed()) { showApp(); } else { showLogin(); }
 })();
+
