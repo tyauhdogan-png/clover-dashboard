@@ -227,6 +227,7 @@
     if (tabName === 'chat') { initChatTab(); } else { stopChatPolling(); }
     if (tabName === 'giaoviec') { initGiaoViecTab(); }
     if (tabName === 'callcungtuyen') { initCallCungTuyenTab(); }
+    if (tabName === 'ptc') { initPtcTab(); }
   }
 
   // --------------------------------------------------------------------------
@@ -1409,7 +1410,9 @@
         CCT.sub = btn.dataset.cct;
         $('cct-panel-gapkhach').classList.toggle('hidden', CCT.sub !== 'gapkhach');
         $('cct-panel-goiy').classList.toggle('hidden', CCT.sub !== 'goiy');
+        $('cct-panel-kehoach').classList.toggle('hidden', CCT.sub !== 'kehoach');
         if (CCT.sub === 'goiy' && !GOIY.loaded) loadGoiYCungTuyen();
+        if (CCT.sub === 'kehoach') initKeHoachTab();
       });
     });
 
@@ -1450,8 +1453,8 @@
     box.innerHTML = [
       cctStatCardHtml('Tháng đang xem', monthLabel, ''),
       cctStatCardHtml('Nhân viên có dữ liệu', String(nv.length), ''),
-      cctStatCardHtml('Tổng khách hàng đã gặp', fmtNum.format(tongKhach), '(không trùng khách/nhân viên)'),
-      cctStatCardHtml('Tổng lượt gặp', fmtNum.format(tongLuot), '')
+      cctStatCardHtml('Khách hàng tổ chức đã ghé', fmtNum.format(tongKhach), '(không trùng cơ sở/nhân viên)'),
+      cctStatCardHtml('Tổng số call phát sinh', fmtNum.format(tongLuot), '')
     ].join('');
   }
   function cctStatCardHtml(label, value, sub) {
@@ -1460,6 +1463,10 @@
       (sub ? '<div class="cct-stat-sub">' + escapeHtml(sub) + '</div>' : '') + '</div>';
   }
 
+  // Bảng "Khách hàng tổ chức ghé thường xuyên nhất" — mỗi dòng = 1 khách hàng
+  // tổ chức (cơ sở/bệnh viện, KHÔNG phải người liên hệ cá nhân) của 1 nhân
+  // viên trong tháng đang xem, xếp theo `thuHang` (Apps Script đã xếp theo số
+  // call phát sinh giảm dần — xem getCallCungTuyenTheoThang_).
   function renderCctTable() {
     var tbody = document.querySelector('#table-cct-gapkhach tbody');
     if (!tbody) return;
@@ -1469,23 +1476,35 @@
     (CCT.data.nhanVien || []).forEach(function (emp) {
       if (nvFilter && emp.hoTen !== nvFilter) return;
       (emp.khach || []).forEach(function (kh) {
-        if (search && (kh.maKH + ' ' + kh.tenKH).toLowerCase().indexOf(search) === -1) return;
+        if (search && (kh.tenKH || '').toLowerCase().indexOf(search) === -1) return;
         rows.push({ emp: emp, kh: kh });
       });
     });
-    rows.sort(function (a, b) { return a.kh.lanCuoi < b.kh.lanCuoi ? 1 : -1; });
+    // Nhân viên (theo tên) rồi thứ hạng trong nội bộ nhân viên đó — để mỗi
+    // khối nhân viên tự đứng thành nhóm, dễ nhìn khi xem "Tất cả nhân viên".
+    rows.sort(function (a, b) {
+      var h = (a.emp.hoTen || '').localeCompare(b.emp.hoTen || '', 'vi');
+      return h !== 0 ? h : (a.kh.thuHang || 0) - (b.kh.thuHang || 0);
+    });
     setText('cct-table-count', '(' + rows.length + ')');
     tbody.innerHTML = rows.length ? rows.map(function (r) {
       return '<tr>' +
+        '<td><span class="cct-rank-badge">' + cctRankMedal(r.kh.thuHang) + (r.kh.thuHang || '') + '</span></td>' +
         '<td>' + escapeHtml(r.emp.hoTen) + '</td>' +
-        '<td>' + escapeHtml(r.kh.maKH) + '</td>' +
-        '<td>' + escapeHtml(r.kh.tenKH) + '</td>' +
+        '<td>' + escapeHtml(r.kh.tenKH || r.kh.maKH || '—') + '</td>' +
         '<td>' + fmtNum.format(r.kh.soLanGap) + '</td>' +
         '<td>' + fmtDate(r.kh.lanDau) + '</td>' +
         '<td>' + fmtDate(r.kh.lanCuoi) + '</td>' +
         '<td>' + escapeHtml(r.kh.ghiChuGanNhat || '—') + '</td>' +
         '</tr>';
     }).join('') : '<tr><td colspan="7" class="empty-state small">Không có dữ liệu phù hợp bộ lọc.</td></tr>';
+  }
+
+  function cctRankMedal(thuHang) {
+    if (thuHang === 1) return '🥇 ';
+    if (thuHang === 2) return '🥈 ';
+    if (thuHang === 3) return '🥉 ';
+    return '#';
   }
 
   function loadGoiYCungTuyen() {
@@ -1530,6 +1549,237 @@
       '<h2>' + escapeHtml(emp.nhanVien) + ' <span class="count">' + emp.tongSoKhachGoiY + ' khách cần ghé lại</span></h2>' +
       '<div class="goiy-week-grid">' + daysHtml + '</div>' +
       '</div>';
+  }
+
+  // --------------------------------------------------------------------------
+  // DỰ KIẾN TUẦN SAU — kế hoạch ghé khách hàng tổ chức cho 1 tuần cụ thể.
+  // Admin điền được cho bất kỳ ai; nhân viên chỉ tự điền/xoá của chính mình.
+  // Việc XEM (danh sách kế hoạch + gợi ý tên khách hàng tổ chức) gọi TRỰC
+  // TIẾP Apps Script, giống mọi dữ liệu xem khác — chỉ 2 hành động GHI (thêm
+  // /xoá) mới đi qua Netlify Function cct-plan.js để kiểm tra quyền.
+  // --------------------------------------------------------------------------
+  var KEHOACH = { inited: false, tuanKey: '', list: [], employees: [], employeesLoaded: false, goiYMap: {} };
+
+  // Trả về ngày Thứ 2 (đầu tuần) của tuần CHỨA dateStr (yyyy-MM-dd) — dùng
+  // chung cho cả input <type=date> (người dùng có thể chọn bất kỳ ngày nào
+  // trong tuần, tự động quy về đúng Thứ 2) và cho nút "Tuần trước/Tuần sau".
+  function mondayOfWeek(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) d = new Date();
+    var day = d.getDay(); // 0 = Chủ nhật
+    var diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return isoDateStr(d);
+  }
+  function isoDateStr(d) {
+    var y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+    return y + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+  }
+  function addDaysStr(dateStr, days) {
+    var d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return isoDateStr(d);
+  }
+  function fmtDateVN(dateStr) {
+    if (!dateStr) return '';
+    var p = dateStr.split('-');
+    return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : dateStr;
+  }
+
+  function initKeHoachTab() {
+    var session = getSession();
+    var isAdmin = !!session && session.vaiTro === 'admin';
+    $('kehoach-nv-field').classList.toggle('hidden', !isAdmin);
+    if (isAdmin && !KEHOACH.employeesLoaded) loadKeHoachEmployees();
+    if (!KEHOACH.goiYLoaded) loadKeHoachGoiY();
+
+    if (!KEHOACH.inited) {
+      KEHOACH.inited = true;
+      // Mặc định mở đúng "tuần SAU" (tuần kế tiếp tuần hiện tại), đúng như
+      // tên mục — người dùng vẫn đổi được qua ô chọn ngày hoặc nút tuần trước/sau.
+      var todayStr = isoDateStr(new Date());
+      KEHOACH.tuanKey = addDaysStr(mondayOfWeek(todayStr), 7);
+      $('kehoach-tuan-input').value = KEHOACH.tuanKey;
+
+      $('kehoach-tuan-input').addEventListener('change', function () {
+        KEHOACH.tuanKey = mondayOfWeek($('kehoach-tuan-input').value || KEHOACH.tuanKey);
+        $('kehoach-tuan-input').value = KEHOACH.tuanKey;
+        loadKeHoachTuan();
+      });
+      $('kehoach-prevweek').addEventListener('click', function () {
+        KEHOACH.tuanKey = addDaysStr(KEHOACH.tuanKey, -7);
+        $('kehoach-tuan-input').value = KEHOACH.tuanKey;
+        loadKeHoachTuan();
+      });
+      $('kehoach-nextweek').addEventListener('click', function () {
+        KEHOACH.tuanKey = addDaysStr(KEHOACH.tuanKey, 7);
+        $('kehoach-tuan-input').value = KEHOACH.tuanKey;
+        loadKeHoachTuan();
+      });
+      $('kehoach-refresh').addEventListener('click', loadKeHoachTuan);
+      $('kehoach-nv').addEventListener('change', renderKeHoachDatalist);
+      $('kehoach-form').addEventListener('submit', submitKeHoach);
+    }
+
+    renderKeHoachDatalist();
+    loadKeHoachTuan();
+  }
+
+  function loadKeHoachEmployees() {
+    fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhân viên');
+        KEHOACH.employeesLoaded = true;
+        var contacts = (json.data || []).filter(function (c) { return c.active !== false; });
+        KEHOACH.employees = contacts;
+        var sel = $('kehoach-nv');
+        sel.innerHTML = '<option value="">— Chọn nhân viên —</option>' + contacts.map(function (c) {
+          return '<option value="' + escapeHtml(c.username) + '">' + escapeHtml(c.hoTen || c.username) + '</option>';
+        }).join('');
+      })
+      .catch(function (err) {
+        setText('kehoach-form-status', 'Không tải được danh sách nhân viên: ' + err.message);
+      });
+  }
+
+  function loadKeHoachGoiY() {
+    fetch(apiUrl('cctToChucGoiY'))
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải gợi ý khách hàng tổ chức');
+        KEHOACH.goiYLoaded = true;
+        var map = {};
+        (json.data || []).forEach(function (emp) {
+          map[normalizeUsernameKey(emp.maNV || emp.hoTen)] = emp.toChuc || [];
+          if (emp.hoTen) map[normalizeUsernameKey(emp.hoTen)] = emp.toChuc || [];
+        });
+        KEHOACH.goiYMap = map;
+        renderKeHoachDatalist();
+      })
+      .catch(function () { /* gợi ý là phụ, lỗi thì bỏ qua, vẫn gõ tự do được */ });
+  }
+
+  // Đổ gợi ý (autocomplete) đúng theo nhân viên đang được chọn — admin thì
+  // theo select "kehoach-nv", nhân viên thường thì theo chính tài khoản
+  // đang đăng nhập.
+  function renderKeHoachDatalist() {
+    var session = getSession();
+    var isAdmin = !!session && session.vaiTro === 'admin';
+    var key = isAdmin ? $('kehoach-nv').value : (session && session.username);
+    var list = (key && KEHOACH.goiYMap[normalizeUsernameKey(key)]) || [];
+    var datalist = $('kehoach-khachhang-list');
+    if (datalist) {
+      datalist.innerHTML = list.map(function (t) { return '<option value="' + escapeHtml(t.ten) + '"></option>'; }).join('');
+    }
+  }
+
+  function loadKeHoachTuan() {
+    setText('kehoach-updated', 'Đang tải…');
+    fetch(apiUrlExtra('cctKeHoach', { tuan: KEHOACH.tuanKey }))
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải kế hoạch tuần');
+        KEHOACH.list = json.data || [];
+        var tuanCuoi = addDaysStr(KEHOACH.tuanKey, 6);
+        setText('kehoach-updated', '🗓️ Tuần từ ' + fmtDateVN(KEHOACH.tuanKey) + ' đến ' + fmtDateVN(tuanCuoi) + ' · Cập nhật lúc ' + new Date().toLocaleString('vi-VN'));
+        renderKeHoachByEmployee();
+      })
+      .catch(function (err) {
+        setText('kehoach-updated', '');
+        showGlobalError('Không tải được kế hoạch tuần: ' + err.message);
+      });
+  }
+
+  function renderKeHoachByEmployee() {
+    var box = $('kehoach-by-employee');
+    if (!box) return;
+    $('kehoach-empty').classList.toggle('hidden', KEHOACH.list.length > 0);
+    var session = getSession();
+    var isAdmin = !!session && session.vaiTro === 'admin';
+    var byEmp = {};
+    var order = [];
+    KEHOACH.list.forEach(function (item) {
+      var key = normalizeUsernameKey(item.username);
+      if (!byEmp[key]) { byEmp[key] = { hoTen: item.hoTen || item.username, items: [] }; order.push(key); }
+      byEmp[key].items.push(item);
+    });
+    box.innerHTML = order.map(function (key) {
+      var emp = byEmp[key];
+      var canEdit = isAdmin || (session && normalizeUsernameKey(session.username) === key);
+      var cardsHtml = emp.items.map(function (item) {
+        return '<div class="kehoach-item-card" data-id="' + escapeHtml(item.id) + '">' +
+          '<div class="kehoach-item-icon">🏥</div>' +
+          '<div class="kehoach-item-body">' +
+          '<div class="kehoach-item-name">' + escapeHtml(item.khachHang) + '</div>' +
+          (item.ghiChu ? '<div class="kehoach-item-note">📝 ' + escapeHtml(item.ghiChu) + '</div>' : '') +
+          '<div class="kehoach-item-meta">Thêm bởi ' + escapeHtml(item.nguoiTao || '—') + '</div>' +
+          '</div>' +
+          (canEdit ? '<button type="button" class="kehoach-item-del" title="Xoá khỏi kế hoạch">✕</button>' : '') +
+          '</div>';
+      }).join('');
+      return '<div class="panel kehoach-emp-card">' +
+        '<h2>🐰 ' + escapeHtml(emp.hoTen) + ' <span class="count">' + emp.items.length + ' khách hàng tổ chức</span></h2>' +
+        '<div class="kehoach-item-list">' + cardsHtml + '</div>' +
+        '</div>';
+    }).join('');
+    wireKeHoachDeleteButtons(box);
+  }
+
+  function wireKeHoachDeleteButtons(container) {
+    container.querySelectorAll('.kehoach-item-del').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var card = btn.closest('.kehoach-item-card');
+        var id = card.dataset.id;
+        if (!window.confirm('Xoá khách hàng tổ chức này khỏi kế hoạch tuần?')) return;
+        btn.disabled = true;
+        fetch('/.netlify/functions/cct-plan', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+          body: JSON.stringify({ action: 'delete', id: id, tuan: KEHOACH.tuanKey })
+        })
+          .then(function (res) { return res.json(); })
+          .then(function (json) {
+            if (!json.ok) throw new Error(json.error || 'Xoá thất bại');
+            loadKeHoachTuan();
+          })
+          .catch(function (err) {
+            showGlobalError('Xoá kế hoạch thất bại: ' + err.message);
+            btn.disabled = false;
+          });
+      });
+    });
+  }
+
+  function submitKeHoach(ev) {
+    ev.preventDefault();
+    var statusEl = $('kehoach-form-status');
+    var btn = $('kehoach-submit-btn');
+    var session = getSession();
+    var isAdmin = !!session && session.vaiTro === 'admin';
+    var username = isAdmin ? $('kehoach-nv').value : (session && session.username);
+    var khachHang = $('kehoach-khachhang').value.trim();
+    var ghiChu = $('kehoach-ghichu').value.trim();
+    statusEl.textContent = '';
+    if (isAdmin && !username) { statusEl.textContent = 'Vui lòng chọn nhân viên.'; return; }
+    if (!khachHang) { statusEl.textContent = 'Vui lòng nhập tên khách hàng tổ chức.'; return; }
+    btn.disabled = true;
+    statusEl.textContent = 'Đang lưu…';
+    fetch('/.netlify/functions/cct-plan', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ action: 'add', tuan: KEHOACH.tuanKey, username: username, khachHang: khachHang, ghiChu: ghiChu })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Thêm kế hoạch thất bại');
+        statusEl.textContent = 'Đã thêm vào kế hoạch! 🎉';
+        $('kehoach-khachhang').value = '';
+        $('kehoach-ghichu').value = '';
+        loadKeHoachTuan();
+      })
+      .catch(function (err) { statusEl.textContent = 'Lỗi: ' + err.message; })
+      .finally(function () { btn.disabled = false; });
   }
 
   // --------------------------------------------------------------------------
@@ -1944,6 +2194,228 @@
       })
       .finally(function () { btn.disabled = false; });
   });
+
+  // --------------------------------------------------------------------------
+  // PHÁT TRIỂN CÁ NHÂN — danh mục sản phẩm, điểm đào tạo, chọn 2 học viên + 2
+  // speaker mỗi tháng (xoay vòng công bằng), tăng trưởng học SP + doanh số.
+  // Các endpoint XEM (danhMucSp/daoTaoSp/ptcChonThang/ptcTangTruong) gọi
+  // TRỰC TIẾP Apps Script (giống Sản phẩm trọng tâm/Doanh số, không cần
+  // đăng nhập) — chỉ 2 hành động GHI (nhập điểm / chọn lại) mới đi qua
+  // Netlify Function training.js để kiểm tra CHỈ ADMIN mới được ghi.
+  // --------------------------------------------------------------------------
+  var PTC = { inited: false, danhMuc: [], diem: [], pick: null, tangTruong: [], employeesLoaded: false, employees: [] };
+
+  function initPtcTab() {
+    if (!PTC.inited) {
+      PTC.inited = true;
+      var now = new Date();
+      var thangSel = $('ptc-thang');
+      var namSel = $('ptc-nam');
+      thangSel.innerHTML = VN_MONTHS_FULL.map(function (label, i) {
+        return '<option value="' + (i + 1) + '">' + label + '</option>';
+      }).join('');
+      thangSel.value = String(now.getMonth() + 1); // mặc định THÁNG HIỆN TẠI
+      var namNow = now.getFullYear();
+      namSel.innerHTML = [namNow - 1, namNow, namNow + 1].map(function (y) {
+        return '<option value="' + y + '">' + y + '</option>';
+      }).join('');
+      namSel.value = String(namNow);
+
+      ['ptc-thang', 'ptc-nam'].forEach(function (id) { $(id).addEventListener('change', loadPtcThang); });
+      $('ptc-refresh').addEventListener('click', loadPtcThang);
+      $('ptc-reroll-btn').addEventListener('click', rerollPtcThang);
+      $('ptc-diem-form').addEventListener('submit', submitPtcDiem);
+    }
+
+    var session = getSession();
+    var isAdmin = !!session && session.vaiTro === 'admin';
+    $('ptc-reroll-btn').classList.toggle('hidden', !isAdmin);
+    $('ptc-nhapdiem-panel').classList.toggle('hidden', !isAdmin);
+    if (isAdmin && !PTC.employeesLoaded) loadPtcEmployees();
+    if (!PTC.danhMuc.length) loadPtcDanhMuc();
+
+    loadPtcThang();
+  }
+
+  // Danh sách nhân viên để đổ vào select "Nhân viên" của form nhập điểm — tái
+  // dùng đúng endpoint messages?action=threads đã có sẵn (trả về danh sách
+  // tài khoản nhân viên, giống cách mục Giao việc đang làm).
+  function loadPtcEmployees() {
+    fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhân viên');
+        PTC.employeesLoaded = true;
+        var contacts = (json.data || []).filter(function (c) { return c.active !== false; });
+        PTC.employees = contacts;
+        var sel = $('ptc-diem-nv');
+        sel.innerHTML = '<option value="">— Chọn nhân viên —</option>' + contacts.map(function (c) {
+          return '<option value="' + escapeHtml(c.username) + '">' + escapeHtml(c.hoTen || c.username) + '</option>';
+        }).join('');
+      })
+      .catch(function (err) {
+        setText('ptc-diem-form-status', 'Không tải được danh sách nhân viên: ' + err.message);
+      });
+  }
+
+  function loadPtcDanhMuc() {
+    fetch(apiUrl('danhMucSp'))
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải danh mục sản phẩm');
+        PTC.danhMuc = json.data || [];
+        var sel = $('ptc-diem-sp');
+        sel.innerHTML = '<option value="">— Chọn sản phẩm —</option>' + PTC.danhMuc.map(function (p) {
+          return '<option value="' + escapeHtml(p.tenSanPham) + '">' + escapeHtml(p.tenSanPham) + '</option>';
+        }).join('');
+      })
+      .catch(function (err) {
+        showGlobalError('Không tải được danh mục sản phẩm: ' + err.message);
+      });
+  }
+
+  function loadPtcThang() {
+    var thang = $('ptc-thang').value;
+    var nam = $('ptc-nam').value;
+    setText('ptc-updated', 'Đang tải…');
+    Promise.all([
+      fetch(apiUrlExtra('ptcChonThang', { thang: thang, nam: nam })).then(function (res) { return res.json(); }),
+      fetch(apiUrlExtra('ptcTangTruong', { thang: thang, nam: nam })).then(function (res) { return res.json(); }),
+      fetch(apiUrl('daoTaoSp')).then(function (res) { return res.json(); })
+    ]).then(function (results) {
+      var pickJson = results[0], ttJson = results[1], diemJson = results[2];
+      if (!pickJson.ok) throw new Error(pickJson.error || 'Lỗi tải chọn học viên/speaker');
+      if (!ttJson.ok) throw new Error(ttJson.error || 'Lỗi tải tăng trưởng cá nhân');
+      if (!diemJson.ok) throw new Error(diemJson.error || 'Lỗi tải lịch sử điểm đào tạo');
+      PTC.pick = pickJson.data || null;
+      PTC.tangTruong = ttJson.data || [];
+      PTC.diem = diemJson.data || [];
+      setText('ptc-updated', 'Cập nhật lúc ' + new Date().toLocaleString('vi-VN'));
+      renderPtcPickGrid();
+      renderPtcTangTruong();
+      renderPtcDiemHistory();
+    }).catch(function (err) {
+      setText('ptc-updated', '');
+      showGlobalError('Không tải được dữ liệu Phát triển cá nhân: ' + err.message);
+    });
+  }
+
+  function renderPtcPickGrid() {
+    var box = $('ptc-pick-grid');
+    if (!box) return;
+    if (!PTC.pick) { box.innerHTML = '<div class="empty-state small">Chưa có dữ liệu.</div>'; return; }
+    var cards = [];
+    (PTC.pick.hocVien || []).forEach(function (p, i) {
+      cards.push(ptcPersonCardHtml('🎓 Học viên ' + (i + 1), p));
+    });
+    (PTC.pick.speaker || []).forEach(function (p, i) {
+      cards.push(ptcPersonCardHtml('🎤 Speaker ' + (i + 1), p));
+    });
+    box.innerHTML = cards.join('');
+  }
+
+  function ptcPersonCardHtml(label, p) {
+    var name = (p && (p.hoTen || p.username)) || '—';
+    return '<div class="ptc-pick-card"><div class="ptc-pick-role">' + escapeHtml(label) + '</div>' +
+      '<div class="ptc-pick-name">' + escapeHtml(name) + '</div></div>';
+  }
+
+  // Chỉ admin thấy nút này — random lại 4 người cho đúng tháng đang xem, có
+  // ưu tiên người bị chọn ít lần nhất trong lịch sử (xoay vòng công bằng),
+  // KHÔNG xoá lượt chọn cũ (giữ lịch sử để lần xoay vòng sau vẫn tính đúng).
+  function rerollPtcThang() {
+    var thang = $('ptc-thang').value;
+    var nam = $('ptc-nam').value;
+    var btn = $('ptc-reroll-btn');
+    if (!window.confirm('Chọn lại 2 học viên + 2 speaker cho tháng này? Lượt chọn hiện tại của tháng sẽ được thay bằng 1 lượt random mới.')) return;
+    btn.disabled = true;
+    fetch('/.netlify/functions/training', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ action: 'reroll_thang', nam: nam, thang: thang })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Chọn lại thất bại');
+        PTC.pick = json.data;
+        renderPtcPickGrid();
+      })
+      .catch(function (err) { showGlobalError('Chọn lại thất bại: ' + err.message); })
+      .finally(function () { btn.disabled = false; });
+  }
+
+  function renderPtcTangTruong() {
+    var tbody = document.querySelector('#table-ptc-tangtruong tbody');
+    if (!tbody) return;
+    var rows = PTC.tangTruong || [];
+    tbody.innerHTML = rows.length ? rows.map(function (r) {
+      var dsGrowthClass = r.tangTruongDoanhSo > 0 ? 'good' : (r.tangTruongDoanhSo < 0 ? 'critical' : 'muted');
+      var dsGrowthText = (r.tangTruongDoanhSo > 0 ? '+' : '') + fmtVnd(r.tangTruongDoanhSo) +
+        (r.tangTruongDoanhSoPhanTram !== null ? ' (' + (r.tangTruongDoanhSoPhanTram > 0 ? '+' : '') + r.tangTruongDoanhSoPhanTram + '%)' : '');
+      var diemGrowthClass = r.tangTruongDiem > 0 ? 'good' : (r.tangTruongDiem < 0 ? 'critical' : 'muted');
+      return '<tr>' +
+        '<td>' + escapeHtml(r.hoTen) + '</td>' +
+        '<td class="num">' + fmtNum.format(r.diemThangNay) + '</td>' +
+        '<td class="num">' + fmtNum.format(r.diemThangTruoc) + '</td>' +
+        '<td class="num"><span class="chip ' + diemGrowthClass + ' small">' + (r.tangTruongDiem > 0 ? '+' : '') + fmtNum.format(r.tangTruongDiem) + '</span></td>' +
+        '<td class="num">' + fmtNum.format(r.soSanPhamDaHocLuyKe) + '</td>' +
+        '<td class="num">' + fmtVnd(r.doanhSoThangNay) + '</td>' +
+        '<td class="num">' + fmtVnd(r.doanhSoThangTruoc) + '</td>' +
+        '<td class="num"><span class="chip ' + dsGrowthClass + ' small">' + escapeHtml(dsGrowthText) + '</span></td>' +
+        '</tr>';
+    }).join('') : '<tr><td colspan="8" class="empty-state small">Chưa có dữ liệu.</td></tr>';
+  }
+
+  function renderPtcDiemHistory() {
+    var tbody = document.querySelector('#table-ptc-diem tbody');
+    if (!tbody) return;
+    var all = PTC.diem || [];
+    setText('ptc-diem-count', '(' + fmtNum.format(all.length) + ')');
+    var rows = all.slice(0, 200); // đã được Apps Script sắp xếp mới nhất trước
+    tbody.innerHTML = rows.length ? rows.map(function (r) {
+      return '<tr>' +
+        '<td>' + escapeHtml(r.thang) + '</td>' +
+        '<td>' + escapeHtml(r.hoTen || r.username) + '</td>' +
+        '<td>' + escapeHtml(r.sanPham) + '</td>' +
+        '<td class="num">' + fmtNum.format(r.diem) + '</td>' +
+        '<td>' + escapeHtml(r.nguoiCham) + '</td>' +
+        '<td>' + escapeHtml(r.ghiChu || '—') + '</td>' +
+        '<td>' + (r.thoiGianNhap ? new Date(r.thoiGianNhap).toLocaleString('vi-VN') : '') + '</td>' +
+        '</tr>';
+    }).join('') : '<tr><td colspan="7" class="empty-state small">Chưa có điểm đào tạo nào được nhập.</td></tr>';
+  }
+
+  function submitPtcDiem(ev) {
+    ev.preventDefault();
+    var statusEl = $('ptc-diem-form-status');
+    var btn = $('ptc-diem-submit-btn');
+    var username = $('ptc-diem-nv').value;
+    var sanPham = $('ptc-diem-sp').value;
+    var thangVal = $('ptc-diem-thang').value; // input type="month" -> "yyyy-MM"
+    var diem = $('ptc-diem-diem').value;
+    var ghiChu = $('ptc-diem-ghichu').value.trim();
+    statusEl.textContent = '';
+    if (!username) { statusEl.textContent = 'Vui lòng chọn nhân viên.'; return; }
+    if (!sanPham) { statusEl.textContent = 'Vui lòng chọn sản phẩm.'; return; }
+    if (!thangVal) { statusEl.textContent = 'Vui lòng chọn tháng chấm điểm.'; return; }
+    if (diem === '' || isNaN(Number(diem))) { statusEl.textContent = 'Vui lòng nhập điểm hợp lệ.'; return; }
+    btn.disabled = true;
+    statusEl.textContent = 'Đang lưu…';
+    fetch('/.netlify/functions/training', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ action: 'submit_diem', username: username, sanPham: sanPham, thang: thangVal, diem: diem, ghiChu: ghiChu })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lưu điểm thất bại');
+        statusEl.textContent = 'Đã lưu điểm thành công!';
+        $('ptc-diem-form').reset();
+        loadPtcThang();
+      })
+      .catch(function (err) { statusEl.textContent = 'Lỗi: ' + err.message; })
+      .finally(function () { btn.disabled = false; });
+  }
 
   // --------------------------------------------------------------------------
   // KHỞI ĐỘNG
