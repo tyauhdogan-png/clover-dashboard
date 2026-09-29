@@ -22,6 +22,22 @@
   // --------------------------------------------------------------------------
   function $(id) { return document.getElementById(id); }
   function setText(id, text) { var el = $(id); if (el) el.textContent = text; }
+  // Vòng 15: dùng thay cho việc gọi thẳng res.json() ở MỌI nơi gọi fetch() —
+  // đọc text() trước rồi mới tự parse JSON, để khi Apps Script
+  // trả về HTML (thường do CHƯA Deploy lại bản mới nhất sau khi cập nhật
+  // code, hoặc do URL API/API_KEY sai khiến Google trả trang đăng nhập) thì
+  // báo lỗi tiếng Việt dễ hiểu, thay vì lỗi khó hiểu "Unexpected token '<'".
+  function parseJsonRes_(res) {
+    return res.text().then(function (text) {
+      try {
+        return JSON.parse(text);
+      } catch (eParse) {
+        var loi = 'Server trả về dữ liệu không phải JSON (có thể do Apps Script CHƯA được Deploy lại bản mới nhất sau khi cập nhật code, hoặc sai URL API/API_KEY).';
+        if (text) loi += ' Nội dung nhận được: ' + String(text).slice(0, 150);
+        throw new Error(loi);
+      }
+    });
+  }
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -172,7 +188,7 @@
     fetch(apiUrl('all'))
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
+        return parseJsonRes_(res);
       })
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi không xác định từ API');
@@ -220,6 +236,12 @@
       document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.add('hidden'); });
       btn.classList.add('active');
       $('tab-' + btn.dataset.tab).classList.remove('hidden');
+      // Vòng 15: banner lỗi dùng chung 1 vùng #global-error cho mọi tab — nếu
+      // không ẩn khi chuyển tab thì lỗi của tab TRƯỚC vẫn còn hiện khi đã
+      // sang tab khác (đã gặp trong ảnh chụp màn hình: lỗi "Phát triển cá
+      // nhân" vẫn hiện dù đang xem tab khác). Tab mới nếu tự lỗi sẽ tự hiện
+      // lại banner ngay trong lúc tải.
+      $('global-error').classList.add('hidden');
       onTabSwitch(btn.dataset.tab);
     });
   });
@@ -722,6 +744,13 @@
         var mine = all.filter(function (e) { return kpiNormName(e.hoTen) === kpiNormName(session.hoTen); })[0];
         if (mine) KPI_SELECTED_SHEET = mine.sheetName;
       }
+    }
+    // Vòng 15: mọi trường hợp KHÁC (admin, hoặc tài khoản không khớp tên với
+    // bảng KPI nào) -> mặc định LUÔN hiện sẵn KPI của Dương Hồng Khuyên, thay
+    // vì để trống và bắt phải bấm chọn mới hiện.
+    if (!KPI_SELECTED_SHEET) {
+      var khuyen = all.filter(function (e) { return kpiNormName(e.hoTen) === kpiNormName('Dương Hồng Khuyên'); })[0];
+      if (khuyen) KPI_SELECTED_SHEET = khuyen.sheetName;
     }
     if (KPI_SELECTED_SHEET && !all.some(function (e) { return e.sheetName === KPI_SELECTED_SHEET; })) {
       KPI_SELECTED_SHEET = null;
@@ -1370,7 +1399,10 @@
   // tự gọi API riêng (type=callCungTuyen / type=goiyCungTuyen) khi người dùng
   // mở tab, để không làm chậm lần tải trang đầu tiên.
   // --------------------------------------------------------------------------
-  var CCT = { inited: false, sub: 'gapkhach', data: { nam: 0, thang: 0, nhanVien: [] } };
+  // Vòng 15: mặc định mở subtab "Gợi ý cung tuyến tuần" (sub: 'goiy') thay vì
+  // "Đã gặp khách trong tháng" — theo yêu cầu, đây là phần nhân viên cần xem
+  // ngay khi mở web mỗi sáng để biết hôm nay đi đâu.
+  var CCT = { inited: false, sub: 'goiy', gapkhachLoaded: false, data: { nam: 0, thang: 0, nhanVien: [] } };
   var GOIY = { loaded: false, data: { soNgayNguong: 30, soKhachMoiNgay: 5, nhanVien: [] } };
   var VN_MONTHS_FULL = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 
@@ -1411,6 +1443,10 @@
         $('cct-panel-gapkhach').classList.toggle('hidden', CCT.sub !== 'gapkhach');
         $('cct-panel-goiy').classList.toggle('hidden', CCT.sub !== 'goiy');
         $('cct-panel-kehoach').classList.toggle('hidden', CCT.sub !== 'kehoach');
+        // Vòng 15: mỗi subtab chỉ tải dữ liệu lần ĐẦU TIÊN được mở tới (lazy),
+        // "Gợi ý cung tuyến tuần" đã tải sẵn ngay lúc mở tab (xem bên dưới) vì
+        // giờ là subtab mặc định.
+        if (CCT.sub === 'gapkhach' && !CCT.gapkhachLoaded) { CCT.gapkhachLoaded = true; loadCallCungTuyenThang(); }
         if (CCT.sub === 'goiy' && !GOIY.loaded) loadGoiYCungTuyen();
         if (CCT.sub === 'kehoach') initKeHoachTab();
       });
@@ -1422,7 +1458,9 @@
     $('cct-filter-search').addEventListener('input', debounce(renderCctTable, 200));
     $('goiy-apply').addEventListener('click', loadGoiYCungTuyen);
 
-    loadCallCungTuyenThang();
+    // Vòng 15: tải ngay "Gợi ý cung tuyến tuần" khi vừa mở tab Call & Cung
+    // tuyến (đây là subtab mặc định), không đợi bấm mới tải.
+    loadGoiYCungTuyen();
   }
 
   function loadCallCungTuyenThang() {
@@ -1430,7 +1468,7 @@
     var nam = $('cct-nam').value;
     setText('cct-updated', 'Đang tải…');
     fetch(apiUrlExtra('callCungTuyen', { thang: thang, nam: nam }))
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi không xác định từ API');
         CCT.data = json.data || { nam: nam, thang: thang, nhanVien: [] };
@@ -1512,7 +1550,7 @@
     var soKhach = $('goiy-sokhach').value || 5;
     setText('goiy-updated', 'Đang tải…');
     fetch(apiUrlExtra('goiyCungTuyen', { soNgay: soNgay, soKhach: soKhach }))
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi không xác định từ API');
         GOIY.loaded = true;
@@ -1627,7 +1665,7 @@
 
   function loadKeHoachEmployees() {
     fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhân viên');
         KEHOACH.employeesLoaded = true;
@@ -1645,7 +1683,7 @@
 
   function loadKeHoachGoiY() {
     fetch(apiUrl('cctToChucGoiY'))
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải gợi ý khách hàng tổ chức');
         KEHOACH.goiYLoaded = true;
@@ -1677,7 +1715,7 @@
   function loadKeHoachTuan() {
     setText('kehoach-updated', 'Đang tải…');
     fetch(apiUrlExtra('cctKeHoach', { tuan: KEHOACH.tuanKey }))
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải kế hoạch tuần');
         KEHOACH.list = json.data || [];
@@ -1738,7 +1776,7 @@
           headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
           body: JSON.stringify({ action: 'delete', id: id, tuan: KEHOACH.tuanKey })
         })
-          .then(function (res) { return res.json(); })
+          .then(parseJsonRes_)
           .then(function (json) {
             if (!json.ok) throw new Error(json.error || 'Xoá thất bại');
             loadKeHoachTuan();
@@ -1770,7 +1808,7 @@
       headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
       body: JSON.stringify({ action: 'add', tuan: KEHOACH.tuanKey, username: username, khachHang: khachHang, ghiChu: ghiChu })
     })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Thêm kế hoạch thất bại');
         statusEl.textContent = 'Đã thêm vào kế hoạch! 🎉';
@@ -1847,7 +1885,7 @@
     var list = $('chat-contacts-list');
     list.innerHTML = '<div class="empty-state small">Đang tải…</div>';
     fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách');
         CHAT.contactsLoaded = true;
@@ -1891,7 +1929,7 @@
     CHAT.loading = true;
     var url = '/.netlify/functions/messages?action=list&thread=' + encodeURIComponent(CHAT.thread);
     fetch(url, { headers: authHeader() })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải tin nhắn');
         renderChatMessages(json.data || [], json.me || {});
@@ -1952,7 +1990,7 @@
       headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
       body: JSON.stringify({ thread: CHAT.thread, text: text })
     })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Gửi tin nhắn thất bại');
         input.value = '';
@@ -2005,7 +2043,7 @@
 
   function loadGiaoViecEmployees() {
     fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhân viên');
         GIAOVIEC.employeesLoaded = true;
@@ -2028,7 +2066,7 @@
     var box = $('giaoviec-list');
     if (!GIAOVIEC.tasks.length) box.innerHTML = '<div class="empty-state">Đang tải…</div>';
     fetch('/.netlify/functions/tasks', { headers: authHeader() })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhiệm vụ');
         GIAOVIEC.tasks = json.data || [];
@@ -2095,7 +2133,7 @@
           headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
           body: JSON.stringify({ action: 'feedback', id: id, trangThai: trangThai, ghiChu: ghiChu })
         })
-          .then(function (res) { return res.json(); })
+          .then(parseJsonRes_)
           .then(function (json) {
             if (!json.ok) throw new Error(json.error || 'Lưu phản hồi thất bại');
             statusText.textContent = 'Đã lưu lúc ' + giaoViecFmtTime(new Date().toISOString());
@@ -2180,7 +2218,7 @@
       headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
       body: JSON.stringify({ action: 'create', username: username, tenNhiemVu: tenNhiemVu, noiDung: noiDung, ngayThucHien: ngayThucHien })
     })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Giao việc thất bại');
         var mailNote = json.mailSent ? ' Đã gửi mail báo cho nhân viên.' :
@@ -2203,7 +2241,7 @@
   // đăng nhập) — chỉ 2 hành động GHI (nhập điểm / chọn lại) mới đi qua
   // Netlify Function training.js để kiểm tra CHỈ ADMIN mới được ghi.
   // --------------------------------------------------------------------------
-  var PTC = { inited: false, danhMuc: [], diem: [], pick: null, tangTruong: [], employeesLoaded: false, employees: [] };
+  var PTC = { inited: false, danhMuc: [], diem: [], pick: null, tangTruong: [], employeesLoaded: false, employees: [], hopDaoTao: [] };
 
   function initPtcTab() {
     if (!PTC.inited) {
@@ -2225,14 +2263,19 @@
       $('ptc-refresh').addEventListener('click', loadPtcThang);
       $('ptc-reroll-btn').addEventListener('click', rerollPtcThang);
       $('ptc-diem-form').addEventListener('submit', submitPtcDiem);
+      $('hop-daotao-form').addEventListener('submit', submitHopDaoTao);
+      $('hop-daotao-ngay').value = new Date().toISOString().slice(0, 10); // mặc định hôm nay
     }
 
     var session = getSession();
     var isAdmin = !!session && session.vaiTro === 'admin';
     $('ptc-reroll-btn').classList.toggle('hidden', !isAdmin);
     $('ptc-nhapdiem-panel').classList.toggle('hidden', !isAdmin);
+    $('hop-daotao-form-wrap').classList.toggle('hidden', !isAdmin);
+    $('hop-daotao-col-xoa').classList.toggle('hidden', !isAdmin);
     if (isAdmin && !PTC.employeesLoaded) loadPtcEmployees();
     if (!PTC.danhMuc.length) loadPtcDanhMuc();
+    loadHopDaoTao();
 
     loadPtcThang();
   }
@@ -2242,7 +2285,7 @@
   // tài khoản nhân viên, giống cách mục Giao việc đang làm).
   function loadPtcEmployees() {
     fetch('/.netlify/functions/messages?action=threads', { headers: authHeader() })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh sách nhân viên');
         PTC.employeesLoaded = true;
@@ -2252,6 +2295,12 @@
         sel.innerHTML = '<option value="">— Chọn nhân viên —</option>' + contacts.map(function (c) {
           return '<option value="' + escapeHtml(c.username) + '">' + escapeHtml(c.hoTen || c.username) + '</option>';
         }).join('');
+        var selTrinhBay = $('hop-daotao-nguoitrinhbay');
+        if (selTrinhBay) {
+          selTrinhBay.innerHTML = '<option value="">— (không bắt buộc) —</option>' + contacts.map(function (c) {
+            return '<option value="' + escapeHtml(c.hoTen || c.username) + '">' + escapeHtml(c.hoTen || c.username) + '</option>';
+          }).join('');
+        }
       })
       .catch(function (err) {
         setText('ptc-diem-form-status', 'Không tải được danh sách nhân viên: ' + err.message);
@@ -2260,7 +2309,7 @@
 
   function loadPtcDanhMuc() {
     fetch(apiUrl('danhMucSp'))
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lỗi tải danh mục sản phẩm');
         PTC.danhMuc = json.data || [];
@@ -2268,6 +2317,12 @@
         sel.innerHTML = '<option value="">— Chọn sản phẩm —</option>' + PTC.danhMuc.map(function (p) {
           return '<option value="' + escapeHtml(p.tenSanPham) + '">' + escapeHtml(p.tenSanPham) + '</option>';
         }).join('');
+        var selHop = $('hop-daotao-sp');
+        if (selHop) {
+          selHop.innerHTML = '<option value="">— Chọn sản phẩm —</option>' + PTC.danhMuc.map(function (p) {
+            return '<option value="' + escapeHtml(p.tenSanPham) + '">' + escapeHtml(p.tenSanPham) + '</option>';
+          }).join('');
+        }
       })
       .catch(function (err) {
         showGlobalError('Không tải được danh mục sản phẩm: ' + err.message);
@@ -2279,9 +2334,9 @@
     var nam = $('ptc-nam').value;
     setText('ptc-updated', 'Đang tải…');
     Promise.all([
-      fetch(apiUrlExtra('ptcChonThang', { thang: thang, nam: nam })).then(function (res) { return res.json(); }),
-      fetch(apiUrlExtra('ptcTangTruong', { thang: thang, nam: nam })).then(function (res) { return res.json(); }),
-      fetch(apiUrl('daoTaoSp')).then(function (res) { return res.json(); })
+      fetch(apiUrlExtra('ptcChonThang', { thang: thang, nam: nam })).then(parseJsonRes_),
+      fetch(apiUrlExtra('ptcTangTruong', { thang: thang, nam: nam })).then(parseJsonRes_),
+      fetch(apiUrl('daoTaoSp')).then(parseJsonRes_)
     ]).then(function (results) {
       var pickJson = results[0], ttJson = results[1], diemJson = results[2];
       if (!pickJson.ok) throw new Error(pickJson.error || 'Lỗi tải chọn học viên/speaker');
@@ -2334,7 +2389,7 @@
       headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
       body: JSON.stringify({ action: 'reroll_thang', nam: nam, thang: thang })
     })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Chọn lại thất bại');
         PTC.pick = json.data;
@@ -2406,7 +2461,7 @@
       headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
       body: JSON.stringify({ action: 'submit_diem', username: username, sanPham: sanPham, thang: thangVal, diem: diem, ghiChu: ghiChu })
     })
-      .then(function (res) { return res.json(); })
+      .then(parseJsonRes_)
       .then(function (json) {
         if (!json.ok) throw new Error(json.error || 'Lưu điểm thất bại');
         statusEl.textContent = 'Đã lưu điểm thành công!';
@@ -2415,6 +2470,90 @@
       })
       .catch(function (err) { statusEl.textContent = 'Lỗi: ' + err.message; })
       .finally(function () { btn.disabled = false; });
+  }
+
+  // ---- Vòng 15: "Sản phẩm đào tạo khi họp" (2 buổi/tháng) — mọi người xem
+  // được (gọi thẳng Apps Script, giống danhMucSp/daoTaoSp), chỉ admin mới
+  // thêm/xoá được (qua Netlify Function training.js). ----
+  function loadHopDaoTao() {
+    fetch(apiUrl('hopDaoTaoSp'))
+      .then(parseJsonRes_)
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi tải sản phẩm đào tạo khi họp');
+        PTC.hopDaoTao = json.data || [];
+        renderHopDaoTao();
+      })
+      .catch(function (err) {
+        showGlobalError('Không tải được "Sản phẩm đào tạo khi họp": ' + err.message);
+      });
+  }
+
+  function renderHopDaoTao() {
+    var tbody = document.querySelector('#table-hop-daotao tbody');
+    if (!tbody) return;
+    var session = getSession();
+    var isAdmin = !!session && session.vaiTro === 'admin';
+    var rows = PTC.hopDaoTao || [];
+    tbody.innerHTML = rows.length ? rows.map(function (r) {
+      return '<tr>' +
+        '<td>' + fmtDate(r.ngayHop) + '</td>' +
+        '<td>' + escapeHtml(r.sanPham) + '</td>' +
+        '<td>' + escapeHtml(r.nguoiTrinhBay || '—') + '</td>' +
+        '<td>' + escapeHtml(r.ghiChu || '—') + '</td>' +
+        (isAdmin ? '<td><button type="button" class="btn btn-small btn-danger hop-daotao-xoa-btn" data-id="' + escapeHtml(r.id) + '">Xoá</button></td>' : '') +
+        '</tr>';
+    }).join('') : '<tr><td colspan="' + (isAdmin ? 5 : 4) + '" class="empty-state small">Chưa có sản phẩm đào tạo nào được ghi nhận.</td></tr>';
+    if (isAdmin) {
+      tbody.querySelectorAll('.hop-daotao-xoa-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { deleteHopDaoTao(btn.dataset.id); });
+      });
+    }
+  }
+
+  function submitHopDaoTao(ev) {
+    ev.preventDefault();
+    var statusEl = $('hop-daotao-form-status');
+    var btn = $('hop-daotao-submit-btn');
+    var ngayHop = $('hop-daotao-ngay').value; // input type="date" -> "yyyy-MM-dd"
+    var sanPham = $('hop-daotao-sp').value;
+    var nguoiTrinhBay = $('hop-daotao-nguoitrinhbay').value;
+    var ghiChu = $('hop-daotao-ghichu').value.trim();
+    statusEl.textContent = '';
+    if (!ngayHop) { statusEl.textContent = 'Vui lòng chọn ngày họp.'; return; }
+    if (!sanPham) { statusEl.textContent = 'Vui lòng chọn sản phẩm.'; return; }
+    btn.disabled = true;
+    statusEl.textContent = 'Đang lưu…';
+    fetch('/.netlify/functions/training', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ action: 'add_hop', ngayHop: ngayHop, sanPham: sanPham, nguoiTrinhBay: nguoiTrinhBay, ghiChu: ghiChu })
+    })
+      .then(parseJsonRes_)
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lưu thất bại');
+        statusEl.textContent = 'Đã thêm!';
+        $('hop-daotao-sp').value = '';
+        $('hop-daotao-nguoitrinhbay').value = '';
+        $('hop-daotao-ghichu').value = '';
+        loadHopDaoTao();
+      })
+      .catch(function (err) { statusEl.textContent = 'Lỗi: ' + err.message; })
+      .finally(function () { btn.disabled = false; });
+  }
+
+  function deleteHopDaoTao(id) {
+    if (!window.confirm('Xoá dòng "sản phẩm đào tạo" này?')) return;
+    fetch('/.netlify/functions/training', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeader()),
+      body: JSON.stringify({ action: 'delete_hop', id: id })
+    })
+      .then(parseJsonRes_)
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Xoá thất bại');
+        loadHopDaoTao();
+      })
+      .catch(function (err) { showGlobalError('Xoá thất bại: ' + err.message); });
   }
 
   // --------------------------------------------------------------------------
