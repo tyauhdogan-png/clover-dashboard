@@ -343,6 +343,10 @@ header.topbar {
 .btn:hover { background: var(--page-plane); }
 .btn-primary { background: var(--series-1); border-color: var(--series-1); color: #fff; }
 .btn-primary:hover { background: #5b93c9; }
+/* Vòng 15: nút xoá (vd "Sản phẩm đào tạo khi họp") — dùng chung tông màu
+   --status-critical đã có sẵn trong bảng màu, để đồng bộ với chip/cảnh báo. */
+.btn-danger { background: rgba(238,126,121,0.12); border-color: rgba(238,126,121,0.4); color: #b8474a; }
+.btn-danger:hover { background: rgba(238,126,121,0.22); }
 .user-badge {
   font-size: 12.5px;
   color: var(--text-secondary);
