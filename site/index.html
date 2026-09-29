@@ -57,6 +57,10 @@
         <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.5v9M12.6 7.6c0-1-1-1.7-2.3-1.7-1.4 0-2.5.7-2.5 1.9 0 2.6 4.8 1.3 4.8 3.9 0 1.2-1.1 1.9-2.5 1.9-1.3 0-2.3-.7-2.3-1.7"/></svg></span>
         <span>Doanh số</span>
       </button>
+      <button class="tab-btn" data-tab="ptc">
+        <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 2.5 2.5 6l7.5 3.5L17.5 6 10 2.5Z"/><path d="M5 8v4.5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V8"/><path d="M17.5 6v5.5"/></svg></span>
+        <span>Phát triển cá nhân</span>
+      </button>
       <button class="tab-btn" data-tab="callcungtuyen">
         <span class="tab-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6.5c0 6 5 10.5 10.5 10.5.6 0 1.1-.4 1.2-1l.5-2.1a1.2 1.2 0 0 0-.7-1.4l-2.6-1a1.2 1.2 0 0 0-1.4.3l-.8 1a8.5 8.5 0 0 1-4-4l1-.8a1.2 1.2 0 0 0 .3-1.4l-1-2.6a1.2 1.2 0 0 0-1.4-.7L3.5 3.3c-.6.1-1 .6-1 1.2 0 .7 0 1.4.5 2Z"/><circle cx="15.5" cy="4.8" r="1.3"/><path d="M15.5 6.5v3.2M13.8 8.2h3.4"/></svg></span>
         <span>Call &amp; Cung tuyến</span>
@@ -246,6 +250,7 @@
         <input type="text" class="search-box" id="sales-filter-search" placeholder="Tìm khách hàng, mặt hàng…" />
         <button class="clear-filters" id="sales-clear">Xoá bộ lọc</button>
       </div>
+      <div class="cct-updated">Chỉ hiển thị đơn hàng trong 3 tháng gần nhất — các tháng trước đó không còn hiện ở đây.</div>
 
       <div class="stat-grid" id="sales-stats"></div>
 
@@ -331,31 +336,116 @@
       </div>
     </section>
 
+    <!-- ===================== TAB: PHÁT TRIỂN CÁ NHÂN ===================== -->
+    <section id="tab-ptc" class="tab-panel hidden">
+      <div class="filter-bar">
+        <select id="ptc-thang"></select>
+        <select id="ptc-nam"></select>
+        <button class="btn" id="ptc-refresh">↻ Tải lại</button>
+        <button class="btn btn-primary hidden" id="ptc-reroll-btn">🎲 Chọn lại học viên/speaker tháng này</button>
+      </div>
+      <div class="cct-updated" id="ptc-updated"></div>
+
+      <div class="panel">
+        <h2>👥 Học viên &amp; Speaker tháng này</h2>
+        <div class="ptc-pick-grid" id="ptc-pick-grid"></div>
+      </div>
+
+      <div class="panel hidden" id="ptc-nhapdiem-panel">
+        <h2>Nhập điểm đào tạo sản phẩm</h2>
+        <form class="giaoviec-form" id="ptc-diem-form">
+          <div class="giaoviec-form-row">
+            <label class="giaoviec-field">
+              <span>Nhân viên</span>
+              <select id="ptc-diem-nv" required><option value="">— Chọn nhân viên —</option></select>
+            </label>
+            <label class="giaoviec-field">
+              <span>Sản phẩm</span>
+              <select id="ptc-diem-sp" required><option value="">— Chọn sản phẩm —</option></select>
+            </label>
+          </div>
+          <div class="giaoviec-form-row">
+            <label class="giaoviec-field">
+              <span>Tháng chấm điểm</span>
+              <input type="month" id="ptc-diem-thang" required />
+            </label>
+            <label class="giaoviec-field">
+              <span>Điểm (0 - 10)</span>
+              <input type="number" id="ptc-diem-diem" min="0" max="10" step="0.5" required placeholder="VD: 8" />
+            </label>
+          </div>
+          <label class="giaoviec-field">
+            <span>Ghi chú</span>
+            <input type="text" id="ptc-diem-ghichu" maxlength="500" placeholder="Ghi chú thêm (không bắt buộc)…" />
+          </label>
+          <div class="giaoviec-form-actions">
+            <button type="submit" class="btn btn-primary" id="ptc-diem-submit-btn">Lưu điểm</button>
+            <span class="giaoviec-form-status" id="ptc-diem-form-status"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>📈 Tăng trưởng cá nhân — học sản phẩm &amp; doanh số</h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-ptc-tangtruong">
+            <thead><tr>
+              <th>Nhân viên</th>
+              <th>Điểm TB tháng này</th>
+              <th>Điểm TB tháng trước</th>
+              <th>Tăng trưởng điểm</th>
+              <th>SP đã học (≥5đ, luỹ kế)</th>
+              <th>Doanh số tháng này</th>
+              <th>Doanh số tháng trước</th>
+              <th>Tăng trưởng doanh số</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Lịch sử điểm đào tạo <span class="count" id="ptc-diem-count"></span></h2>
+        <div class="table-wrap">
+          <table class="data-table" id="table-ptc-diem">
+            <thead><tr>
+              <th>Tháng</th><th>Nhân viên</th><th>Sản phẩm</th><th>Điểm</th><th>Người chấm</th><th>Ghi chú</th><th>Thời gian nhập</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ===================== TAB: CALL & CUNG TUYẾN ===================== -->
     <section id="tab-callcungtuyen" class="tab-panel hidden">
       <div class="cct-subtabs">
         <button class="cct-subtab-btn active" data-cct="gapkhach">📞 Đã gặp khách trong tháng</button>
         <button class="cct-subtab-btn" data-cct="goiy">🗺️ Gợi ý cung tuyến tuần</button>
+        <button class="cct-subtab-btn" data-cct="kehoach">🐣 Dự kiến tuần sau</button>
       </div>
 
-      <!-- ---- Sub-tab: Đã gặp khách trong tháng (nguồn: sheet CALL / CUNG-TUYEN) ---- -->
+      <!-- ---- Sub-tab: Đã gặp khách trong tháng (nguồn: sheet CALL / CUNG-TUYEN) ----
+           Chỉ tính theo KHÁCH HÀNG TỔ CHỨC (cơ sở/bệnh viện) — không hiện tên
+           người liên hệ cá nhân tại đó. ---- -->
       <div id="cct-panel-gapkhach" class="cct-panel">
         <div class="filter-bar">
           <select id="cct-thang"></select>
           <select id="cct-nam"></select>
           <select id="cct-filter-nv"><option value="">Tất cả nhân viên</option></select>
-          <input type="text" class="search-box" id="cct-filter-search" placeholder="Tìm mã KH / tên khách hàng…" />
+          <input type="text" class="search-box" id="cct-filter-search" placeholder="Tìm khách hàng tổ chức…" />
           <button class="btn" id="cct-refresh">↻ Tải lại</button>
         </div>
         <div class="cct-updated" id="cct-updated"></div>
         <div class="cct-summary-cards" id="cct-summary-cards"></div>
         <div class="panel">
-          <h2>Chi tiết khách đã gặp <span class="count" id="cct-table-count"></span></h2>
+          <h2>🏥 Khách hàng tổ chức ghé thường xuyên nhất <span class="count" id="cct-table-count"></span></h2>
+          <p class="muted small">Mỗi khách hàng tổ chức = 1 cơ sở/bệnh viện (không tính theo người liên hệ cá nhân tại đó). Xếp theo số call phát sinh trong tháng, nhiều nhất lên đầu.</p>
           <div class="table-wrap">
             <table class="data-table" id="table-cct-gapkhach">
               <thead><tr>
-                <th>Nhân viên</th><th>Mã KH</th><th>Tên khách hàng</th>
-                <th>Số lần gặp</th><th>Lần gặp đầu</th><th>Lần gặp gần nhất</th><th>Ghi chú gần nhất</th>
+                <th>Hạng</th><th>Nhân viên</th><th>Khách hàng tổ chức</th>
+                <th>Số call phát sinh</th><th>Lần ghé đầu</th><th>Lần ghé gần nhất</th><th>Ghi chú gần nhất</th>
               </tr></thead>
               <tbody></tbody>
             </table>
@@ -375,6 +465,47 @@
         <div class="cct-updated" id="goiy-updated"></div>
         <div class="empty-state hidden" id="goiy-empty">Chưa có khách hàng nào đủ điều kiện gợi ý (đã mua hàng nhưng lâu chưa lặp lại đơn) theo ngưỡng hiện tại.</div>
         <div id="goiy-employee-list" class="cct-goiy-list"></div>
+      </div>
+
+      <!-- ---- Sub-tab: Dự kiến tuần sau — kế hoạch ghé khách hàng tổ chức,
+           admin HOẶC chính nhân viên tự chọn để điền, có ghi chú ---- -->
+      <div id="cct-panel-kehoach" class="cct-panel hidden">
+        <div class="filter-bar">
+          <button class="btn" id="kehoach-prevweek">‹ Tuần trước</button>
+          <label class="cct-inline-label">Tuần chứa ngày
+            <input type="date" id="kehoach-tuan-input" /></label>
+          <button class="btn" id="kehoach-nextweek">Tuần sau ›</button>
+          <button class="btn" id="kehoach-refresh">↻ Tải lại</button>
+        </div>
+        <div class="cct-updated" id="kehoach-updated"></div>
+
+        <div class="panel kehoach-add-panel">
+          <h2>🐣 Thêm khách hàng tổ chức dự kiến ghé</h2>
+          <form class="giaoviec-form" id="kehoach-form">
+            <div class="giaoviec-form-row">
+              <label class="giaoviec-field hidden" id="kehoach-nv-field">
+                <span>Nhân viên</span>
+                <select id="kehoach-nv"><option value="">— Chọn nhân viên —</option></select>
+              </label>
+              <label class="giaoviec-field">
+                <span>Khách hàng tổ chức</span>
+                <input type="text" id="kehoach-khachhang" list="kehoach-khachhang-list" maxlength="200" required placeholder="VD: Bệnh viện Chợ Rẫy — gõ mới hoặc chọn gợi ý" />
+                <datalist id="kehoach-khachhang-list"></datalist>
+              </label>
+            </div>
+            <label class="giaoviec-field">
+              <span>Ghi chú</span>
+              <input type="text" id="kehoach-ghichu" maxlength="500" placeholder="Ghi chú thêm (không bắt buộc)…" />
+            </label>
+            <div class="giaoviec-form-actions">
+              <button type="submit" class="btn btn-primary" id="kehoach-submit-btn">🐰 Thêm vào kế hoạch</button>
+              <span class="giaoviec-form-status" id="kehoach-form-status"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="empty-state hidden" id="kehoach-empty">Chưa có kế hoạch nào cho tuần này — thêm khách hàng tổ chức dự kiến ghé ở form trên nhé 🐣</div>
+        <div id="kehoach-by-employee" class="kehoach-emp-grid"></div>
       </div>
     </section>
 
