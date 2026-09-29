@@ -351,6 +351,46 @@
         <div class="ptc-pick-grid" id="ptc-pick-grid"></div>
       </div>
 
+      <!-- Vòng 15: "Sản phẩm đào tạo khi họp" — team họp 2 lần/tháng, admin
+           ghi lại sản phẩm nào đã đào tạo/trình bày trong từng buổi họp. -->
+      <div class="panel">
+        <h2>🗓️ Sản phẩm đào tạo khi họp <span class="muted small">(2 buổi/tháng)</span></h2>
+        <div class="hidden" id="hop-daotao-form-wrap">
+          <form class="giaoviec-form" id="hop-daotao-form">
+            <div class="giaoviec-form-row">
+              <label class="giaoviec-field">
+                <span>Ngày họp</span>
+                <input type="date" id="hop-daotao-ngay" required />
+              </label>
+              <label class="giaoviec-field">
+                <span>Sản phẩm đào tạo</span>
+                <select id="hop-daotao-sp" required><option value="">— Chọn sản phẩm —</option></select>
+              </label>
+            </div>
+            <label class="giaoviec-field">
+              <span>Người trình bày</span>
+              <select id="hop-daotao-nguoitrinhbay"><option value="">— (không bắt buộc) —</option></select>
+            </label>
+            <label class="giaoviec-field">
+              <span>Ghi chú</span>
+              <input type="text" id="hop-daotao-ghichu" maxlength="500" placeholder="Ghi chú thêm (không bắt buộc)…" />
+            </label>
+            <div class="giaoviec-form-actions">
+              <button type="submit" class="btn btn-primary" id="hop-daotao-submit-btn">Thêm vào buổi họp</button>
+              <span class="giaoviec-form-status" id="hop-daotao-form-status"></span>
+            </div>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="table-hop-daotao">
+            <thead><tr>
+              <th>Ngày họp</th><th>Sản phẩm đào tạo</th><th>Người trình bày</th><th>Ghi chú</th><th class="hidden" id="hop-daotao-col-xoa"></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="panel hidden" id="ptc-nhapdiem-panel">
         <h2>Nhập điểm đào tạo sản phẩm</h2>
         <form class="giaoviec-form" id="ptc-diem-form">
@@ -420,15 +460,15 @@
     <!-- ===================== TAB: CALL & CUNG TUYẾN ===================== -->
     <section id="tab-callcungtuyen" class="tab-panel hidden">
       <div class="cct-subtabs">
-        <button class="cct-subtab-btn active" data-cct="gapkhach">📞 Đã gặp khách trong tháng</button>
-        <button class="cct-subtab-btn" data-cct="goiy">🗺️ Gợi ý cung tuyến tuần</button>
+        <button class="cct-subtab-btn" data-cct="gapkhach">📞 Đã gặp khách trong tháng</button>
+        <button class="cct-subtab-btn active" data-cct="goiy">🗺️ Gợi ý cung tuyến tuần</button>
         <button class="cct-subtab-btn" data-cct="kehoach">🐣 Dự kiến tuần sau</button>
       </div>
 
       <!-- ---- Sub-tab: Đã gặp khách trong tháng (nguồn: sheet CALL / CUNG-TUYEN) ----
            Chỉ tính theo KHÁCH HÀNG TỔ CHỨC (cơ sở/bệnh viện) — không hiện tên
            người liên hệ cá nhân tại đó. ---- -->
-      <div id="cct-panel-gapkhach" class="cct-panel">
+      <div id="cct-panel-gapkhach" class="cct-panel hidden">
         <div class="filter-bar">
           <select id="cct-thang"></select>
           <select id="cct-nam"></select>
@@ -454,7 +494,7 @@
       </div>
 
       <!-- ---- Sub-tab: Gợi ý cung tuyến tuần ---- -->
-      <div id="cct-panel-goiy" class="cct-panel hidden">
+      <div id="cct-panel-goiy" class="cct-panel">
         <div class="filter-bar">
           <label class="cct-inline-label">Chưa lặp lại đơn từ
             <input type="number" id="goiy-songay" value="30" min="7" step="1" /> ngày trở lên</label>
