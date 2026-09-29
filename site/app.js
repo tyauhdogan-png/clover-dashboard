@@ -226,6 +226,7 @@
   function onTabSwitch(tabName) {
     if (tabName === 'chat') { initChatTab(); } else { stopChatPolling(); }
     if (tabName === 'giaoviec') { initGiaoViecTab(); }
+    if (tabName === 'callcungtuyen') { initCallCungTuyenTab(); }
   }
 
   // --------------------------------------------------------------------------
@@ -1358,6 +1359,177 @@
       : '<div class="empty-state small">Chưa có dữ liệu khách hàng.</div>';
 
     setText('ds-updated', data.capNhatLuc ? 'n8n cập nhật lúc ' + new Date(data.capNhatLuc).toLocaleString('vi-VN') : '');
+  }
+
+  // --------------------------------------------------------------------------
+  // CALL & CUNG TUYẾN — "đã gặp khách nào trong tháng" + gợi ý cung tuyến tuần
+  // Nguồn dữ liệu: sheet CALL / CUNG-TUYEN (nhật ký check-in gặp khách của
+  // trình dược viên) — gộp lại ở phía Apps Script (getAllVisitLogs_), không
+  // phải 1 sheet cố định, nên phần này KHÔNG nằm trong loadAll()/type=all mà
+  // tự gọi API riêng (type=callCungTuyen / type=goiyCungTuyen) khi người dùng
+  // mở tab, để không làm chậm lần tải trang đầu tiên.
+  // --------------------------------------------------------------------------
+  var CCT = { inited: false, sub: 'gapkhach', data: { nam: 0, thang: 0, nhanVien: [] } };
+  var GOIY = { loaded: false, data: { soNgayNguong: 30, soKhachMoiNgay: 5, nhanVien: [] } };
+  var VN_MONTHS_FULL = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+
+  function apiUrlExtra(type, extra) {
+    var u = apiUrl(type);
+    for (var k in extra) {
+      if (extra[k] !== undefined && extra[k] !== null && extra[k] !== '') {
+        u += '&' + k + '=' + encodeURIComponent(extra[k]);
+      }
+    }
+    return u;
+  }
+
+  function initCallCungTuyenTab() {
+    if (CCT.inited) return;
+    CCT.inited = true;
+
+    var now = new Date();
+    var thangSel = $('cct-thang');
+    var namSel = $('cct-nam');
+    thangSel.innerHTML = VN_MONTHS_FULL.map(function (label, i) {
+      return '<option value="' + (i + 1) + '">' + label + '</option>';
+    }).join('');
+    thangSel.value = String(now.getMonth() + 1); // mặc định THÁNG HIỆN TẠI (tháng 9)
+    var namNow = now.getFullYear();
+    namSel.innerHTML = [namNow - 1, namNow, namNow + 1].map(function (y) {
+      return '<option value="' + y + '">' + y + '</option>';
+    }).join('');
+    namSel.value = String(namNow);
+
+    fillSelect($('cct-filter-nv'), RAW.meta.nhanVien || [], 'Tất cả nhân viên');
+
+    document.querySelectorAll('.cct-subtab-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.cct-subtab-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        CCT.sub = btn.dataset.cct;
+        $('cct-panel-gapkhach').classList.toggle('hidden', CCT.sub !== 'gapkhach');
+        $('cct-panel-goiy').classList.toggle('hidden', CCT.sub !== 'goiy');
+        if (CCT.sub === 'goiy' && !GOIY.loaded) loadGoiYCungTuyen();
+      });
+    });
+
+    ['cct-thang', 'cct-nam'].forEach(function (id) { $(id).addEventListener('change', loadCallCungTuyenThang); });
+    $('cct-refresh').addEventListener('click', loadCallCungTuyenThang);
+    $('cct-filter-nv').addEventListener('change', renderCctTable);
+    $('cct-filter-search').addEventListener('input', debounce(renderCctTable, 200));
+    $('goiy-apply').addEventListener('click', loadGoiYCungTuyen);
+
+    loadCallCungTuyenThang();
+  }
+
+  function loadCallCungTuyenThang() {
+    var thang = $('cct-thang').value;
+    var nam = $('cct-nam').value;
+    setText('cct-updated', 'Đang tải…');
+    fetch(apiUrlExtra('callCungTuyen', { thang: thang, nam: nam }))
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi không xác định từ API');
+        CCT.data = json.data || { nam: nam, thang: thang, nhanVien: [] };
+        setText('cct-updated', 'Cập nhật lúc ' + new Date(json.updatedAt).toLocaleString('vi-VN'));
+        renderCctSummary();
+        renderCctTable();
+      })
+      .catch(function (err) {
+        setText('cct-updated', '');
+        showGlobalError('Không tải được dữ liệu Call/Cung tuyến: ' + err.message);
+      });
+  }
+
+  function renderCctSummary() {
+    var box = $('cct-summary-cards');
+    var nv = CCT.data.nhanVien || [];
+    var tongKhach = nv.reduce(function (s, e) { return s + e.soKhachDaGap; }, 0);
+    var tongLuot = nv.reduce(function (s, e) { return s + e.tongLuotGap; }, 0);
+    var monthLabel = (VN_MONTHS_FULL[(CCT.data.thang || 1) - 1] || '') + '/' + CCT.data.nam;
+    box.innerHTML = [
+      cctStatCardHtml('Tháng đang xem', monthLabel, ''),
+      cctStatCardHtml('Nhân viên có dữ liệu', String(nv.length), ''),
+      cctStatCardHtml('Tổng khách hàng đã gặp', fmtNum.format(tongKhach), '(không trùng khách/nhân viên)'),
+      cctStatCardHtml('Tổng lượt gặp', fmtNum.format(tongLuot), '')
+    ].join('');
+  }
+  function cctStatCardHtml(label, value, sub) {
+    return '<div class="cct-stat-card"><div class="cct-stat-label">' + escapeHtml(label) + '</div>' +
+      '<div class="cct-stat-value">' + escapeHtml(value) + '</div>' +
+      (sub ? '<div class="cct-stat-sub">' + escapeHtml(sub) + '</div>' : '') + '</div>';
+  }
+
+  function renderCctTable() {
+    var tbody = document.querySelector('#table-cct-gapkhach tbody');
+    if (!tbody) return;
+    var nvFilter = $('cct-filter-nv').value;
+    var search = ($('cct-filter-search').value || '').toLowerCase().trim();
+    var rows = [];
+    (CCT.data.nhanVien || []).forEach(function (emp) {
+      if (nvFilter && emp.hoTen !== nvFilter) return;
+      (emp.khach || []).forEach(function (kh) {
+        if (search && (kh.maKH + ' ' + kh.tenKH).toLowerCase().indexOf(search) === -1) return;
+        rows.push({ emp: emp, kh: kh });
+      });
+    });
+    rows.sort(function (a, b) { return a.kh.lanCuoi < b.kh.lanCuoi ? 1 : -1; });
+    setText('cct-table-count', '(' + rows.length + ')');
+    tbody.innerHTML = rows.length ? rows.map(function (r) {
+      return '<tr>' +
+        '<td>' + escapeHtml(r.emp.hoTen) + '</td>' +
+        '<td>' + escapeHtml(r.kh.maKH) + '</td>' +
+        '<td>' + escapeHtml(r.kh.tenKH) + '</td>' +
+        '<td>' + fmtNum.format(r.kh.soLanGap) + '</td>' +
+        '<td>' + fmtDate(r.kh.lanDau) + '</td>' +
+        '<td>' + fmtDate(r.kh.lanCuoi) + '</td>' +
+        '<td>' + escapeHtml(r.kh.ghiChuGanNhat || '—') + '</td>' +
+        '</tr>';
+    }).join('') : '<tr><td colspan="7" class="empty-state small">Không có dữ liệu phù hợp bộ lọc.</td></tr>';
+  }
+
+  function loadGoiYCungTuyen() {
+    var soNgay = $('goiy-songay').value || 30;
+    var soKhach = $('goiy-sokhach').value || 5;
+    setText('goiy-updated', 'Đang tải…');
+    fetch(apiUrlExtra('goiyCungTuyen', { soNgay: soNgay, soKhach: soKhach }))
+      .then(function (res) { return res.json(); })
+      .then(function (json) {
+        if (!json.ok) throw new Error(json.error || 'Lỗi không xác định từ API');
+        GOIY.loaded = true;
+        GOIY.data = json.data || { nhanVien: [] };
+        setText('goiy-updated', 'Cập nhật lúc ' + new Date(json.updatedAt).toLocaleString('vi-VN') +
+          ' · Ngưỡng ' + GOIY.data.soNgayNguong + ' ngày · ' + GOIY.data.soKhachMoiNgay + ' khách/ngày');
+        renderGoiYCungTuyen();
+      })
+      .catch(function (err) {
+        setText('goiy-updated', '');
+        showGlobalError('Không tải được gợi ý cung tuyến: ' + err.message);
+      });
+  }
+
+  function renderGoiYCungTuyen() {
+    var box = $('goiy-employee-list');
+    var list = GOIY.data.nhanVien || [];
+    $('goiy-empty').classList.toggle('hidden', list.length > 0);
+    box.innerHTML = list.map(goiyEmployeeCardHtml).join('');
+  }
+
+  function goiyEmployeeCardHtml(emp) {
+    var daysHtml = (emp.ngay || []).map(function (d) {
+      var khHtml = d.khach.map(function (k) {
+        return '<div class="goiy-khach-item">' +
+          '<div class="goiy-khach-ten">' + escapeHtml(k.tenKhach || k.maKhach) + '</div>' +
+          '<div class="goiy-khach-meta">Mã ' + escapeHtml(k.maKhach) + ' · ' + k.soNgayChuaLapLai + ' ngày chưa lặp lại đơn</div>' +
+          '<div class="goiy-khach-meta">Mua gần nhất: ' + fmtDate(k.ngayMuaGanNhat) + ' · ' + k.soDonDaMua + ' đơn</div>' +
+          '</div>';
+      }).join('');
+      return '<div class="goiy-day-col"><div class="goiy-day-label">' + escapeHtml(d.thu) + '</div>' + khHtml + '</div>';
+    }).join('');
+    return '<div class="panel goiy-emp-card">' +
+      '<h2>' + escapeHtml(emp.nhanVien) + ' <span class="count">' + emp.tongSoKhachGoiY + ' khách cần ghé lại</span></h2>' +
+      '<div class="goiy-week-grid">' + daysHtml + '</div>' +
+      '</div>';
   }
 
   // --------------------------------------------------------------------------
