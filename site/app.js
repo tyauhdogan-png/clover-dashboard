@@ -1300,7 +1300,7 @@
       '<span class="ds-team-card-name">' + escapeHtml(label) + '</span></div>' +
       '<div class="ds-team-card-nums">' +
       '<span class="ds-luyke">' + fmtTrieu(t.luyKe) + '</span>' +
-      '<span class="ds-target">/ ' + fmtTrieu(t.target) + ' (Target tháng 8)</span></div>' +
+      '<span class="ds-target">/ ' + fmtTrieu(t.target) + ' (Target tháng 9)</span></div>' +
       spttProgressBar(t.tyLe) + '</div>';
   }
 
@@ -1778,4 +1778,3 @@
   // --------------------------------------------------------------------------
   if (isAuthed()) { showApp(); } else { showLogin(); }
 })();
-
